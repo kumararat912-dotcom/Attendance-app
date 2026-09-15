@@ -1,26 +1,785 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prasanta Engineering & Contractor - Attendance System</title>
-    <!-- Web App Manifest Links for Professional App Installation -->
-    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUHJhc2FudGEgRW5naW5lZXJpbmcgJiBDb250cmFjdG9yIiwic2hvcnRfbmFtZSI6IlBFQyBBdHRlbmRhbmNlIiwic3RhcnRfdXJsIjoiLi8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMWQzNTU3IiwidGhlbWVfY29sb3IiOiIjMWQzNTU3IiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8va3VtYXJhcmF0OTEyLWRvdGNvbS5naXRodWIuaW8vQXR0ZW5kYW5jZS1hcHAvZmF2aWNvbi5pY28iLCJzaXplcyI6IjE5M3gxOTMiLCJ0eXBlIjoiaW1hZ2UveC1pY29uIn1dfQ==">
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .container { background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
-        h2 { color: #1d3557; margin-bottom: 10px; }
-        p { color: #555; margin-bottom: 25px; }
-        .btn { display: block; width: 100%; padding: 12px; margin: 10px 0; background: #1d3557; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; text-decoration: none; }
-        .btn:hover { background: #457b9d; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Prasanta Engineering &amp; Contractor — Attendance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --panel: #F5F7F9;
+    --panel-raised: #EEF1F4;
+    --line: #DFE4E9;
+    --line-soft: #EBEEF1;
+    --ink: #1C2430;
+    --ink-dim: #6B7684;
+    --navy: #1D3557;
+    --navy-dim: #E7EDF4;
+    --amber: #D98E2B;
+    --amber-dim: #FBF0DD;
+    --blue: #2F6FEB;
+    --blue-dim: #E6EDFC;
+    --red: #E0463F;
+    --red-dim: #FCE9E8;
+    --gray: #C7CDD3;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif; -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  #app { max-width: 430px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; position: relative; background: var(--bg); }
+  .screen { display: none; flex-direction: column; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ---------- Top brand bar ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 10px; padding: 16px 18px;
+    border-bottom: 1px solid var(--line); background: var(--bg);
+  }
+  .topbar .logo-wrap { flex-shrink: 0; }
+  .topbar .title-wrap { flex: 1; line-height: 1.15; }
+  .topbar .co-name { font-size: 14.5px; font-weight: 700; color: var(--navy); }
+  .topbar .co-sub { font-size: 10px; color: var(--ink-dim); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.06em; margin-top: 2px; }
+  .topbar .action-link { font-size: 12px; color: var(--navy); font-family: 'IBM Plex Mono', monospace; cursor: pointer; white-space: nowrap; }
+
+  /* ---------- Landing ---------- */
+  .landing-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+  .landing-logo { margin-bottom: 18px; }
+  .landing-co { font-size: 21px; font-weight: 700; color: var(--navy); line-height: 1.3; }
+  .landing-tag { font-size: 12px; color: var(--ink-dim); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.1em; margin: 6px 0 40px; }
+  .role-btn {
+    width: 100%; max-width: 300px; padding: 18px; margin-bottom: 14px; border-radius: 10px;
+    border: 1.5px solid var(--navy); background: var(--bg); color: var(--navy);
+    font-family: 'Space Grotesk', sans-serif; font-size: 15.5px; font-weight: 600; cursor: pointer;
+  }
+  .role-btn.primary { background: var(--navy); color: #fff; }
+  .role-btn:active { opacity: 0.8; }
+  .role-btn .role-sub { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 400; margin-top: 3px; opacity: 0.75; }
+
+  /* ---------- Generic form pieces ---------- */
+  .pane { flex: 1; padding: 18px 20px 90px; overflow-y: auto; }
+  .field-label { font-size: 11px; color: var(--ink-dim); font-family: 'IBM Plex Mono', monospace; margin: 14px 0 6px; letter-spacing: 0.03em; }
+  .field-label:first-child { margin-top: 0; }
+  input[type="text"], input[type="tel"], input[type="password"], input[type="date"], select {
+    width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 7px;
+    padding: 12px 13px; color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-size: 14.5px; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--navy); }
+  .field-row-split { display: flex; gap: 10px; }
+  .field-row-split > div { flex: 1; }
+  .primary-btn {
+    width: 100%; padding: 14px; border-radius: 8px; border: none; cursor: pointer;
+    background: var(--navy); color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin-top: 18px;
+  }
+  .primary-btn:active { opacity: 0.85; }
+  .primary-btn.disabled { background: var(--gray); pointer-events: none; }
+  .error-msg { color: var(--red); font-size: 12.5px; margin-top: 10px; min-height: 16px; }
+  .hint-text { font-size: 12px; color: var(--ink-dim); margin-top: 4px; line-height: 1.5; }
+
+  /* photo upload */
+  .photo-upload { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+  .photo-preview {
+    width: 68px; height: 68px; border-radius: 8px; background: var(--panel); border: 1px dashed var(--line);
+    display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+  }
+  .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-preview .ph-icon { color: var(--ink-dim); font-size: 22px; }
+  .upload-btn {
+    padding: 10px 16px; border-radius: 7px; border: 1px solid var(--navy); background: var(--bg); color: var(--navy);
+    font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+
+  /* ---------- Owner: login ---------- */
+  .center-pane { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 30px; }
+
+  /* ---------- Owner shell tabs ---------- */
+  .subtabs { display: flex; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .subtab-btn {
+    flex: 1; padding: 13px 0; text-align: center; background: none; border: none; cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; color: var(--ink-dim); border-bottom: 2px solid transparent;
+  }
+  .subtab-btn.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 600; }
+
+  .section-head { display: flex; justify-content: space-between; align-items: center; margin: 18px 0 10px; }
+  .section-head:first-child { margin-top: 0; }
+  .section-title { font-size: 12px; color: var(--ink-dim); letter-spacing: 0.03em; font-family: 'IBM Plex Mono', monospace; }
+  .count-tag { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-dim); }
+
+  .filter-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .filter-row select, .filter-row input { flex: 1; }
+
+  .emp-list { border-top: 1px solid var(--line-soft); }
+  .emp-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); cursor: pointer; }
+  .emp-row:active { background: var(--panel); }
+  .emp-row-photo { width: 40px; height: 40px; border-radius: 7px; background: var(--panel); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--ink-dim); font-size: 15px; font-weight: 600; }
+  .emp-row-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .status-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--gray); }
+  .status-dot.blue { background: var(--blue); }
+  .status-dot.red { background: var(--red); }
+  .emp-row-name-wrap { flex: 1; min-width: 0; }
+  .emp-row-name { font-size: 14.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .emp-row-meta { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-dim); margin-top: 2px; }
+  .emp-row-arrow { color: var(--ink-dim); font-size: 15px; }
+
+  .empty-state { padding: 30px 0; text-align: center; color: var(--ink-dim); font-size: 13.5px; line-height: 1.6; }
+  .loading-note { color: var(--ink-dim); font-size: 13px; font-family: 'IBM Plex Mono', monospace; padding: 20px 0; }
+
+  .id-created-card {
+    border: 1.5px solid var(--navy); border-radius: 10px; padding: 20px; text-align: center; margin-top: 6px; background: var(--navy-dim);
+  }
+  .id-created-label { font-size: 11.5px; color: var(--ink-dim); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.05em; }
+  .id-created-code { font-size: 24px; font-weight: 700; color: var(--navy); font-family: 'IBM Plex Mono', monospace; margin: 8px 0; letter-spacing: 0.03em; }
+  .id-created-hint { font-size: 12px; color: var(--ink-dim); }
+
+  /* ---------- Profile card ---------- */
+  .profile-card { border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; background: var(--panel); }
+  .profile-card-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .profile-photo { width: 62px; height: 62px; border-radius: 9px; background: var(--panel-raised); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--ink-dim); font-size: 22px; font-weight: 700; }
+  .profile-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-name { font-size: 16.5px; font-weight: 700; }
+  .profile-id-tag { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--navy); margin-top: 3px; }
+  .profile-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-top: 1px solid var(--line-soft); }
+  .profile-row:first-of-type { border-top: none; }
+  .profile-row span:first-child { color: var(--ink-dim); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  .profile-row span:last-child { font-weight: 500; text-align: right; }
+
+  /* ---------- Add attendance ---------- */
+  .attend-hero { border: 1px solid var(--line); border-radius: 12px; padding: 28px 20px; text-align: center; }
+  .attend-hero.marked { background: var(--blue-dim); border-color: var(--blue); }
+  .attend-status-big { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .attend-status-big.marked { color: var(--blue); }
+  .attend-time { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--ink-dim); margin-bottom: 18px; }
+  .selfie-preview { width: 96px; height: 96px; border-radius: 50%; overflow: hidden; margin: 0 auto 16px; border: 3px solid var(--blue); }
+  .selfie-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .camera-btn {
+    width: 100%; padding: 16px; border-radius: 9px; border: none; cursor: pointer; background: var(--navy); color: #fff;
+    font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600;
+  }
+  .camera-btn:active { opacity: 0.85; }
+
+  /* ---------- Calendar ---------- */
+  .cal-summary { display: flex; gap: 10px; margin-bottom: 16px; }
+  .cal-summary-cell { flex: 1; border: 1px solid var(--line); border-radius: 9px; padding: 12px; text-align: center; }
+  .cal-summary-num { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; }
+  .cal-summary-num.blue { color: var(--blue); }
+  .cal-summary-num.red { color: var(--red); }
+  .cal-summary-lbl { font-size: 10.5px; color: var(--ink-dim); margin-top: 3px; }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 4px; }
+  .cal-dow { text-align: center; font-size: 10px; color: var(--ink-dim); font-family: 'IBM Plex Mono', monospace; padding-bottom: 4px; }
+  .cal-cell {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 7px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600;
+  }
+  .cal-cell.blank { visibility: hidden; }
+  .cal-cell.present { background: var(--blue); color: #fff; }
+  .cal-cell.absent { background: var(--red); color: #fff; }
+  .cal-cell.future { background: var(--panel); color: var(--gray); }
+  .cal-legend { display: flex; gap: 16px; margin-top: 14px; font-size: 11.5px; color: var(--ink-dim); }
+  .cal-legend-item { display: flex; align-items: center; gap: 6px; }
+  .cal-legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* ---------- Employee bottom nav ---------- */
+  nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px;
+    background: var(--bg); border-top: 1px solid var(--line); display: flex; padding: 8px 16px calc(8px + env(safe-area-inset-bottom)); z-index: 5;
+  }
+  .nav-btn {
+    flex: 1; background: none; border: none; color: var(--ink-dim); font-family: 'Space Grotesk', sans-serif;
+    font-size: 11.5px; padding: 6px 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .nav-btn .dash { width: 18px; height: 2px; background: var(--ink-dim); border-radius: 1px; }
+  .nav-btn.active { color: var(--navy); }
+  .nav-btn.active .dash { background: var(--navy); }
+
+  .back-link { font-size: 12px; color: var(--navy); font-family: 'IBM Plex Mono', monospace; cursor: pointer; }
+  .hidden { display: none !important; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h2>Prasanta Engineering & Contractor</h2>
-        <p>ATTENDANCE SYSTEM</p>
-        <a href="#" class="btn" onclick="alert('Owner Portal Loading...')">Owner</a>
-        <a href="#" class="btn" onclick="alert('Employee Portal Loading...')">Employee</a>
+<div id="app">
+
+  <!-- ============ LANDING ============ -->
+  <div class="screen active" id="screen-landing">
+    <div class="landing-body">
+      <svg class="landing-logo" width="76" height="76" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="#1D3557" stroke="#D98E2B" stroke-width="3"/>
+        <text x="50" y="61" font-family="'Space Grotesk', sans-serif" font-size="34" font-weight="700" fill="#D98E2B" text-anchor="middle">PEC</text>
+      </svg>
+      <div class="landing-co">Prasanta Engineering<br>&amp; Contractor</div>
+      <div class="landing-tag">ATTENDANCE SYSTEM</div>
+      <button class="role-btn primary" id="btn-go-owner">Owner<span class="role-sub">Manage employees &amp; attendance</span></button>
+      <button class="role-btn" id="btn-go-employee">Employee<span class="role-sub">Mark your own attendance</span></button>
     </div>
+  </div>
+
+  <!-- ============ OWNER: PASSWORD ============ -->
+  <div class="screen" id="screen-owner-login">
+    <div class="topbar">
+      <div class="logo-wrap">
+        <svg width="30" height="30" viewBox="0 0 100 100"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="#1D3557" stroke="#D98E2B" stroke-width="3"/><text x="50" y="61" font-size="34" font-weight="700" fill="#D98E2B" text-anchor="middle" font-family="'Space Grotesk'">PEC</text></svg>
+      </div>
+      <div class="title-wrap"><div class="co-name">Owner Login</div></div>
+      <div class="action-link" id="link-back-1">← Back</div>
+    </div>
+    <div class="center-pane">
+      <div class="field-label">OWNER PASSWORD</div>
+      <input type="password" id="owner-pass-input" placeholder="Enter password">
+      <div class="error-msg" id="owner-pass-error"></div>
+      <button class="primary-btn" id="owner-pass-submit">Login</button>
+    </div>
+  </div>
+
+  <!-- ============ OWNER: SHELL ============ -->
+  <div class="screen" id="screen-owner">
+    <div class="topbar">
+      <div class="logo-wrap">
+        <svg width="30" height="30" viewBox="0 0 100 100"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="#1D3557" stroke="#D98E2B" stroke-width="3"/><text x="50" y="61" font-size="34" font-weight="700" fill="#D98E2B" text-anchor="middle" font-family="'Space Grotesk'">PEC</text></svg>
+      </div>
+      <div class="title-wrap"><div class="co-name">Owner Panel</div></div>
+      <div class="action-link" id="link-owner-logout">Log out</div>
+    </div>
+    <div class="subtabs">
+      <button class="subtab-btn active" data-otab="home">Home</button>
+      <button class="subtab-btn" data-otab="add">Add Employee</button>
+    </div>
+
+    <!-- Home tab -->
+    <div class="pane" id="otab-home">
+      <div class="filter-row">
+        <input type="date" id="home-date-filter">
+        <select id="home-year-filter"></select>
+      </div>
+      <input type="text" id="home-search" placeholder="Search employee name…">
+      <div class="section-head"><div class="section-title">EMPLOYEES</div><div class="count-tag" id="home-count">0</div></div>
+      <div class="emp-list" id="home-emp-list"><div class="loading-note">Loading…</div></div>
+    </div>
+
+    <!-- Add employee tab -->
+    <div class="pane hidden" id="otab-add">
+      <div class="field-label">EMPLOYEE PHOTO</div>
+      <div class="photo-upload">
+        <div class="photo-preview" id="ae-photo-preview"><span class="ph-icon">＋</span></div>
+        <button class="upload-btn" id="ae-photo-btn">Upload Photo</button>
+        <input type="file" accept="image/*" id="ae-photo-input" style="display:none">
+      </div>
+
+      <div class="field-label">EMPLOYEE NAME *</div>
+      <input type="text" id="ae-name" placeholder="Full name" maxlength="40">
+
+      <div class="field-row-split">
+        <div>
+          <div class="field-label">DATE OF BIRTH</div>
+          <input type="date" id="ae-dob">
+        </div>
+        <div>
+          <div class="field-label">JOINING DATE</div>
+          <input type="date" id="ae-joining">
+        </div>
+      </div>
+
+      <div class="field-label">AADHAAR NO.</div>
+      <input type="text" id="ae-aadhaar" placeholder="XXXX XXXX XXXX" maxlength="14">
+
+      <div class="field-label">POSITION</div>
+      <input type="text" id="ae-position" placeholder="e.g. Fitter, Supervisor" maxlength="30">
+
+      <div class="error-msg" id="ae-error"></div>
+      <button class="primary-btn" id="ae-submit">Create Employee ID</button>
+
+      <div class="id-created-card hidden" id="ae-created-card">
+        <div class="id-created-label">EMPLOYEE ID CREATED</div>
+        <div class="id-created-code" id="ae-created-id"></div>
+        <div class="id-created-hint">Share this ID with the employee — they'll use it to log in under "Employee".</div>
+      </div>
+    </div>
+
+    <!-- Employee detail (owner viewing one profile) -->
+    <div class="pane hidden" id="otab-detail">
+      <div class="back-link" id="detail-back" style="margin-bottom:14px;">← Back to list</div>
+      <div id="detail-profile"></div>
+      <div class="filter-row">
+        <select id="detail-month"></select>
+        <select id="detail-year"></select>
+      </div>
+      <div id="detail-calendar"></div>
+    </div>
+  </div>
+
+  <!-- ============ EMPLOYEE: LOGIN ============ -->
+  <div class="screen" id="screen-emp-login">
+    <div class="topbar">
+      <div class="logo-wrap">
+        <svg width="30" height="30" viewBox="0 0 100 100"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="#1D3557" stroke="#D98E2B" stroke-width="3"/><text x="50" y="61" font-size="34" font-weight="700" fill="#D98E2B" text-anchor="middle" font-family="'Space Grotesk'">PEC</text></svg>
+      </div>
+      <div class="title-wrap"><div class="co-name">Employee Login</div></div>
+      <div class="action-link" id="link-back-2">← Back</div>
+    </div>
+    <div class="center-pane">
+      <div class="field-label">EMPLOYEE ID</div>
+      <input type="text" id="emp-id-input" placeholder="e.g. PEC-0001">
+      <div class="hint-text">This is a one-time login. Once you log in, this device stays signed in.</div>
+      <div class="error-msg" id="emp-id-error"></div>
+      <button class="primary-btn" id="emp-id-submit">Login</button>
+    </div>
+  </div>
+
+  <!-- ============ EMPLOYEE: SHELL ============ -->
+  <div class="screen" id="screen-emp">
+    <div class="topbar">
+      <div class="logo-wrap">
+        <svg width="30" height="30" viewBox="0 0 100 100"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="#1D3557" stroke="#D98E2B" stroke-width="3"/><text x="50" y="61" font-size="34" font-weight="700" fill="#D98E2B" text-anchor="middle" font-family="'Space Grotesk'">PEC</text></svg>
+      </div>
+      <div class="title-wrap"><div class="co-name" id="emp-shell-name">Employee</div></div>
+      <div class="action-link" id="link-emp-logout">Log out</div>
+    </div>
+
+    <div class="pane" id="etab-profile" style="padding-bottom:90px;"></div>
+
+    <div class="pane hidden" id="etab-attend" style="padding-bottom:90px;">
+      <div class="attend-hero" id="attend-hero"></div>
+      <input type="file" accept="image/*" capture="user" id="selfie-input" style="display:none">
+    </div>
+
+    <div class="pane hidden" id="etab-history" style="padding-bottom:90px;">
+      <div class="filter-row">
+        <select id="eh-month"></select>
+        <select id="eh-year"></select>
+      </div>
+      <div id="eh-calendar"></div>
+    </div>
+
+    <nav id="emp-nav">
+      <button class="nav-btn active" data-etab="profile"><div class="dash"></div>Profile</button>
+      <button class="nav-btn" data-etab="attend"><div class="dash"></div>Add Attendance</button>
+      <button class="nav-btn" data-etab="history"><div class="dash"></div>History</button>
+    </nav>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const OWNER_PASSWORD = "Prasanta@123";
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const DOW = ["S","M","T","W","T","F","S"];
+
+  let employees = [];        // {id, name, dob, joining, aadhaar, position, photo}
+  let currentEmpId = null;   // logged-in employee id (employee shell)
+  let detailEmpId = null;    // employee id owner is viewing on Home
+  let aePhotoData = null;    // pending photo for add-employee form
+
+  // ---------- Helpers ----------
+  function pad(n){ return n < 10 ? '0'+n : ''+n; }
+  function dateKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function todayKey(){ return dateKey(new Date()); }
+  function fmtTime(iso){
+    const d = new Date(iso);
+    let h = d.getHours(), m = pad(d.getMinutes());
+    const ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if (h === 0) h = 12;
+    return h + ':' + m + ' ' + ap;
+  }
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function findEmployee(id){ return employees.find(e => e.id === id); }
+  function initials(name){
+    return (name||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+  }
+  function resizeImage(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+          else if (h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality || 0.6));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // ---------- LocalStorage Storage Implementation ----------
+  function loadEmployees(){
+    try {
+      const res = localStorage.getItem('pec_employees');
+      employees = res ? JSON.parse(res) : [];
+    } catch(e) { employees = []; }
+  }
+  function saveEmployees(){ 
+    try {
+      localStorage.setItem('pec_employees', JSON.stringify(employees));
+    } catch(e) {} 
+  }
+  function loadDay(key){
+    try {
+      const res = localStorage.getItem('pec_attendance:' + key);
+      return res ? JSON.parse(res) : {};
+    } catch(e) { return {}; }
+  }
+  function saveDay(key, data){ 
+    try {
+      localStorage.setItem('pec_attendance:' + key, JSON.stringify(data));
+    } catch(e) {} 
+  }
+  function loadSession(){
+    try {
+      const res = localStorage.getItem('pec_device_session');
+      return res ? JSON.parse(res) : null;
+    } catch(e) { return null; }
+  }
+  function saveSession(empId){ 
+    try {
+      localStorage.setItem('pec_device_session', JSON.stringify({ employeeId: empId }));
+    } catch(e) {} 
+  }
+  function clearSession(){ 
+    try { 
+      localStorage.removeItem('pec_device_session'); 
+    } catch(e){} 
+  }
+
+  // ---------- Landing ----------
+  document.getElementById('btn-go-owner').addEventListener('click', () => showScreen('screen-owner-login'));
+  document.getElementById('btn-go-employee').addEventListener('click', () => showScreen('screen-emp-login'));
+  document.getElementById('link-back-1').addEventListener('click', () => showScreen('screen-landing'));
+  document.getElementById('link-back-2').addEventListener('click', () => showScreen('screen-landing'));
+
+  // ---------- Owner login ----------
+  document.getElementById('owner-pass-submit').addEventListener('click', ownerLogin);
+  document.getElementById('owner-pass-input').addEventListener('keydown', e => { if (e.key === 'Enter') ownerLogin(); });
+  function ownerLogin(){
+    const val = document.getElementById('owner-pass-input').value;
+    const errEl = document.getElementById('owner-pass-error');
+    if (val === OWNER_PASSWORD){
+      errEl.textContent = '';
+      document.getElementById('owner-pass-input').value = '';
+      enterOwnerShell();
+    } else {
+      errEl.textContent = 'Incorrect password. Please try again.';
+    }
+  }
+  function enterOwnerShell(){
+    showScreen('screen-owner');
+    switchOwnerTab('home');
+    populateYearFilters();
+    renderHomeList();
+  }
+  document.getElementById('link-owner-logout').addEventListener('click', () => showScreen('screen-landing'));
+
+  // ---------- Owner subtabs ----------
+  document.querySelectorAll('.subtab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchOwnerTab(btn.getAttribute('data-otab')));
+  });
+  function switchOwnerTab(tab){
+    document.querySelectorAll('.subtab-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-otab') === tab));
+    document.getElementById('otab-home').classList.toggle('hidden', tab !== 'home');
+    document.getElementById('otab-add').classList.toggle('hidden', tab !== 'add');
+    document.getElementById('otab-detail').classList.add('hidden');
+    if (tab === 'home') renderHomeList();
+  }
+
+  // ---------- Add Employee ----------
+  document.getElementById('ae-photo-btn').addEventListener('click', () => document.getElementById('ae-photo-input').click());
+  document.getElementById('ae-photo-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    aePhotoData = await resizeImage(file, 300, 0.7);
+    document.getElementById('ae-photo-preview').innerHTML = `<img src="${aePhotoData}">`;
+  });
+  document.getElementById('ae-submit').addEventListener('click', createEmployee);
+  function createEmployee(){
+    const errEl = document.getElementById('ae-error');
+    const name = document.getElementById('ae-name').value.trim();
+    if (!name){ errEl.textContent = 'Employee name is required.'; return; }
+    errEl.textContent = '';
+
+    loadEmployees(); // Refresh data before generating ID
+    let maxNum = 0;
+    employees.forEach(e => {
+      const m = /PEC-(\d+)/.exec(e.id || '');
+      if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+    });
+    const newId = 'PEC-' + String(maxNum + 1).padStart(4, '0');
+
+    const profile = {
+      id: newId,
+      name: name,
+      dob: document.getElementById('ae-dob').value,
+      joining: document.getElementById('ae-joining').value,
+      aadhaar: document.getElementById('ae-aadhaar').value.trim(),
+      position: document.getElementById('ae-position').value.trim(),
+      photo: aePhotoData
+    };
+    employees.push(profile);
+    saveEmployees();
+
+    document.getElementById('ae-created-card').classList.remove('hidden');
+    document.getElementById('ae-created-id').textContent = newId;
+    ['ae-name','ae-dob','ae-joining','ae-aadhaar','ae-position'].forEach(id => document.getElementById(id).value = '');
+    aePhotoData = null;
+    document.getElementById('ae-photo-preview').innerHTML = '<span class="ph-icon">＋</span>';
+  }
+
+  // ---------- Owner Home list ----------
+  function populateYearFilters(){
+    const y = new Date().getFullYear();
+    const years = [y-1, y, y+1];
+    ['home-year-filter'].forEach(id => {
+      const sel = document.getElementById(id);
+      sel.innerHTML = years.map(yr => `<option value="${yr}" ${yr===y?'selected':''}>${yr}</option>`).join('');
+    });
+    document.getElementById('home-date-filter').value = todayKey();
+  }
+  document.getElementById('home-date-filter').addEventListener('change', renderHomeList);
+  document.getElementById('home-search').addEventListener('input', renderHomeList);
+
+  function renderHomeList(){
+    loadEmployees();
+    const list = document.getElementById('home-emp-list');
+    const dateVal = document.getElementById('home-date-filter').value || todayKey();
+    const q = document.getElementById('home-search').value.trim().toLowerCase();
+    const dayRecords = loadDay(dateVal);
+    const isFuture = new Date(dateVal + 'T00:00:00') > new Date(todayKey() + 'T00:00:00');
+
+    const filtered = q ? employees.filter(e => e.name.toLowerCase().includes(q)) : employees;
+    document.getElementById('home-count').textContent = filtered.length;
+
+    if (!employees.length){
+      list.innerHTML = '<div class="empty-state">No employees yet. Add one from the "Add Employee" tab.</div>';
+      return;
+    }
+    if (!filtered.length){
+      list.innerHTML = '<div class="empty-state">No match for that search.</div>';
+      return;
+    }
+    list.innerHTML = filtered.map(e => {
+      const rec = dayRecords[e.id];
+      const dotClass = isFuture ? '' : (rec ? 'blue' : 'red');
+      const metaText = rec ? 'Present · ' + fmtTime(rec.time) : (isFuture ? 'Upcoming date' : 'Absent');
+      const photoHtml = e.photo ? `<img src="${e.photo}">` : initials(e.name);
+      return `<div class="emp-row" data-id="${e.id}">
+        <div class="emp-row-photo">${photoHtml}</div>
+        <div class="status-dot ${dotClass}"></div>
+        <div class="emp-row-name-wrap">
+          <div class="emp-row-name">${escapeHtml(e.name)}</div>
+          <div class="emp-row-meta">${e.id} · ${metaText}</div>
+        </div>
+        <div class="emp-row-arrow">›</div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('.emp-row').forEach(row => {
+      row.addEventListener('click', () => openOwnerDetail(row.getAttribute('data-id')));
+    });
+  }
+
+  // ---------- Owner: employee detail ----------
+  function openOwnerDetail(empId){
+    detailEmpId = empId;
+    document.getElementById('otab-home').classList.add('hidden');
+    document.getElementById('otab-add').classList.add('hidden');
+    document.getElementById('otab-detail').classList.remove('hidden');
+    document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+    renderProfileCard(empId, document.getElementById('detail-profile'));
+    populateMonthYear('detail-month', 'detail-year');
+    renderCalendarInto('detail-calendar', empId, 'detail-month', 'detail-year');
+  }
+  document.getElementById('detail-back').addEventListener('click', () => {
+    document.getElementById('otab-detail').classList.add('hidden');
+    switchOwnerTab('home');
+  });
+  document.getElementById('detail-month').addEventListener('change', () => renderCalendarInto('detail-calendar', detailEmpId, 'detail-month', 'detail-year'));
+  document.getElementById('detail-year').addEventListener('change', () => renderCalendarInto('detail-calendar', detailEmpId, 'detail-month', 'detail-year'));
+
+  function renderProfileCard(empId, container){
+    loadEmployees();
+    const e = findEmployee(empId);
+    if (!e){ container.innerHTML = '<div class="empty-state">Profile not found.</div>'; return; }
+    const photoHtml = e.photo ? `<img src="${e.photo}">` : initials(e.name);
+    container.innerHTML = `
+      <div class="profile-card">
+        <div class="profile-card-top">
+          <div class="profile-photo">${photoHtml}</div>
+          <div>
+            <div class="profile-name">${escapeHtml(e.name)}</div>
+            <div class="profile-id-tag">${e.id}</div>
+          </div>
+        </div>
+        <div class="profile-row"><span>POSITION</span><span>${escapeHtml(e.position || '—')}</span></div>
+        <div class="profile-row"><span>DATE OF BIRTH</span><span>${escapeHtml(e.dob || '—')}</span></div>
+        <div class="profile-row"><span>JOINING DATE</span><span>${escapeHtml(e.joining || '—')}</span></div>
+        <div class="profile-row"><span>AADHAAR NO.</span><span>${escapeHtml(e.aadhaar || '—')}</span></div>
+      </div>`;
+  }
+
+  // ---------- Calendar (shared by owner detail + employee history) ----------
+  function populateMonthYear(monthSelId, yearSelId){
+    const now = new Date();
+    const monthSel = document.getElementById(monthSelId);
+    const yearSel = document.getElementById(yearSelId);
+    if (!monthSel.dataset.filled){
+      monthSel.innerHTML = MONTH_NAMES.map((m,i) => `<option value="${i}" ${i===now.getMonth()?'selected':''}>${m}</option>`).join('');
+      monthSel.dataset.filled = '1';
+    }
+    if (!yearSel.dataset.filled){
+      const y = now.getFullYear();
+      yearSel.innerHTML = [y-1,y,y+1].map(yr => `<option value="${yr}" ${yr===y?'selected':''}>${yr}</option>`).join('');
+      yearSel.dataset.filled = '1';
+    }
+  }
+
+  function renderCalendarInto(containerId, empId, monthSelId, yearSelId){
+    const container = document.getElementById(containerId);
+    container.innerHTML = '<div class="loading-note">Loading calendar…</div>';
+    const month = parseInt(document.getElementById(monthSelId).value, 10);
+    const year = parseInt(document.getElementById(yearSelId).value, 10);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDow = new Date(year, month, 1).getDay();
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    let blueCount = 0, redCount = 0;
+    const cells = [];
+    for (let d = 1; d <= daysInMonth; d++){
+      const cellDate = new Date(year, month, d);
+      const key = year + '-' + pad(month+1) + '-' + pad(d);
+      const dayRec = loadDay(key);
+      const present = !!dayRec[empId];
+      let cls;
+      if (cellDate > today){ cls = 'future'; }
+      else if (present){ cls = 'present'; blueCount++; }
+      else { cls = 'absent'; redCount++; }
+      cells.push(`<div class="cal-cell ${cls}">${d}</div>`);
+    }
+    const blanks = Array(firstDow).fill('<div class="cal-cell blank"></div>');
+
+    container.innerHTML = `
+      <div class="cal-summary">
+        <div class="cal-summary-cell"><div class="cal-summary-num blue">${blueCount}</div><div class="cal-summary-lbl">PRESENT DAYS</div></div>
+        <div class="cal-summary-cell"><div class="cal-summary-num red">${redCount}</div><div class="cal-summary-lbl">ABSENT DAYS</div></div>
+      </div>
+      <div class="cal-grid">
+        ${DOW.map(d => `<div class="cal-dow">${d}</div>`).join('')}
+        ${blanks.join('')}
+        ${cells.join('')}
+      </div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--blue)"></div>Present</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--red)"></div>Absent</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--panel);border:1px solid var(--line)"></div>Upcoming</div>
+      </div>`;
+  }
+
+  // ---------- Employee login ----------
+  document.getElementById('emp-id-submit').addEventListener('click', employeeLogin);
+  document.getElementById('emp-id-input').addEventListener('keydown', e => { if (e.key === 'Enter') employeeLogin(); });
+  function employeeLogin(){
+    loadEmployees();
+    const errEl = document.getElementById('emp-id-error');
+    const idVal = document.getElementById('emp-id-input').value.trim().toUpperCase();
+    const emp = findEmployee(idVal);
+    if (!emp){ errEl.textContent = 'No employee found with that ID. Check with your owner/admin.'; return; }
+    errEl.textContent = '';
+    document.getElementById('emp-id-input').value = '';
+    saveSession(idVal);
+    enterEmployeeShell(idVal);
+  }
+  document.getElementById('link-emp-logout').addEventListener('click', () => {
+    clearSession();
+    currentEmpId = null;
+    showScreen('screen-landing');
+  });
+
+  function enterEmployeeShell(empId){
+    currentEmpId = empId;
+    loadEmployees();
+    const emp = findEmployee(empId);
+    document.getElementById('emp-shell-name').textContent = emp ? emp.name : empId;
+    showScreen('screen-emp');
+    switchEmpTab('profile');
+  }
+
+  // ---------- Employee subtabs ----------
+  document.querySelectorAll('#emp-nav .nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchEmpTab(btn.getAttribute('data-etab')));
+  });
+  function switchEmpTab(tab){
+    document.querySelectorAll('#emp-nav .nav-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-etab') === tab));
+    document.getElementById('etab-profile').classList.toggle('hidden', tab !== 'profile');
+    document.getElementById('etab-attend').classList.toggle('hidden', tab !== 'attend');
+    document.getElementById('etab-history').classList.toggle('hidden', tab !== 'history');
+    if (tab === 'profile') renderProfileCard(currentEmpId, document.getElementById('etab-profile'));
+    if (tab === 'attend') renderAttendTab();
+    if (tab === 'history'){
+      populateMonthYear('eh-month', 'eh-year');
+      renderCalendarInto('eh-calendar', currentEmpId, 'eh-month', 'eh-year');
+    }
+  }
+  document.getElementById('eh-month').addEventListener('change', () => renderCalendarInto('eh-calendar', currentEmpId, 'eh-month', 'eh-year'));
+  document.getElementById('eh-year').addEventListener('change', () => renderCalendarInto('eh-calendar', currentEmpId, 'eh-month', 'eh-year'));
+
+  // ---------- Employee: Add Attendance ----------
+  function renderAttendTab(){
+    const hero = document.getElementById('attend-hero');
+    const day = loadDay(todayKey());
+    const rec = day[currentEmpId];
+    if (rec){
+      hero.classList.add('marked');
+      hero.innerHTML = `
+        <div class="selfie-preview">${rec.selfie ? `<img src="${rec.selfie}">` : ''}</div>
+        <div class="attend-status-big marked">Attendance marked</div>
+        <div class="attend-time">Today at ${fmtTime(rec.time)}</div>`;
+    } else {
+      hero.classList.remove('marked');
+      hero.innerHTML = `
+        <div class="attend-status-big">Not marked yet today</div>
+        <div class="attend-time">Take a selfie to mark your attendance</div>
+        <button class="camera-btn" id="take-selfie-btn">📷 Take Selfie &amp; Mark Present</button>`;
+      document.getElementById('take-selfie-btn').addEventListener('click', () => document.getElementById('selfie-input').click());
+    }
+  }
+  document.getElementById('selfie-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const selfieData = await resizeImage(file, 220, 0.6);
+    const key = todayKey();
+    const day = loadDay(key);
+    day[currentEmpId] = { time: new Date().toISOString(), selfie: selfieData };
+    saveDay(key, day);
+    e.target.value = '';
+    renderAttendTab();
+  });
+
+  // ---------- Init ----------
+  function init(){
+    loadEmployees();
+    populateYearFilters();
+    const session = loadSession();
+    if (session && session.employeeId && findEmployee(session.employeeId)){
+      enterEmployeeShell(session.employeeId);
+    }
+  }
+  
+  init();
+
+})();
+</script>
 </body>
 </html>
