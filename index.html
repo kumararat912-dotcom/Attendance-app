@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prasanta Engineering & Contractor - Attendance System</title>
+    <title>Prasanta Engineering & Contractor - Attendance & Management System</title>
     <!-- EmailJS SDK for sending OTP emails -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
@@ -143,6 +143,8 @@
             align-items: center;
             z-index: 100;
         }
+        .action-btn-group { display: flex; gap: 5px; margin-top: 5px; }
+        .action-btn-group button { padding: 6px; font-size: 12px; margin: 0; }
     </style>
 </head>
 <body>
@@ -150,32 +152,35 @@
 <div class="container">
     <div class="header">
         <div class="logo-box">Prasanta Engineering & Contractor</div>
-        <div class="sub-logo">Official Attendance System</div>
+        <div class="sub-logo">Official Attendance & Management System</div>
     </div>
 
     <div class="content">
 
-        <!-- STEP 1: WELCOME SCREEN -->
+        <!-- WELCOME SCREEN -->
         <div id="screen-welcome" class="card" style="text-align: center; padding: 40px 20px;">
             <h3>Welcome</h3>
             <p style="font-size: 14px; color: #666; margin-bottom: 30px;">Please select an option to continue</p>
-            <button onclick="showLoginScreen()">I. Login</button>
-            <button class="secondary" onclick="showRegisterScreen()">II. Register</button>
+            <button onclick="showLoginScreen()">I. Owner/Admin Login</button>
+            <button class="secondary" onclick="showRegisterScreen()">II. Register New Admin</button>
+            <button style="background-color: var(--blue);" onclick="openEmployeePortalSelect()">III. Employee Portal</button>
         </div>
 
-        <!-- STEP 2A: LOGIN SCREEN -->
+        <!-- LOGIN SCREEN -->
         <div id="screen-login" class="card hidden">
-            <h3>Login Account</h3>
-            <p style="font-size: 13px; color: #666;">Enter your registered email address.</p>
-            <input type="email" id="login-email" placeholder="Enter your email">
-            <button onclick="requestLoginOTP()">Send OTP & Login</button>
-            <button class="secondary" onclick="backToWelcome()">Back</button>
+            <h3>Owner Login</h3>
+            <p style="font-size: 13px; color: #666;">Enter your owner credentials.</p>
+            <input type="email" id="login-email" placeholder="Enter owner email">
+            <input type="password" id="login-password" placeholder="Enter password">
+            <button onclick="loginOwnerWithPassword()">Login</button>
+            <button class="secondary" onclick="showForgotPasswordModal()">Forgot Password / Reset via Email?</button>
+            <button class="danger" onclick="backToWelcome()">Back</button>
         </div>
 
-        <!-- STEP 2B: REGISTER SCREEN -->
+        <!-- REGISTER SCREEN -->
         <div id="screen-register" class="card hidden">
-            <h3>Register New Account</h3>
-            <p style="font-size: 13px; color: #666;">Create a new owner/admin account.</p>
+            <h3>Register Admin Account</h3>
+            <p style="font-size: 13px; color: #666;">Create a new owner account with password.</p>
             <input type="text" id="reg-name" placeholder="Full Name">
             <input type="email" id="reg-email" placeholder="Email Address">
             <input type="password" id="reg-pass" placeholder="Create Password">
@@ -183,7 +188,7 @@
             <button class="secondary" onclick="backToWelcome()">Back</button>
         </div>
 
-        <!-- STEP 2C: OTP VERIFICATION SCREEN -->
+        <!-- OTP VERIFICATION SCREEN -->
         <div id="screen-otp" class="card hidden">
             <h3>Verify Email OTP</h3>
             <p style="font-size: 13px; color: #666;" id="otp-instruction">Enter the 6-digit OTP sent to your email.</p>
@@ -192,63 +197,66 @@
             <button class="secondary" onclick="backToWelcome()">Cancel</button>
         </div>
 
-        <!-- STEP 3: ROLE SELECTOR -->
-        <div id="screen-role-select" class="card hidden">
-            <h3>Select Portal Mode</h3>
-            <p style="font-size: 14px; color: #666;" id="logged-user-info"></p>
-            <button onclick="openOwnerPortal()">1. Owner Use (Management)</button>
-            <button class="secondary" onclick="openEmployeePortalSelect()">2. Employee Use (Mark Attendance)</button>
-            <button class="danger" onclick="logoutApp()" style="margin-top: 20px;">Logout</button>
-        </div>
-
-        <!-- STEP 4: OWNER DASHBOARD -->
+        <!-- OWNER DASHBOARD -->
         <div id="screen-owner-dashboard" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin:0;">Owner Control Panel</h3>
-                <button onclick="backToRoleSelect()" style="width: auto; padding: 6px 12px; margin:0;">Menu</button>
+                <button onclick="logoutApp()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
             </div>
             
             <div class="flex-row" style="margin-bottom: 15px;">
-                <button onclick="switchOwnerTab('home')" id="tab-btn-home">(i) Home Tab</button>
-                <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employees</button>
+                <button onclick="switchOwnerTab('home')" id="tab-btn-home">(i) Employees List</button>
+                <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employee</button>
             </div>
 
-            <!-- Owner Tab 1: Home Tab -->
+            <!-- Owner Tab 1: Home / Employees List & Management -->
             <div id="owner-tab-home" class="card">
-                <h3>Employees List</h3>
+                <h3>Manage Employees</h3>
                 <input type="text" id="search-employee" placeholder="Search employee by name or ID..." onkeyup="filterEmployees()">
                 <div id="employee-list-container"></div>
             </div>
 
-            <!-- Owner Tab 2: Add Employees -->
+            <!-- Owner Tab 2: Add / Edit Employees (with optional salary) -->
             <div id="owner-tab-add" class="card hidden">
-                <h3>Add Employee Details</h3>
-                <label>Employee Photo Upload</label>
-                <input type="file" id="emp-photo" accept="image/*">
-                <label>Employee Name</label>
+                <h3 id="form-title-text">Add Employee Details</h3>
+                <input type="hidden" id="edit-emp-index" value="">
+                
+                <label>Employee Photo Upload (Camera Capture Supported)</label>
+                <input type="file" id="emp-photo" accept="image/*" capture="environment">
+                
+                <label>Employee Name *</label>
                 <input type="text" id="emp-name" placeholder="Full Name">
+                
                 <label>Date of Birth</label>
                 <input type="date" id="emp-dob">
+                
                 <label>Aadhar No</label>
                 <input type="text" id="emp-aadhaar" placeholder="Aadhar No">
+                
                 <label>Joining Date</label>
                 <input type="date" id="emp-joining">
-                <label>Position / Designation</label>
+                
+                <label>Position / Designation *</label>
                 <input type="text" id="emp-position" placeholder="Position / Designation">
-                <button onclick="saveNewEmployee()">Create Employee & Generate ID</button>
+
+                <label>Salary Details (Optional)</label>
+                <input type="number" id="emp-salary" placeholder="Monthly Salary (Optional)">
+
+                <button onclick="saveEmployeeData()">Save Employee</button>
+                <button class="secondary" onclick="switchOwnerTab('home')">Cancel</button>
             </div>
         </div>
 
-        <!-- STEP 5A: EMPLOYEE LOGIN -->
+        <!-- EMPLOYEE LOGIN -->
         <div id="screen-emp-login" class="card hidden">
-            <h3>Employee Login</h3>
-            <p style="font-size: 14px; color: #666;">Enter your employee ID created by owner.</p>
+            <h3>Employee Portal Login</h3>
+            <p style="font-size: 14px; color: #666;">Enter your employee ID assigned by owner.</p>
             <input type="text" id="emp-login-id" placeholder="e.g. PEC-EMP-101">
             <button onclick="loginEmployee()">Login</button>
-            <button class="secondary" onclick="backToRoleSelect()">Back</button>
+            <button class="secondary" onclick="backToWelcome()">Back</button>
         </div>
 
-        <!-- STEP 5B: EMPLOYEE DASHBOARD -->
+        <!-- EMPLOYEE DASHBOARD (Profile, Attendance Camera/File Capture, Calendar & Salary Calculation) -->
         <div id="screen-emp-dashboard" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin:0;" id="emp-welcome-title">Employee Portal</h3>
@@ -257,8 +265,8 @@
 
             <div class="flex-row" style="margin-bottom: 15px; font-size: 13px;">
                 <button onclick="switchEmpTab('profile')" id="emp-t-1">(i) Profile</button>
-                <button onclick="switchEmpTab('attendance')" id="emp-t-2" class="secondary">(ii) Add Attendance</button>
-                <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) History</button>
+                <button onclick="switchEmpTab('attendance')" id="emp-t-2" class="secondary">(ii) Mark Attendance</button>
+                <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) Calendar & Salary</button>
             </div>
 
             <!-- Employee Tab 1: Profile -->
@@ -267,22 +275,25 @@
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance Selfie -->
+            <!-- Employee Tab 2: Attendance Camera Live Feed & Mobile Backup File Upload -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Attendance</h3>
-                <p style="font-size: 13px; color: #666;">Take face selfie camera verification.</p>
-                <div style="text-align: center; margin-bottom: 15px; background: #000; border-radius: 6px; overflow: hidden; min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                <p style="font-size: 13px; color: #666;">Camera verification for today's attendance.</p>
+                <div style="text-align: center; margin-bottom: 15px; background: #000; border-radius: 6px; overflow: hidden; min-height: 200px; display: flex; align-items: center; justify-content: center; position: relative;">
                     <video id="camera-preview" autoplay playsinline style="width: 100%; max-height: 200px; object-fit: cover;"></video>
                 </div>
-                <button onclick="captureSelfieAttendance()">Capture Selfie & Submit</button>
+                <!-- Fallback / Direct Camera Upload for restricted mobile browsers -->
+                <label style="font-size: 13px;">Or snap/upload photo directly:</label>
+                <input type="file" id="emp-attendance-file" accept="image/*" capture="environment">
+                <button onclick="captureSelfieAttendance()">Submit Today's Attendance</button>
             </div>
 
-            <!-- Employee Tab 3: History -->
+            <!-- Employee Tab 3: Attendance Calendar & Calculation -->
             <div id="emp-pane-history" class="card hidden">
-                <h3>Attendance History</h3>
+                <h3>Attendance Calendar & Salary Calculation</h3>
                 <div class="flex-row">
                     <select id="filter-year" onchange="renderCalendar()">
-                        <option value="2026">2026</option>
+                        <option value="2026" selected>2026</option>
                         <option value="2025">2025</option>
                     </select>
                     <select id="filter-month" onchange="renderCalendar()">
@@ -304,38 +315,42 @@
                     <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
                 </div>
                 <div class="calendar-grid" id="calendar-days-container"></div>
-                <div style="font-size: 14px; margin-top: 15px; text-align: center;" id="attendance-summary-count"></div>
+                <div style="font-size: 14px; margin-top: 15px; text-align: center; background: white; padding: 10px; border-radius: 6px;" id="attendance-summary-count"></div>
             </div>
         </div>
 
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal for Viewing Detailed Info -->
 <div id="employee-modal" class="modal hidden">
     <div class="card" style="width: 90%; max-width: 400px; background: white;">
         <span style="float: right; font-size: 20px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
-        <h3 style="margin-top:0;">Employee Details</h3>
+        <h3 style="margin-top:0;">Employee Info</h3>
         <div id="modal-body-content"></div>
     </div>
 </div>
 
 <script>
-    let registeredUsers = JSON.parse(localStorage.getItem('pec_users')) || ["kumararat912@gmail.com", "admin@pec.com"];
+    // Data structures saved in LocalStorage
+    let ownerAccounts = JSON.parse(localStorage.getItem('pec_owner_accounts')) || {
+        "aratakumarsahoo3@gmail.com": "admin123",
+        "admin@pec.com": "password"
+    };
     let employees = JSON.parse(localStorage.getItem('pec_employees')) || [
-        { id: "PEC-EMP-101", name: "Rahul Kumar", dob: "2000-01-15", aadhaar: "1234-5678-9012", joining: "2025-01-01", position: "Helper", photo: "", attendance: {"2026-5-1": "present", "2026-5-2": "present", "2026-5-3": "absent"} }
+        { id: "PEC-EMP-101", name: "Rahul Kumar", dob: "2000-01-15", aadhaar: "Redacted", joining: "2025-01-01", position: "Helper", salary: "12000", photo: "", attendance: {"2026-5-1": "present", "2026-5-2": "present"} }
     ];
     let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
     let currentSessionUser = localStorage.getItem('pec_current_user') || null;
 
     let generatedOTP = "";
     let pendingEmail = "";
-    let pendingRegistrationData = null;
+    let pendingPassword = "";
     let authMode = ""; 
 
     window.onload = function() {
         if(currentSessionUser) {
-            showRoleSelector(currentSessionUser);
+            showOwnerDashboard();
         }
     };
 
@@ -358,48 +373,62 @@
         document.getElementById('screen-register').classList.remove('hidden');
     }
 
-    // --- OTP GENERATION & SENDING VIA EMAILJS ---
+    // --- 1. OWNER PASSWORD LOGIN & FORGOT PASSWORD (VIA EMAILJS) ---
+    function loginOwnerWithPassword() {
+        const email = document.getElementById('login-email').value.trim().toLowerCase();
+        const pass = document.getElementById('login-password').value;
+
+        if(!email || !pass) {
+            alert('Please enter email and password.');
+            return;
+        }
+
+        if(ownerAccounts[email] && ownerAccounts[email] === pass) {
+            currentSessionUser = email;
+            localStorage.setItem('pec_current_user', currentSessionUser);
+            alert('Login Successful!');
+            showOwnerDashboard();
+        } else {
+            alert('Invalid email or password!');
+        }
+    }
+
+    function showForgotPasswordModal() {
+        const email = prompt("Enter your registered owner email for password reset OTP:");
+        if(email && email.includes('@')) {
+            let cleanEmail = email.trim().toLowerCase();
+            if(ownerAccounts[cleanEmail]) {
+                generateAndSendOTP(cleanEmail, 'forgot');
+            } else {
+                alert('Email not found in owner database.');
+            }
+        }
+    }
+
     function generateAndSendOTP(email, mode) {
         pendingEmail = email;
         authMode = mode;
-        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit OTP
+        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
         let templateParams = {
             to_email: email,
             otp_code: generatedOTP,
+            time: new Date().toLocaleTimeString(),
             message: "Your OTP code for Prasanta Engineering & Contractor is: " + generatedOTP
         };
 
-        let serviceID = "service_33ql72e";
-        let templateID = "template_qs9fv3s";
-
-        emailjs.send(serviceID, templateID, templateParams)
+        emailjs.send("service_33ql72e", "template_qs9fv3s", templateParams)
             .then(function(response) {
                 alert('OTP sent successfully to your email: ' + email);
                 hideAllScreens();
                 document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
                 document.getElementById('screen-otp').classList.remove('hidden');
             }, function(error) {
-                alert('EmailJS Error: ' + JSON.stringify(error) + ' (Simulation OTP: ' + generatedOTP + ')');
+                alert('EmailJS simulation OTP: ' + generatedOTP);
                 hideAllScreens();
                 document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
                 document.getElementById('screen-otp').classList.remove('hidden');
             });
-    }
-
-    function requestLoginOTP() {
-        const email = document.getElementById('login-email').value.trim().toLowerCase();
-        if(!email || !email.includes('@')) {
-            alert('Please enter a valid email address.');
-            return;
-        }
-
-        if(registeredUsers.includes(email)) {
-            generateAndSendOTP(email, 'login');
-        } else {
-            alert('Email not found! Please register first.');
-            showRegisterScreen();
-        }
     }
 
     function requestRegisterOTP() {
@@ -412,39 +441,46 @@
             return;
         }
 
-        if(registeredUsers.includes(email)) {
-            alert('Email already registered! Please login instead.');
+        if(ownerAccounts[email]) {
+            alert('Email already registered! Please login.');
             showLoginScreen();
             return;
         }
 
-        pendingRegistrationData = { email: email };
+        pendingPassword = pass;
         generateAndSendOTP(email, 'register');
     }
 
     function verifyOTP() {
         const userOTP = document.getElementById('entered-otp').value.trim();
         if(userOTP === generatedOTP) {
-            alert('Email verified successfully!');
+            alert('Verification successful!');
             document.getElementById('entered-otp').value = "";
 
             if(authMode === 'register') {
-                registeredUsers.push(pendingRegistrationData.email);
-                localStorage.setItem('pec_users', JSON.stringify(registeredUsers));
+                ownerAccounts[pendingEmail] = pendingPassword;
+                localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
+            } else if(authMode === 'forgot') {
+                let newPass = prompt("Enter your new password:");
+                if(newPass) {
+                    ownerAccounts[pendingEmail] = newPass;
+                    localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
+                    alert('Password updated successfully!');
+                }
             }
 
             currentSessionUser = pendingEmail;
             localStorage.setItem('pec_current_user', currentSessionUser);
-            showRoleSelector(currentSessionUser);
+            showOwnerDashboard();
         } else {
             alert('Invalid OTP! Please try again.');
         }
     }
 
-    function showRoleSelector(email) {
+    function showOwnerDashboard() {
         hideAllScreens();
-        document.getElementById('logged-user-info').innerText = "Logged in as: " + email;
-        document.getElementById('screen-role-select').classList.remove('hidden');
+        document.getElementById('screen-owner-dashboard').classList.remove('hidden');
+        renderEmployeeList();
     }
 
     function logoutApp() {
@@ -453,23 +489,9 @@
         backToWelcome();
     }
 
-    function openOwnerPortal() {
-        hideAllScreens();
-        document.getElementById('screen-owner-dashboard').classList.remove('hidden');
-        renderEmployeeList();
-    }
-
     function openEmployeePortalSelect() {
-        if(currentLoggedInEmpId) {
-            loadEmployeeDashboard(currentLoggedInEmpId);
-        } else {
-            hideAllScreens();
-            document.getElementById('screen-emp-login').classList.remove('hidden');
-        }
-    }
-
-    function backToRoleSelect() {
-        showRoleSelector(currentSessionUser);
+        hideAllScreens();
+        document.getElementById('screen-emp-login').classList.remove('hidden');
     }
 
     function switchOwnerTab(tab) {
@@ -484,56 +506,81 @@
             document.getElementById('owner-tab-add').classList.remove('hidden');
             document.getElementById('tab-btn-home').classList.add('secondary');
             document.getElementById('tab-btn-add').classList.remove('secondary');
+            
+            // Clear form for new entry
+            document.getElementById('form-title-text').innerText = "Add Employee Details";
+            document.getElementById('edit-emp-index').value = "";
+            document.getElementById('emp-name').value = "";
+            document.getElementById('emp-dob').value = "";
+            document.getElementById('emp-aadhaar').value = "";
+            document.getElementById('emp-joining').value = "";
+            document.getElementById('emp-position').value = "";
+            document.getElementById('emp-salary').value = "";
+            document.getElementById('emp-photo').value = "";
         }
     }
 
-    function saveNewEmployee() {
+    // --- 3 & 4. EMPLOYEE CRUD: ADD, EDIT, DELETE & SALARY ---
+    function saveEmployeeData() {
         const name = document.getElementById('emp-name').value;
         const dob = document.getElementById('emp-dob').value;
         const aadhaar = document.getElementById('emp-aadhaar').value;
         const joining = document.getElementById('emp-joining').value;
         const position = document.getElementById('emp-position').value;
+        const salary = document.getElementById('emp-salary').value || "Not Assigned"; // Optional salary
         const photoInput = document.getElementById('emp-photo');
+        const editIndex = document.getElementById('edit-emp-index').value;
 
         if(!name || !position) {
             alert('Please fill Name and Position.');
             return;
         }
 
-        const newId = "PEC-EMP-" + Math.floor(100 + Math.random() * 900);
-        
         let reader = new FileReader();
         if(photoInput.files && photoInput.files[0]) {
             reader.readAsDataURL(photoInput.files[0]);
             reader.onload = function(e) {
-                pushEmployeeData(newId, name, dob, aadhaar, joining, position, e.target.result);
+                processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, e.target.result);
             }
         } else {
-            pushEmployeeData(newId, name, dob, aadhaar, joining, position, "");
+            let existingPhoto = "";
+            if(editIndex !== "") {
+                existingPhoto = employees[editIndex].photo;
+            }
+            processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, existingPhoto);
         }
     }
 
-    function pushEmployeeData(id, name, dob, aadhaar, joining, position, photo) {
-        employees.push({
-            id: id,
-            name: name,
-            dob: dob,
-            aadhaar: aadhaar || "N/A",
-            joining: joining,
-            position: position,
-            photo: photo,
-            attendance: {}
-        });
+    function processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, photo) {
+        if(editIndex !== "") {
+            // Edit existing employee
+            let idx = parseInt(editIndex);
+            employees[idx].name = name;
+            employees[idx].dob = dob;
+            employees[idx].aadhaar = aadhaar || "N/A";
+            employees[idx].joining = joining;
+            employees[idx].position = position;
+            employees[idx].salary = salary;
+            if(photo) employees[idx].photo = photo;
+            alert('Employee updated successfully!');
+        } else {
+            // Add new employee
+            const newId = "PEC-EMP-" + Math.floor(100 + Math.random() * 900);
+            employees.push({
+                id: newId,
+                name: name,
+                dob: dob,
+                aadhaar: aadhaar || "N/A",
+                joining: joining,
+                position: position,
+                salary: salary,
+                photo: photo,
+                attendance: {}
+            });
+            alert('Employee created successfully! ID: ' + newId);
+        }
 
         localStorage.setItem('pec_employees', JSON.stringify(employees));
-        alert('Employee created successfully! ID: ' + id);
-        
-        document.getElementById('emp-name').value = "";
-        document.getElementById('emp-dob').value = "";
-        document.getElementById('emp-aadhaar').value = "";
-        document.getElementById('emp-joining').value = "";
-        document.getElementById('emp-position').value = "";
-        document.getElementById('emp-photo').value = "";
         switchOwnerTab('home');
     }
 
@@ -545,11 +592,19 @@
             return;
         }
 
-        employees.forEach(emp => {
+        employees.forEach((emp, index) => {
             let div = document.createElement('div');
-            div.style.cssText = "padding: 10px; border-bottom: 1px solid #ddd; margin-top: 5px; cursor: pointer;";
-            div.innerHTML = `<strong>${emp.name}</strong> (${emp.id})<br><small>Position: ${emp.position} | Joining: ${emp.joining || 'N/A'}</small>`;
-            div.onclick = () => openEmployeeModal(emp.id);
+            div.style.cssText = "padding: 12px; border-bottom: 1px solid #ddd; margin-top: 5px;";
+            div.innerHTML = `
+                <div style="cursor: pointer;" onclick="openEmployeeModal('${emp.id}')">
+                    <strong>${emp.name}</strong> (${emp.id})<br>
+                    <small>Position: ${emp.position} | Salary: ${emp.salary}</small>
+                </div>
+                <div class="action-btn-group">
+                    <button class="secondary" onclick="editEmployee(${index})">Edit</button>
+                    <button class="danger" onclick="deleteEmployee(${index})">Delete</button>
+                </div>
+            `;
             container.appendChild(div);
         });
     }
@@ -560,13 +615,47 @@
         container.innerHTML = "";
         
         let filtered = employees.filter(e => e.name.toLowerCase().includes(query) || e.id.toLowerCase().includes(query));
-        filtered.forEach(emp => {
+        filtered.forEach((emp) => {
+            let originalIndex = employees.findIndex(item => item.id === emp.id);
             let div = document.createElement('div');
-            div.style.cssText = "padding: 10px; border-bottom: 1px solid #ddd; margin-top: 5px; cursor: pointer;";
-            div.innerHTML = `<strong>${emp.name}</strong> (${emp.id})<br><small>Position: ${emp.position}</small>`;
-            div.onclick = () => openEmployeeModal(emp.id);
+            div.style.cssText = "padding: 12px; border-bottom: 1px solid #ddd; margin-top: 5px;";
+            div.innerHTML = `
+                <div style="cursor: pointer;" onclick="openEmployeeModal('${emp.id}')">
+                    <strong>${emp.name}</strong> (${emp.id})<br>
+                    <small>Position: ${emp.position} | Salary: ${emp.salary}</small>
+                </div>
+                <div class="action-btn-group">
+                    <button class="secondary" onclick="editEmployee(${originalIndex})">Edit</button>
+                    <button class="danger" onclick="deleteEmployee(${originalIndex})">Delete</button>
+                </div>
+            `;
             container.appendChild(div);
         });
+    }
+
+    function editEmployee(index) {
+        const emp = employees[index];
+        document.getElementById('form-title-text').innerText = "Edit Employee Details";
+        document.getElementById('edit-emp-index').value = index;
+        document.getElementById('emp-name').value = emp.name;
+        document.getElementById('emp-dob').value = emp.dob || "";
+        document.getElementById('emp-aadhaar').value = emp.aadhaar !== "N/A" ? emp.aadhaar : "";
+        document.getElementById('emp-joining').value = emp.joining || "";
+        document.getElementById('emp-position').value = emp.position;
+        document.getElementById('emp-salary').value = emp.salary !== "Not Assigned" ? emp.salary : "";
+        
+        document.getElementById('owner-tab-home').classList.add('hidden');
+        document.getElementById('owner-tab-add').classList.remove('hidden');
+        document.getElementById('tab-btn-home').classList.add('secondary');
+        document.getElementById('tab-btn-add').classList.remove('secondary');
+    }
+
+    function deleteEmployee(index) {
+        if(confirm("Are you sure you want to delete this employee?")) {
+            employees.splice(index, 1);
+            localStorage.setItem('pec_employees', JSON.stringify(employees));
+            renderEmployeeList();
+        }
     }
 
     function openEmployeeModal(empId) {
@@ -578,9 +667,9 @@
             <p><strong>ID:</strong> ${emp.id}</p>
             <p><strong>Name:</strong> ${emp.name}</p>
             <p><strong>Position:</strong> ${emp.position}</p>
+            <p><strong>Salary:</strong> ${emp.salary}</p>
             <p><strong>DOB:</strong> ${emp.dob || 'N/A'}</p>
             <p><strong>Joining:</strong> ${emp.joining || 'N/A'}</p>
-            <p><strong>Aadhar:</strong> ${emp.aadhaar}</p>
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
     }
@@ -589,6 +678,7 @@
         document.getElementById('employee-modal').classList.add('hidden');
     }
 
+    // --- EMPLOYEE PORTAL LOGIN & ATTENDANCE ---
     function loginEmployee() {
         const idInput = document.getElementById('emp-login-id').value.trim();
         const found = employees.find(e => e.id.toLowerCase() === idInput.toLowerCase());
@@ -605,7 +695,7 @@
         currentLoggedInEmpId = null;
         localStorage.removeItem('pec_current_emp');
         stopCamera();
-        showRoleSelector(currentSessionUser);
+        backToWelcome();
     }
 
     function loadEmployeeDashboard(empId) {
@@ -619,9 +709,9 @@
                 <p><strong>Employee ID:</strong> ${emp.id}</p>
                 <p><strong>Full Name:</strong> ${emp.name}</p>
                 <p><strong>Position:</strong> ${emp.position}</p>
+                <p><strong>Salary:</strong> ${emp.salary}</p>
                 <p><strong>Date of Birth:</strong> ${emp.dob || 'N/A'}</p>
                 <p><strong>Joining Date:</strong> ${emp.joining || 'N/A'}</p>
-                <p><strong>Aadhaar Status:</strong> ${emp.aadhaar}</p>
             `;
             switchEmpTab('profile');
         }
@@ -644,15 +734,18 @@
         }
     }
 
+    // --- 2. CAMERA FIX (Live stream + Mobile fallback backup upload support) ---
     let videoStream = null;
     function startCamera() {
         const video = document.getElementById('camera-preview');
-        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
             .then(stream => {
                 videoStream = stream;
                 video.srcObject = stream;
             })
-            .catch(err => console.log("Camera error"));
+            .catch(err => {
+                console.log("Webcam live feed blocked or unsupported. Mobile file capture input available as fallback.");
+            });
     }
 
     function stopCamera() {
@@ -674,6 +767,7 @@
         switchEmpTab('history');
     }
 
+    // --- CALENDAR & SALARY CALCULATION VIEW ---
     function renderCalendar() {
         const container = document.getElementById('calendar-days-container');
         container.innerHTML = "";
@@ -712,9 +806,18 @@
             container.appendChild(cell);
         }
 
+        // Salary Estimation Calculation based on Present days
+        let calculatedEarnings = "N/A";
+        let baseSalary = parseFloat(emp.salary);
+        if(!isNaN(baseSalary)) {
+            let dailyRate = baseSalary / 30;
+            calculatedEarnings = "₹ " + Math.round(dailyRate * presentCount);
+        }
+
         document.getElementById('attendance-summary-count').innerHTML = `
-            <span class="badge badge-blue">Present: ${presentCount}</span> 
-            <span class="badge badge-red">Absent: ${absentCount}</span>
+            <span class="badge badge-blue">Present: ${presentCount} Days</span> 
+            <span class="badge badge-red">Absent: ${absentCount} Days</span><br><br>
+            <strong>Estimated Salary for Month:</strong> ${calculatedEarnings}
         `;
     }
 </script>
