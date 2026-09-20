@@ -8,7 +8,6 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
-            // Initialized with your EmailJS Public Key
             emailjs.init("dx_EZ5roIzsVPTokP");
         })();
     </script>
@@ -126,10 +125,10 @@
             margin-top: 15px;
         }
         .cal-day {
-            padding: 10px 0;
+            padding: 8px 0;
             border-radius: 4px;
             background: #eee;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
         }
         .cal-day.present { background: var(--blue); color: white; }
@@ -143,8 +142,64 @@
             align-items: center;
             z-index: 100;
         }
-        .action-btn-group { display: flex; gap: 5px; margin-top: 5px; }
-        .action-btn-group button { padding: 6px; font-size: 12px; margin: 0; }
+        
+        /* 3-Dot Menu Styles */
+        .emp-item-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .menu-container {
+            position: relative;
+        }
+        .dots-btn {
+            background: none;
+            border: none;
+            color: var(--ink);
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 8px;
+            width: auto;
+            margin: 0;
+        }
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 30px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 10;
+            width: 100px;
+        }
+        .dropdown-menu.show {
+            display: block;
+        }
+        .dropdown-menu button {
+            background: none;
+            color: var(--ink);
+            border: none;
+            width: 100%;
+            text-align: left;
+            padding: 8px 12px;
+            font-size: 14px;
+            margin: 0;
+            border-radius: 0;
+        }
+        .dropdown-menu button:hover {
+            background: #f1f1f1;
+        }
+        .dropdown-menu button.delete-opt {
+            color: var(--red);
+        }
     </style>
 </head>
 <body>
@@ -209,19 +264,19 @@
                 <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employee</button>
             </div>
 
-            <!-- Owner Tab 1: Home / Employees List & Management -->
+            <!-- Owner Tab 1: Home / Employees List & Filter -->
             <div id="owner-tab-home" class="card">
                 <h3>Manage Employees</h3>
-                <input type="text" id="search-employee" placeholder="Search employee by name or ID..." onkeyup="filterEmployees()">
+                <input type="text" id="search-employee" placeholder="Filter by employee name or ID..." onkeyup="filterEmployees()">
                 <div id="employee-list-container"></div>
             </div>
 
-            <!-- Owner Tab 2: Add / Edit Employees (with optional salary) -->
+            <!-- Owner Tab 2: Add / Edit Employees -->
             <div id="owner-tab-add" class="card hidden">
                 <h3 id="form-title-text">Add Employee Details</h3>
                 <input type="hidden" id="edit-emp-index" value="">
                 
-                <label>Employee Photo Upload (Camera Capture Supported)</label>
+                <label>Employee Photo Upload</label>
                 <input type="file" id="emp-photo" accept="image/*" capture="environment">
                 
                 <label>Employee Name *</label>
@@ -256,7 +311,7 @@
             <button class="secondary" onclick="backToWelcome()">Back</button>
         </div>
 
-        <!-- EMPLOYEE DASHBOARD (Profile, Attendance Camera/File Capture, Calendar & Salary Calculation) -->
+        <!-- EMPLOYEE DASHBOARD -->
         <div id="screen-emp-dashboard" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin:0;" id="emp-welcome-title">Employee Portal</h3>
@@ -275,20 +330,19 @@
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance Camera Live Feed & Mobile Backup File Upload -->
+            <!-- Employee Tab 2: Attendance Camera -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Attendance</h3>
                 <p style="font-size: 13px; color: #666;">Camera verification for today's attendance.</p>
                 <div style="text-align: center; margin-bottom: 15px; background: #000; border-radius: 6px; overflow: hidden; min-height: 200px; display: flex; align-items: center; justify-content: center; position: relative;">
                     <video id="camera-preview" autoplay playsinline style="width: 100%; max-height: 200px; object-fit: cover;"></video>
                 </div>
-                <!-- Fallback / Direct Camera Upload for restricted mobile browsers -->
                 <label style="font-size: 13px;">Or snap/upload photo directly:</label>
                 <input type="file" id="emp-attendance-file" accept="image/*" capture="environment">
                 <button onclick="captureSelfieAttendance()">Submit Today's Attendance</button>
             </div>
 
-            <!-- Employee Tab 3: Attendance Calendar & Calculation -->
+            <!-- Employee Tab 3: Calendar & Calculation -->
             <div id="emp-pane-history" class="card hidden">
                 <h3>Attendance Calendar & Salary Calculation</h3>
                 <div class="flex-row">
@@ -322,17 +376,16 @@
     </div>
 </div>
 
-<!-- Modal for Viewing Detailed Info -->
+<!-- Modal for Owner to View Detailed Employee Info & Attendance History -->
 <div id="employee-modal" class="modal hidden">
-    <div class="card" style="width: 90%; max-width: 400px; background: white;">
-        <span style="float: right; font-size: 20px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
-        <h3 style="margin-top:0;">Employee Info</h3>
+    <div class="card" style="width: 92%; max-width: 420px; background: white; max-height: 90vh; overflow-y: auto;">
+        <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
+        <h3 style="margin-top:0;">Employee Details & Attendance</h3>
         <div id="modal-body-content"></div>
     </div>
 </div>
 
 <script>
-    // Data structures saved in LocalStorage
     let ownerAccounts = JSON.parse(localStorage.getItem('pec_owner_accounts')) || {
         "aratakumarsahoo3@gmail.com": "admin123",
         "admin@pec.com": "password"
@@ -351,6 +404,18 @@
     window.onload = function() {
         if(currentSessionUser) {
             showOwnerDashboard();
+        }
+        // Close dropdown menus when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.dots-btn')) {
+                let dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    let openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
         }
     };
 
@@ -373,7 +438,6 @@
         document.getElementById('screen-register').classList.remove('hidden');
     }
 
-    // --- 1. OWNER PASSWORD LOGIN & FORGOT PASSWORD (VIA EMAILJS) ---
     function loginOwnerWithPassword() {
         const email = document.getElementById('login-email').value.trim().toLowerCase();
         const pass = document.getElementById('login-password').value;
@@ -507,7 +571,6 @@
             document.getElementById('tab-btn-home').classList.add('secondary');
             document.getElementById('tab-btn-add').classList.remove('secondary');
             
-            // Clear form for new entry
             document.getElementById('form-title-text').innerText = "Add Employee Details";
             document.getElementById('edit-emp-index').value = "";
             document.getElementById('emp-name').value = "";
@@ -520,14 +583,13 @@
         }
     }
 
-    // --- 3 & 4. EMPLOYEE CRUD: ADD, EDIT, DELETE & SALARY ---
     function saveEmployeeData() {
         const name = document.getElementById('emp-name').value;
         const dob = document.getElementById('emp-dob').value;
         const aadhaar = document.getElementById('emp-aadhaar').value;
         const joining = document.getElementById('emp-joining').value;
         const position = document.getElementById('emp-position').value;
-        const salary = document.getElementById('emp-salary').value || "Not Assigned"; // Optional salary
+        const salary = document.getElementById('emp-salary').value || "Not Assigned";
         const photoInput = document.getElementById('emp-photo');
         const editIndex = document.getElementById('edit-emp-index').value;
 
@@ -553,7 +615,6 @@
 
     function processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, photo) {
         if(editIndex !== "") {
-            // Edit existing employee
             let idx = parseInt(editIndex);
             employees[idx].name = name;
             employees[idx].dob = dob;
@@ -564,7 +625,6 @@
             if(photo) employees[idx].photo = photo;
             alert('Employee updated successfully!');
         } else {
-            // Add new employee
             const newId = "PEC-EMP-" + Math.floor(100 + Math.random() * 900);
             employees.push({
                 id: newId,
@@ -584,6 +644,7 @@
         switchOwnerTab('home');
     }
 
+    // --- RENDER EMPLOYEE LIST WITH 3-DOT MENU ---
     function renderEmployeeList() {
         const container = document.getElementById('employee-list-container');
         container.innerHTML = "";
@@ -594,43 +655,72 @@
 
         employees.forEach((emp, index) => {
             let div = document.createElement('div');
-            div.style.cssText = "padding: 12px; border-bottom: 1px solid #ddd; margin-top: 5px;";
+            div.className = "emp-item-card";
             div.innerHTML = `
-                <div style="cursor: pointer;" onclick="openEmployeeModal('${emp.id}')">
-                    <strong>${emp.name}</strong> (${emp.id})<br>
-                    <small>Position: ${emp.position} | Salary: ${emp.salary}</small>
+                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
+                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
+                    <div>
+                        <strong>${emp.name}</strong> (${emp.id})<br>
+                        <small style="color: #666;">${emp.position}</small>
+                    </div>
                 </div>
-                <div class="action-btn-group">
-                    <button class="secondary" onclick="editEmployee(${index})">Edit</button>
-                    <button class="danger" onclick="deleteEmployee(${index})">Delete</button>
+                <div class="menu-container">
+                    <button class="dots-btn" onclick="toggleMenu(event, ${index})">&#8942;</button>
+                    <div id="dropdown-menu-${index}" class="dropdown-menu">
+                        <button onclick="editEmployee(${index})">Edit</button>
+                        <button class="delete-opt" onclick="deleteEmployee(${index})">Delete</button>
+                    </div>
                 </div>
             `;
             container.appendChild(div);
         });
     }
 
+    // --- FILTER EMPLOYEES BY NAME OR ID ---
     function filterEmployees() {
         let query = document.getElementById('search-employee').value.toLowerCase();
         let container = document.getElementById('employee-list-container');
         container.innerHTML = "";
         
         let filtered = employees.filter(e => e.name.toLowerCase().includes(query) || e.id.toLowerCase().includes(query));
+        if(filtered.length === 0) {
+            container.innerHTML = "<p>No matching employees found.</p>";
+            return;
+        }
+
         filtered.forEach((emp) => {
             let originalIndex = employees.findIndex(item => item.id === emp.id);
             let div = document.createElement('div');
-            div.style.cssText = "padding: 12px; border-bottom: 1px solid #ddd; margin-top: 5px;";
+            div.className = "emp-item-card";
             div.innerHTML = `
-                <div style="cursor: pointer;" onclick="openEmployeeModal('${emp.id}')">
-                    <strong>${emp.name}</strong> (${emp.id})<br>
-                    <small>Position: ${emp.position} | Salary: ${emp.salary}</small>
+                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
+                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
+                    <div>
+                        <strong>${emp.name}</strong> (${emp.id})<br>
+                        <small style="color: #666;">${emp.position}</small>
+                    </div>
                 </div>
-                <div class="action-btn-group">
-                    <button class="secondary" onclick="editEmployee(${originalIndex})">Edit</button>
-                    <button class="danger" onclick="deleteEmployee(${originalIndex})">Delete</button>
+                <div class="menu-container">
+                    <button class="dots-btn" onclick="toggleMenu(event, ${originalIndex})">&#8942;</button>
+                    <div id="dropdown-menu-${originalIndex}" class="dropdown-menu">
+                        <button onclick="editEmployee(${originalIndex})">Edit</button>
+                        <button class="delete-opt" onclick="deleteEmployee(${originalIndex})">Delete</button>
+                    </div>
                 </div>
             `;
             container.appendChild(div);
         });
+    }
+
+    function toggleMenu(event, index) {
+        event.stopPropagation();
+        // Hide all other open menus
+        let dropdowns = document.getElementsByClassName("dropdown-menu");
+        for (let i = 0; i < dropdowns.length; i++) {
+            if (i !== index) dropdowns[i].classList.remove('show');
+        }
+        let menu = document.getElementById(`dropdown-menu-${index}`);
+        menu.classList.toggle('show');
     }
 
     function editEmployee(index) {
@@ -658,18 +748,59 @@
         }
     }
 
-    function openEmployeeModal(empId) {
+    // --- OWNER VIEW FOR EMPLOYEE DETAILS & ATTENDANCE HISTORY (WITH PHOTO, PRESENT/ABSENT COUNT) ---
+    function openOwnerEmployeeDetailModal(empId) {
         const emp = employees.find(e => e.id === empId);
         if(!emp) return;
 
+        // Current month & year calendar calculation for preview
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        
+        let firstDayIndex = new Date(year, month, 1).getDay();
+        let daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        let presentCount = 0;
+        let absentCount = 0;
+
+        let calHtml = `<div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; color:#555;"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>`;
+        calHtml += `<div class="calendar-grid" id="modal-cal-days">`;
+
+        for(let i = 0; i < firstDayIndex; i++) {
+            calHtml += `<div></div>`;
+        }
+
+        for(let d = 1; d <= daysInMonth; d++) {
+            let fullDateStr = `${year}-${month}-${d}`;
+            let status = emp.attendance[fullDateStr];
+            let cls = "cal-day";
+            if(status === 'present') {
+                cls += " present";
+                presentCount++;
+            } else {
+                cls += " absent";
+                absentCount++;
+            }
+            calHtml += `<div class="${cls}">${d}</div>`;
+        }
+        calHtml += `</div>`;
+
         document.getElementById('modal-body-content').innerHTML = `
-            ${emp.photo ? `<img src="${emp.photo}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 10px;">` : ''}
-            <p><strong>ID:</strong> ${emp.id}</p>
-            <p><strong>Name:</strong> ${emp.name}</p>
-            <p><strong>Position:</strong> ${emp.position}</p>
+            <div style="text-align: center; margin-bottom: 15px;">
+                ${emp.photo ? `<img src="${emp.photo}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 8px;">` : `<div style="width: 80px; height: 80px; border-radius: 50%; background: #ccc; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">${emp.name.charAt(0)}</div>`}
+                <h4 style="margin:0;">${emp.name}</h4>
+                <small style="color: #666;">ID: ${emp.id} | ${emp.position}</small>
+            </div>
             <p><strong>Salary:</strong> ${emp.salary}</p>
-            <p><strong>DOB:</strong> ${emp.dob || 'N/A'}</p>
-            <p><strong>Joining:</strong> ${emp.joining || 'N/A'}</p>
+            <p><strong>DOB:</strong> ${emp.dob || 'N/A'} | <strong>Joining:</strong> ${emp.joining || 'N/A'}</p>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+            <h4 style="margin-bottom: 5px;">Current Month Attendance</h4>
+            <div style="margin-bottom: 10px;">
+                <span class="badge badge-blue">Present: ${presentCount} Days</span> 
+                <span class="badge badge-red">Absent: ${absentCount} Days</span>
+            </div>
+            ${calHtml}
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
     }
@@ -678,7 +809,6 @@
         document.getElementById('employee-modal').classList.add('hidden');
     }
 
-    // --- EMPLOYEE PORTAL LOGIN & ATTENDANCE ---
     function loginEmployee() {
         const idInput = document.getElementById('emp-login-id').value.trim();
         const found = employees.find(e => e.id.toLowerCase() === idInput.toLowerCase());
@@ -734,7 +864,6 @@
         }
     }
 
-    // --- 2. CAMERA FIX (Live stream + Mobile fallback backup upload support) ---
     let videoStream = null;
     function startCamera() {
         const video = document.getElementById('camera-preview');
@@ -744,7 +873,7 @@
                 video.srcObject = stream;
             })
             .catch(err => {
-                console.log("Webcam live feed blocked or unsupported. Mobile file capture input available as fallback.");
+                console.log("Webcam live feed blocked or unsupported.");
             });
     }
 
@@ -767,7 +896,6 @@
         switchEmpTab('history');
     }
 
-    // --- CALENDAR & SALARY CALCULATION VIEW ---
     function renderCalendar() {
         const container = document.getElementById('calendar-days-container');
         container.innerHTML = "";
@@ -806,7 +934,6 @@
             container.appendChild(cell);
         }
 
-        // Salary Estimation Calculation based on Present days
         let calculatedEarnings = "N/A";
         let baseSalary = parseFloat(emp.salary);
         if(!isNaN(baseSalary)) {
