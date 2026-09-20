@@ -1,39 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prasanta Engineering & Contractor - Attendance System</title>
-    <style>
-        :root {
-            --bg: #FFFFFF;
-            --panel: #F8F9FA;
-            --ink: #1C2430;
-            --navy: #1D3557;
-            --amber: #D98E2B;
-            --blue: #2A6F97;
-            --red: #E63946;
-            --green: #2A9D8F;
-            --border: #DEE2E6;
-        }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--ink);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 480px;
-            background: var(--bg);
-            min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
-            display: flex;
             flex-direction: column;
             box-sizing: border-box;
         }
@@ -529,3 +493,134 @@
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prasanta Engineering & Contractor - Attendance System</title>
+    <style>
+        :root {
+            --bg: #FFFFFF;
+            --panel: #F5F7F9;
+            --ink: #1C2430;
+            --navy: #1D3557;
+            --amber: #D98E2B;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--ink);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: var(--panel);
+            padding: 24px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            text-align: center;
+            box-sizing: border-box;
+        }
+        h2 {
+            margin-top: 0;
+            color: var(--navy);
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: var(--navy);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        button.secondary {
+            background-color: var(--amber);
+        }
+        .info-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Email Verification Screen -->
+    <div class="card" id="auth-screen">
+        <h2>PEC Attendance</h2>
+        <p class="info-text">Please enter your email to continue</p>
+        <input type="email" id="user-email" placeholder="Enter your email address">
+        <button onclick="handleVerification()">Verify Email</button>
+    </div>
+
+    <!-- 2. Old Owner Login Screen -->
+    <div class="card" id="login-screen" style="display:none;">
+        <h2>Owner Login</h2>
+        <p class="info-text" id="display-email"></p>
+        <input type="password" placeholder="Enter Password">
+        <button onclick="alert('Login Successful!')">Login</button>
+        <button class="secondary" onclick="backToVerify()">Back</button>
+    </div>
+
+    <!-- 3. New Owner Register Screen -->
+    <div class="card" id="register-screen" style="display:none;">
+        <h2>New Owner Registration</h2>
+        <p class="info-text" id="display-reg-email"></p>
+        <input type="text" placeholder="Full Name">
+        <input type="password" placeholder="Create Password">
+        <button onclick="alert('Registration Successful!')">Register</button>
+        <button class="secondary" onclick="backToVerify()">Back</button>
+    </div>
+
+    <script>
+        // Old owner registered email list (Apni ebe chahinle eithi email change ba add kari paribe)
+        const oldOwners = ["kumararat912@gmail.com", "admin@pec.com"];
+
+        function handleVerification() {
+            const emailInput = document.getElementById('user-email').value.trim();
+            if(!emailInput) {
+                alert('Please enter a valid email address!');
+                return;
+            }
+
+            // Check if email belongs to old owner
+            if(oldOwners.includes(emailInput.toLowerCase())) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('display-email').innerText = "Welcome back! Login for: " + emailInput;
+                document.getElementById('login-screen').style.display = 'block';
+            } else {
+                // New owner registration flow
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('display-reg-email').innerText = "Register new account for: " + emailInput;
+                document.getElementById('register-screen').style.display = 'block';
+            }
+        }
+
+        function backToVerify() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('register-screen').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
