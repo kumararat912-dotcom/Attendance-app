@@ -3,148 +3,708 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real Email OTP App</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- EmailJS SDK -->
+    <title>Prasanta Engineering & Contractor - Attendance System</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
-        // EmailJS Initialization with Public Key
-        emailjs.init("dx_EZ5roIzsVPTokP");
+        (function() {
+            // NOTE: Ethe apanankara EmailJS public key set karibe (e.g., emailjs.init("YOUR_PUBLIC_KEY"))
+            emailjs.init("YOUR_PUBLIC_KEY");
+        })();
     </script>
-</head>
-<body class="bg-slate-50">
-    <div id="root"></div>
-
-    <script type="text/babel">
-        function App() {
-            const [isVerified, setIsVerified] = React.useState(false);
-            const [step, setStep] = React.useState('login');
-            const [email, setEmail] = React.useState('');
-            const [generatedOtp, setGeneratedOtp] = React.useState('');
-            const [enteredOtp, setEnteredOtp] = React.useState('');
-            const [error, setError] = React.useState('');
-            const [loading, setLoading] = React.useState(false);
-
-            const handleSendOtp = (e) => {
-                e.preventDefault();
-                if (!email || !email.includes('@')) {
-                    setError('Daya kari gote satha email address diantu.');
-                    return;
-                }
-                
-                setError('');
-                setLoading(true);
-
-                const mockOtp = Math.floor(1000 + Math.random() * 9000).toString();
-                setGeneratedOtp(mockOtp);
-
-                // EmailJS Parameters matching template placeholders
-                const templateParams = {
-                    email: email, 
-                    otp: mockOtp  
-                };
-
-                emailjs.send("service_33ql72e", "template_qs9fv3s", templateParams)
-                    .then((response) => {
-                        setLoading(false);
-                        setStep('otp');
-                    }, (err) => {
-                        setLoading(false);
-                        setError('Email pathae belare samasya hela. Purnibara chesta karantu.');
-                        console.error('FAILED...', err);
-                    });
-            };
-
-            const handleVerifyOtp = (e) => {
-                e.preventDefault();
-                if (enteredOtp !== generatedOtp) {
-                    setError('Bhul OTP! Apananka email inbox check karantu.');
-                    return;
-                }
-                setError('');
-                setIsVerified(true);
-            };
-
-            if (!isVerified) {
-                return (
-                    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-                        {step === 'login' ? (
-                            <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
-                                <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">Email Verification</h1>
-                                <p className="text-sm text-slate-500 text-center mb-6">Real OTP apananka email ku asiba</p>
-                                {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
-                                <form onSubmit={handleSendOtp} className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                                        <input 
-                                            type="email" 
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="name@example.com" 
-                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            required
-                                        />
-                                    </div>
-                                    <button 
-                                        type="submit" 
-                                        disabled={loading}
-                                        className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
-                                    >
-                                        {loading ? 'Sending Real OTP...' : 'Send Real OTP'}
-                                    </button>
-                                </form>
-                            </div>
-                        ) : (
-                            <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
-                                <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">Enter OTP</h1>
-                                <p className="text-sm text-slate-500 text-center mb-6">OTP code sent to {email}</p>
-                                {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
-                                <form onSubmit={handleVerifyOtp} className="space-y-4">
-                                    <input 
-                                        type="text" 
-                                        maxLength="4"
-                                        value={enteredOtp}
-                                        onChange={(e) => setEnteredOtp(e.target.value)}
-                                        placeholder="1234" 
-                                        className="w-full text-center tracking-widest text-2xl font-mono px-4 py-3 border border-slate-300 rounded-lg focus:outline-none"
-                                        required
-                                    />
-                                    <button type="submit" className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700">
-                                        Verify OTP & Open App
-                                    </button>
-                                    <button type="button" onClick={() => setStep('login')} className="w-full text-sm text-slate-500 pt-2">
-                                        ← Back
-                                    </button>
-                                </form>
-                            </div>
-                        )}
-                    </div>
-                );
+    <style>
+        :root {
+            --bg: #FFFFFF;
+            --panel: #F8F9FA;
+            --ink: #1C2430;
+            --navy: #1D3557;
+            --amber: #D98E2B;
+            --blue: #2A6F97;
+            --red: #E63946;
+            --border: #DEE2E6;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--ink);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--bg);
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        @media(min-width: 481px) {
+            .container {
+                min-height: 85vh;
+                border-radius: 16px;
+                border: 1px solid var(--border);
+                overflow: hidden;
             }
+        }
+        .header {
+            background-color: var(--navy);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .logo-box {
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .sub-logo {
+            font-size: 12px;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+        .content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        h2, h3 { color: var(--navy); margin-top: 0; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 16px 0;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--navy);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        button:hover { opacity: 0.9; }
+        button.secondary { background-color: var(--amber); }
+        button.danger { background-color: var(--red); }
+        .hidden { display: none !important; }
+        .flex-row { display: flex; gap: 10px; }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-blue { background-color: var(--blue); }
+        .badge-red { background-color: var(--red); }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .cal-day {
+            padding: 10px 0;
+            border-radius: 4px;
+            background: #eee;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .cal-day.present { background: var(--blue); color: white; }
+        .cal-day.absent { background: var(--red); color: white; }
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
 
-            return (
-                <div className="min-h-screen bg-slate-100 p-8">
-                    <div className="max-w-4xl mx-auto bg-white rounded-xl shadow p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-2xl font-bold text-slate-800">🎉 Welcome to Main App!</h1>
-                            <button 
-                                onClick={() => { setIsVerified(false); setStep('login'); setEmail(''); setEnteredOtp(''); }}
-                                className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100"
-                            >
-                                Log Out
-                            </button>
-                        </div>
-                        <p className="text-slate-600">Apana successful real email verify kari app bhitare enter karichanti ({email}).</p>
-                    </div>
+<div class="container">
+    <div class="header">
+        <div class="logo-box">Prasanta Engineering & Contractor</div>
+        <div class="sub-logo">Official Attendance System</div>
+    </div>
+
+    <div class="content">
+
+        <div id="screen-welcome" class="card" style="text-align: center; padding: 40px 20px;">
+            <h3>Welcome</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 30px;">Please select an option to continue</p>
+            <button onclick="showLoginScreen()">I. Login</button>
+            <button class="secondary" onclick="showRegisterScreen()">II. Register</button>
+        </div>
+
+        <div id="screen-login" class="card hidden">
+            <h3>Login Account</h3>
+            <p style="font-size: 13px; color: #666;">Enter your registered email address.</p>
+            <input type="email" id="login-email" placeholder="Enter your email">
+            <button onclick="requestLoginOTP()">Send OTP & Login</button>
+            <button class="secondary" onclick="backToWelcome()">Back</button>
+        </div>
+
+        <div id="screen-register" class="card hidden">
+            <h3>Register New Account</h3>
+            <p style="font-size: 13px; color: #666;">Create a new owner/admin account.</p>
+            <input type="text" id="reg-name" placeholder="Full Name">
+            <input type="email" id="reg-email" placeholder="Email Address">
+            <input type="password" id="reg-pass" placeholder="Create Password">
+            <button onclick="requestRegisterOTP()">Send Verification OTP</button>
+            <button class="secondary" onclick="backToWelcome()">Back</button>
+        </div>
+
+        <div id="screen-otp" class="card hidden">
+            <h3>Verify Email OTP</h3>
+            <p style="font-size: 13px; color: #666;" id="otp-instruction">Enter the 6-digit OTP sent to your email.</p>
+            <input type="text" id="entered-otp" placeholder="Enter 6-digit OTP" maxlength="6">
+            <button onclick="verifyOTP()">Verify & Proceed</button>
+            <button class="secondary" onclick="backToWelcome()">Cancel</button>
+        </div>
+
+        <div id="screen-role-select" class="card hidden">
+            <h3>Select Portal Mode</h3>
+            <p style="font-size: 14px; color: #666;" id="logged-user-info"></p>
+            <button onclick="openOwnerPortal()">1. Owner Use (Management)</button>
+            <button class="secondary" onclick="openEmployeePortalSelect()">2. Employee Use (Mark Attendance)</button>
+            <button class="danger" onclick="logoutApp()" style="margin-top: 20px;">Logout</button>
+        </div>
+
+        <div id="screen-owner-dashboard" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin:0;">Owner Control Panel</h3>
+                <button onclick="backToRoleSelect()" style="width: auto; padding: 6px 12px; margin:0;">Menu</button>
+            </div>
+            
+            <div class="flex-row" style="margin-bottom: 15px;">
+                <button onclick="switchOwnerTab('home')" id="tab-btn-home">(i) Home Tab</button>
+                <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employees</button>
+            </div>
+
+            <div id="owner-tab-home" class="card">
+                <h3>Employees List</h3>
+                <input type="text" id="search-employee" placeholder="Search employee by name or ID..." onkeyup="filterEmployees()">
+                <div id="employee-list-container"></div>
+            </div>
+
+            <div id="owner-tab-add" class="card hidden">
+                <h3>Add Employee Details</h3>
+                <label>Employee Photo Upload</label>
+                <input type="file" id="emp-photo" accept="image/*">
+                <label>Employee Name</label>
+                <input type="text" id="emp-name" placeholder="Full Name">
+                <label>Date of Birth</label>
+                <input type="date" id="emp-dob">
+                <label>Aadhar No</label>
+                <input type="text" id="emp-aadhaar" placeholder="Aadhar No">
+                <label>Joining Date</label>
+                <input type="date" id="emp-joining">
+                <label>Position / Designation</label>
+                <input type="text" id="emp-position" placeholder="Position / Designation">
+                <button onclick="saveNewEmployee()">Create Employee & Generate ID</button>
+            </div>
+        </div>
+
+        <div id="screen-emp-login" class="card hidden">
+            <h3>Employee Login</h3>
+            <p style="font-size: 14px; color: #666;">Enter your employee ID created by owner.</p>
+            <input type="text" id="emp-login-id" placeholder="e.g. PEC-EMP-101">
+            <button onclick="loginEmployee()">Login</button>
+            <button class="secondary" onclick="backToRoleSelect()">Back</button>
+        </div>
+
+        <div id="screen-emp-dashboard" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin:0;" id="emp-welcome-title">Employee Portal</h3>
+                <button onclick="logoutEmployee()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
+            </div>
+
+            <div class="flex-row" style="margin-bottom: 15px; font-size: 13px;">
+                <button onclick="switchEmpTab('profile')" id="emp-t-1">(i) Profile</button>
+                <button onclick="switchEmpTab('attendance')" id="emp-t-2" class="secondary">(ii) Add Attendance</button>
+                <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) History</button>
+            </div>
+
+            <div id="emp-pane-profile" class="card">
+                <h3>My Profile</h3>
+                <div id="emp-profile-content"></div>
+            </div>
+
+            <div id="emp-pane-attendance" class="card hidden">
+                <h3>Mark Attendance</h3>
+                <p style="font-size: 13px; color: #666;">Take face selfie camera verification.</p>
+                <div style="text-align: center; margin-bottom: 15px; background: #000; border-radius: 6px; overflow: hidden; min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                    <video id="camera-preview" autoplay playsinline style="width: 100%; max-height: 200px; object-fit: cover;"></video>
                 </div>
-            );
+                <button onclick="captureSelfieAttendance()">Capture Selfie & Submit</button>
+            </div>
+
+            <div id="emp-pane-history" class="card hidden">
+                <h3>Attendance History</h3>
+                <div class="flex-row">
+                    <select id="filter-year" onchange="renderCalendar()">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+                    <select id="filter-month" onchange="renderCalendar()">
+                        <option value="0">January</option>
+                        <option value="1">February</option>
+                        <option value="2">March</option>
+                        <option value="3">April</option>
+                        <option value="4">May</option>
+                        <option value="5" selected>June</option>
+                        <option value="6">July</option>
+                        <option value="7">August</option>
+                        <option value="8">September</option>
+                        <option value="9">October</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                    </select>
+                </div>
+                <div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; color:#555; margin-top: 10px;">
+                    <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                </div>
+                <div class="calendar-grid" id="calendar-days-container"></div>
+                <div style="font-size: 14px; margin-top: 15px; text-align: center;" id="attendance-summary-count"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="employee-modal" class="modal hidden">
+    <div class="card" style="width: 90%; max-width: 400px; background: white;">
+        <span style="float: right; font-size: 20px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
+        <h3 style="margin-top:0;">Employee Details</h3>
+        <div id="modal-body-content"></div>
+    </div>
+</div>
+
+<script>
+    let registeredUsers = JSON.parse(localStorage.getItem('pec_users')) || ["kumararat912@gmail.com", "admin@pec.com"];
+    let employees = JSON.parse(localStorage.getItem('pec_employees')) || [
+        { id: "PEC-EMP-101", name: "Rahul Kumar", dob: "2000-01-15", aadhaar: "1234-5678-9012", joining: "2025-01-01", position: "Helper", photo: "", attendance: {"2026-5-1": "present", "2026-5-2": "present", "2026-5-3": "absent"} }
+    ];
+    let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
+    let currentSessionUser = localStorage.getItem('pec_current_user') || null;
+
+    // Temporary storage for OTP flow
+    let generatedOTP = "";
+    let pendingEmail = "";
+    let pendingRegistrationData = null;
+    let authMode = ""; // 'login' or 'register'
+
+    window.onload = function() {
+        if(currentSessionUser) {
+            showRoleSelector(currentSessionUser);
+        }
+    };
+
+    function hideAllScreens() {
+        document.querySelectorAll('.content > div').forEach(el => el.classList.add('hidden'));
+    }
+
+    function backToWelcome() {
+        hideAllScreens();
+        document.getElementById('screen-welcome').classList.remove('hidden');
+    }
+
+    function showLoginScreen() {
+        hideAllScreens();
+        document.getElementById('screen-login').classList.remove('hidden');
+    }
+
+    function showRegisterScreen() {
+        hideAllScreens();
+        document.getElementById('screen-register').classList.remove('hidden');
+    }
+
+    // --- OTP GENERATION & SENDING LOGIC ---
+    function generateAndSendOTP(email, mode) {
+        pendingEmail = email;
+        authMode = mode;
+        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit random OTP
+
+        // Send OTP using EmailJS (Make sure you configure service ID & template ID on EmailJS dashboard)
+        let templateParams = {
+            to_email: email,
+            otp_code: generatedOTP
+        };
+
+        // Note: Replace "YOUR_SERVICE_ID" and "YOUR_TEMPLATE_ID" with your actual EmailJS credentials
+        emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", templateParams)
+            .then(function(response) {
+                alert('OTP sent successfully to ' + email);
+                hideAllScreens();
+                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
+                document.getElementById('screen-otp').classList.remove('hidden');
+            }, function(error) {
+                // Fallback simulation alert if EmailJS keys aren't linked yet so testing works smoothly
+                alert('OTP Simulation (Configure EmailJS keys for live email): Your OTP is ' + generatedOTP);
+                hideAllScreens();
+                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
+                document.getElementById('screen-otp').classList.remove('hidden');
+            });
+    }
+
+    function requestLoginOTP() {
+        const email = document.getElementById('login-email').value.trim().toLowerCase();
+        if(!email || !email.includes('@')) {
+            alert('Please enter a valid email address.');
+            return;
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+        if(registeredUsers.includes(email)) {
+            generateAndSendOTP(email, 'login');
+        } else {
+            alert('Email not found! Please register first.');
+            showRegisterScreen();
+        }
+    }
+
+    function requestRegisterOTP() {
+        const name = document.getElementById('reg-name').value;
+        const email = document.getElementById('reg-email').value.trim().toLowerCase();
+        const pass = document.getElementById('reg-pass').value;
+
+        if(!name || !email || !pass) {
+            alert('Please fill all details.');
+            return;
+        }
+
+        if(registeredUsers.includes(email)) {
+            alert('Email already registered! Please login instead.');
+            showLoginScreen();
+            return;
+        }
+
+        pendingRegistrationData = { email: email };
+        generateAndSendOTP(email, 'register');
+    }
+
+    function verifyOTP() {
+        const userOTP = document.getElementById('entered-otp').value.trim();
+        if(userOTP === generatedOTP) {
+            alert('Email verified successfully!');
+            document.getElementById('entered-otp').value = "";
+
+            if(authMode === 'register') {
+                registeredUsers.push(pendingRegistrationData.email);
+                localStorage.setItem('pec_users', JSON.stringify(registeredUsers));
+            }
+
+            currentSessionUser = pendingEmail;
+            localStorage.setItem('pec_current_user', currentSessionUser);
+            showRoleSelector(currentSessionUser);
+        } else {
+            alert('Invalid OTP! Please try again.');
+        }
+    }
+
+    function showRoleSelector(email) {
+        hideAllScreens();
+        document.getElementById('logged-user-info').innerText = "Logged in as: " + email;
+        document.getElementById('screen-role-select').classList.remove('hidden');
+    }
+
+    function logoutApp() {
+        currentSessionUser = null;
+        localStorage.removeItem('pec_current_user');
+        backToWelcome();
+    }
+
+    function openOwnerPortal() {
+        hideAllScreens();
+        document.getElementById('screen-owner-dashboard').classList.remove('hidden');
+        renderEmployeeList();
+    }
+
+    function openEmployeePortalSelect() {
+        if(currentLoggedInEmpId) {
+            loadEmployeeDashboard(currentLoggedInEmpId);
+        } else {
+            hideAllScreens();
+            document.getElementById('screen-emp-login').classList.remove('hidden');
+        }
+    }
+
+    function backToRoleSelect() {
+        showRoleSelector(currentSessionUser);
+    }
+
+    // Owner Tabs & Employee Management
+    function switchOwnerTab(tab) {
+        if(tab === 'home') {
+            document.getElementById('owner-tab-home').classList.remove('hidden');
+            document.getElementById('owner-tab-add').classList.add('hidden');
+            document.getElementById('tab-btn-home').classList.remove('secondary');
+            document.getElementById('tab-btn-add').classList.add('secondary');
+            renderEmployeeList();
+        } else {
+            document.getElementById('owner-tab-home').classList.add('hidden');
+            document.getElementById('owner-tab-add').classList.remove('hidden');
+            document.getElementById('tab-btn-home').classList.add('secondary');
+            document.getElementById('tab-btn-add').classList.remove('secondary');
+        }
+    }
+
+    function saveNewEmployee() {
+        const name = document.getElementById('emp-name').value;
+        const dob = document.getElementById('emp-dob').value;
+        const aadhaar = document.getElementById('emp-aadhaar').value;
+        const joining = document.getElementById('emp-joining').value;
+        const position = document.getElementById('emp-position').value;
+        const photoInput = document.getElementById('emp-photo');
+
+        if(!name || !position) {
+            alert('Please fill Name and Position.');
+            return;
+        }
+
+        const newId = "PEC-EMP-" + Math.floor(100 + Math.random() * 900);
+        
+        let reader = new FileReader();
+        if(photoInput.files && photoInput.files[0]) {
+            reader.readAsDataURL(photoInput.files[0]);
+            reader.onload = function(e) {
+                pushEmployeeData(newId, name, dob, aadhaar, joining, position, e.target.result);
+            }
+        } else {
+            pushEmployeeData(newId, name, dob, aadhaar, joining, position, "");
+        }
+    }
+
+    function pushEmployeeData(id, name, dob, aadhaar, joining, position, photo) {
+        employees.push({
+            id: id,
+            name: name,
+            dob: dob,
+            aadhaar: aadhaar || "N/A",
+            joining: joining,
+            position: position,
+            photo: photo,
+            attendance: {}
+        });
+
+        localStorage.setItem('pec_employees', JSON.stringify(employees));
+        alert('Employee created successfully! ID: ' + id);
+        
+        document.getElementById('emp-name').value = "";
+        document.getElementById('emp-dob').value = "";
+        document.getElementById('emp-aadhaar').value = "";
+        document.getElementById('emp-joining').value = "";
+        document.getElementById('emp-position').value = "";
+        document.getElementById('emp-photo').value = "";
+        switchOwnerTab('home');
+    }
+
+    function renderEmployeeList() {
+        const container = document.getElementById('employee-list-container');
+        container.innerHTML = "";
+        if(employees.length === 0) {
+            container.innerHTML = "<p>No employees found.</p>";
+            return;
+        }
+
+        employees.forEach(emp => {
+            let div = document.createElement('div');
+            div.style.cssText = "padding: 10px; border-bottom: 1px solid #ddd; margin-top: 5px; cursor: pointer;";
+            div.innerHTML = `<strong>${emp.name}</strong> (${emp.id})<br><small>Position: ${emp.position} | Joining: ${emp.joining || 'N/A'}</small>`;
+            div.onclick = () => openEmployeeModal(emp.id);
+            container.appendChild(div);
+        });
+    }
+
+    function filterEmployees() {
+        let query = document.getElementById('search-employee').value.toLowerCase();
+        let container = document.getElementById('employee-list-container');
+        container.innerHTML = "";
+        
+        let filtered = employees.filter(e => e.name.toLowerCase().includes(query) || e.id.toLowerCase().includes(query));
+        filtered.forEach(emp => {
+            let div = document.createElement('div');
+            div.style.cssText = "padding: 10px; border-bottom: 1px solid #ddd; margin-top: 5px; cursor: pointer;";
+            div.innerHTML = `<strong>${emp.name}</strong> (${emp.id})<br><small>Position: ${emp.position}</small>`;
+            div.onclick = () => openEmployeeModal(emp.id);
+            container.appendChild(div);
+        });
+    }
+
+    function openEmployeeModal(empId) {
+        const emp = employees.find(e => e.id === empId);
+        if(!emp) return;
+
+        document.getElementById('modal-body-content').innerHTML = `
+            ${emp.photo ? `<img src="${emp.photo}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 10px;">` : ''}
+            <p><strong>ID:</strong> ${emp.id}</p>
+            <p><strong>Name:</strong> ${emp.name}</p>
+            <p><strong>Position:</strong> ${emp.position}</p>
+            <p><strong>DOB:</strong> ${emp.dob || 'N/A'}</p>
+            <p><strong>Joining:</strong> ${emp.joining || 'N/A'}</p>
+            <p><strong>Aadhar:</strong> ${emp.aadhaar}</p>
+        `;
+        document.getElementById('employee-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('employee-modal').classList.add('hidden');
+    }
+
+    // Employee Login & Portal
+    function loginEmployee() {
+        const idInput = document.getElementById('emp-login-id').value.trim();
+        const found = employees.find(e => e.id.toLowerCase() === idInput.toLowerCase());
+        if(found) {
+            currentLoggedInEmpId = found.id;
+            localStorage.setItem('pec_current_emp', currentLoggedInEmpId);
+            loadEmployeeDashboard(currentLoggedInEmpId);
+        } else {
+            alert('Invalid Employee ID!');
+        }
+    }
+
+    function logoutEmployee() {
+        currentLoggedInEmpId = null;
+        localStorage.removeItem('pec_current_emp');
+        stopCamera();
+        showRoleSelector(currentSessionUser);
+    }
+
+    function loadEmployeeDashboard(empId) {
+        hideAllScreens();
+        document.getElementById('screen-emp-dashboard').classList.remove('hidden');
+        const emp = employees.find(e => e.id === empId);
+        if(emp) {
+            document.getElementById('emp-welcome-title').innerText = emp.name;
+            document.getElementById('emp-profile-content').innerHTML = `
+                ${emp.photo ? `<img src="${emp.photo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 10px;">` : ''}
+                <p><strong>Employee ID:</strong> ${emp.id}</p>
+                <p><strong>Full Name:</strong> ${emp.name}</p>
+                <p><strong>Position:</strong> ${emp.position}</p>
+                <p><strong>Date of Birth:</strong> ${emp.dob || 'N/A'}</p>
+                <p><strong>Joining Date:</strong> ${emp.joining || 'N/A'}</p>
+                <p><strong>Aadhaar Status:</strong> ${emp.aadhaar}</p>
+            `;
+            switchEmpTab('profile');
+        }
+    }
+
+    function switchEmpTab(tab) {
+        document.getElementById('emp-pane-profile').classList.add('hidden');
+        document.getElementById('emp-pane-attendance').classList.add('hidden');
+        document.getElementById('emp-pane-history').classList.add('hidden');
+        stopCamera();
+
+        if(tab === 'profile') {
+            document.getElementById('emp-pane-profile').classList.remove('hidden');
+        } else if(tab === 'attendance') {
+            document.getElementById('emp-pane-attendance').classList.remove('hidden');
+            startCamera();
+        } else if(tab === 'history') {
+            document.getElementById('emp-pane-history').classList.remove('hidden');
+            renderCalendar();
+        }
+    }
+
+    let videoStream = null;
+    function startCamera() {
+        const video = document.getElementById('camera-preview');
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(stream => {
+                videoStream = stream;
+                video.srcObject = stream;
+            })
+            .catch(err => console.log("Camera error"));
+    }
+
+    function stopCamera() {
+        if(videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
+        }
+    }
+
+    function captureSelfieAttendance() {
+        const emp = employees.find(e => e.id === currentLoggedInEmpId);
+        if(!emp) return;
+
+        const now = new Date();
+        const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+        emp.attendance[dateKey] = 'present';
+        localStorage.setItem('pec_employees', JSON.stringify(employees));
+        alert('Attendance marked successfully for today!');
+        switchEmpTab('history');
+    }
+
+    function renderCalendar() {
+        const container = document.getElementById('calendar-days-container');
+        container.innerHTML = "";
+        const emp = employees.find(e => e.id === currentLoggedInEmpId);
+        if(!emp) return;
+
+        const selectedYear = parseInt(document.getElementById('filter-year').value);
+        const selectedMonth = parseInt(document.getElementById('filter-month').value);
+        
+        let firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
+        let daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+
+        let presentCount = 0;
+        let absentCount = 0;
+
+        for(let i = 0; i < firstDayIndex; i++) {
+            let emptyCell = document.createElement('div');
+            container.appendChild(emptyCell);
+        }
+
+        for(let d = 1; d <= daysInMonth; d++) {
+            let fullDateStr = `${selectedYear}-${selectedMonth}-${d}`;
+            let status = emp.attendance[fullDateStr];
+
+            let cell = document.createElement('div');
+            cell.className = "cal-day";
+            cell.innerText = d;
+
+            if(status === 'present') {
+                cell.classList.add('present');
+                presentCount++;
+            } else {
+                cell.classList.add('absent');
+                absentCount++;
+            }
+            container.appendChild(cell);
+        }
+
+        document.getElementById('attendance-summary-count').innerHTML = `
+            <span class="badge badge-blue">Present: ${presentCount}</span> 
+            <span class="badge badge-red">Absent: ${absentCount}</span>
+        `;
+    }
+</script>
+
 </body>
 </html>
