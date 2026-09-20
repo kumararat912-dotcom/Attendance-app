@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prasanta Engineering & Contractor - Attendance System</title>
+    <!-- EmailJS SDK for sending OTP emails -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
-            // NOTE: Ethe apanankara EmailJS public key set karibe (e.g., emailjs.init("YOUR_PUBLIC_KEY"))
-            emailjs.init("YOUR_PUBLIC_KEY");
+            // Initialized with your EmailJS Public Key
+            emailjs.init("dx_EZ5roIzsVPTokP");
         })();
     </script>
     <style>
@@ -154,6 +155,7 @@
 
     <div class="content">
 
+        <!-- STEP 1: WELCOME SCREEN -->
         <div id="screen-welcome" class="card" style="text-align: center; padding: 40px 20px;">
             <h3>Welcome</h3>
             <p style="font-size: 14px; color: #666; margin-bottom: 30px;">Please select an option to continue</p>
@@ -161,6 +163,7 @@
             <button class="secondary" onclick="showRegisterScreen()">II. Register</button>
         </div>
 
+        <!-- STEP 2A: LOGIN SCREEN -->
         <div id="screen-login" class="card hidden">
             <h3>Login Account</h3>
             <p style="font-size: 13px; color: #666;">Enter your registered email address.</p>
@@ -169,6 +172,7 @@
             <button class="secondary" onclick="backToWelcome()">Back</button>
         </div>
 
+        <!-- STEP 2B: REGISTER SCREEN -->
         <div id="screen-register" class="card hidden">
             <h3>Register New Account</h3>
             <p style="font-size: 13px; color: #666;">Create a new owner/admin account.</p>
@@ -179,6 +183,7 @@
             <button class="secondary" onclick="backToWelcome()">Back</button>
         </div>
 
+        <!-- STEP 2C: OTP VERIFICATION SCREEN -->
         <div id="screen-otp" class="card hidden">
             <h3>Verify Email OTP</h3>
             <p style="font-size: 13px; color: #666;" id="otp-instruction">Enter the 6-digit OTP sent to your email.</p>
@@ -187,6 +192,7 @@
             <button class="secondary" onclick="backToWelcome()">Cancel</button>
         </div>
 
+        <!-- STEP 3: ROLE SELECTOR -->
         <div id="screen-role-select" class="card hidden">
             <h3>Select Portal Mode</h3>
             <p style="font-size: 14px; color: #666;" id="logged-user-info"></p>
@@ -195,6 +201,7 @@
             <button class="danger" onclick="logoutApp()" style="margin-top: 20px;">Logout</button>
         </div>
 
+        <!-- STEP 4: OWNER DASHBOARD -->
         <div id="screen-owner-dashboard" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin:0;">Owner Control Panel</h3>
@@ -206,12 +213,14 @@
                 <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employees</button>
             </div>
 
+            <!-- Owner Tab 1: Home Tab -->
             <div id="owner-tab-home" class="card">
                 <h3>Employees List</h3>
                 <input type="text" id="search-employee" placeholder="Search employee by name or ID..." onkeyup="filterEmployees()">
                 <div id="employee-list-container"></div>
             </div>
 
+            <!-- Owner Tab 2: Add Employees -->
             <div id="owner-tab-add" class="card hidden">
                 <h3>Add Employee Details</h3>
                 <label>Employee Photo Upload</label>
@@ -230,6 +239,7 @@
             </div>
         </div>
 
+        <!-- STEP 5A: EMPLOYEE LOGIN -->
         <div id="screen-emp-login" class="card hidden">
             <h3>Employee Login</h3>
             <p style="font-size: 14px; color: #666;">Enter your employee ID created by owner.</p>
@@ -238,6 +248,7 @@
             <button class="secondary" onclick="backToRoleSelect()">Back</button>
         </div>
 
+        <!-- STEP 5B: EMPLOYEE DASHBOARD -->
         <div id="screen-emp-dashboard" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin:0;" id="emp-welcome-title">Employee Portal</h3>
@@ -250,11 +261,13 @@
                 <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) History</button>
             </div>
 
+            <!-- Employee Tab 1: Profile -->
             <div id="emp-pane-profile" class="card">
                 <h3>My Profile</h3>
                 <div id="emp-profile-content"></div>
             </div>
 
+            <!-- Employee Tab 2: Attendance Selfie -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Attendance</h3>
                 <p style="font-size: 13px; color: #666;">Take face selfie camera verification.</p>
@@ -264,6 +277,7 @@
                 <button onclick="captureSelfieAttendance()">Capture Selfie & Submit</button>
             </div>
 
+            <!-- Employee Tab 3: History -->
             <div id="emp-pane-history" class="card hidden">
                 <h3>Attendance History</h3>
                 <div class="flex-row">
@@ -297,6 +311,7 @@
     </div>
 </div>
 
+<!-- Modal -->
 <div id="employee-modal" class="modal hidden">
     <div class="card" style="width: 90%; max-width: 400px; background: white;">
         <span style="float: right; font-size: 20px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
@@ -313,11 +328,10 @@
     let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
     let currentSessionUser = localStorage.getItem('pec_current_user') || null;
 
-    // Temporary storage for OTP flow
     let generatedOTP = "";
     let pendingEmail = "";
     let pendingRegistrationData = null;
-    let authMode = ""; // 'login' or 'register'
+    let authMode = ""; 
 
     window.onload = function() {
         if(currentSessionUser) {
@@ -344,28 +358,29 @@
         document.getElementById('screen-register').classList.remove('hidden');
     }
 
-    // --- OTP GENERATION & SENDING LOGIC ---
+    // --- OTP GENERATION & SENDING VIA EMAILJS ---
     function generateAndSendOTP(email, mode) {
         pendingEmail = email;
         authMode = mode;
-        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit random OTP
+        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit OTP
 
-        // Send OTP using EmailJS (Make sure you configure service ID & template ID on EmailJS dashboard)
         let templateParams = {
             to_email: email,
-            otp_code: generatedOTP
+            otp_code: generatedOTP,
+            message: "Your OTP code for Prasanta Engineering & Contractor is: " + generatedOTP
         };
 
-        // Note: Replace "YOUR_SERVICE_ID" and "YOUR_TEMPLATE_ID" with your actual EmailJS credentials
-        emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", templateParams)
+        let serviceID = "service_33ql72e";
+        let templateID = "template_qs9fv3s";
+
+        emailjs.send(serviceID, templateID, templateParams)
             .then(function(response) {
-                alert('OTP sent successfully to ' + email);
+                alert('OTP sent successfully to your email: ' + email);
                 hideAllScreens();
                 document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
                 document.getElementById('screen-otp').classList.remove('hidden');
             }, function(error) {
-                // Fallback simulation alert if EmailJS keys aren't linked yet so testing works smoothly
-                alert('OTP Simulation (Configure EmailJS keys for live email): Your OTP is ' + generatedOTP);
+                alert('EmailJS Error: ' + JSON.stringify(error) + ' (Simulation OTP: ' + generatedOTP + ')');
                 hideAllScreens();
                 document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
                 document.getElementById('screen-otp').classList.remove('hidden');
@@ -457,7 +472,6 @@
         showRoleSelector(currentSessionUser);
     }
 
-    // Owner Tabs & Employee Management
     function switchOwnerTab(tab) {
         if(tab === 'home') {
             document.getElementById('owner-tab-home').classList.remove('hidden');
@@ -575,7 +589,6 @@
         document.getElementById('employee-modal').classList.add('hidden');
     }
 
-    // Employee Login & Portal
     function loginEmployee() {
         const idInput = document.getElementById('emp-login-id').value.trim();
         const found = employees.find(e => e.id.toLowerCase() === idInput.toLowerCase());
