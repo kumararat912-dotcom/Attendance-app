@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prasanta Engineering & Contractor - Attendance App</title>
+    <style>
+        :root {
+            --primary: #1d3557;
+            --secondary: #457b9d;
+            --bg-color: #ffffff;
+            --text-color: #212529;
+            --light-bg: #f8f9fa;
+            --red: #e63946;
+            --blue: #2a9d8f;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 450px;
+            min-height: 100vh;
+            background: var(--bg-color);
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        @media (min-width: 451px) {
+            .app-container {
+                min-height: 850px;
+                border-radius: 16px;
+                overflow: hidden;
+                border: 1px solid #ddd;
+            }
+        }
+        .header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header img {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: white;
+            padding: 5px;
+            margin-bottom: 8px;
+            object-fit: contain;
+        }
+        .header h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: 600;
+        }
+        .header p {
+            font-size: 12px;
+            margin: 4px 0 0;
+            opacity: 0.85;
+        }
+        .content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .btn:hover {
+            background: var(--secondary);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        .btn-outline:hover {
+            background: var(--light-bg);
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+        }
+        .tabs {
+            display: flex;
+            background: var(--light-bg);
+            border-bottom: 1px solid #ddd;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: none;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            color: #666;
+            font-size: 13px;
+        }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            background: white;
+        }
+        .card {
+            background: var(--light-bg);
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+        .card:hover {
+            background: #f1f3f5;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            background: #eee;
+        }
+        .calendar-day.present {
+            background: var(--blue);
+            color: white;
+        }
+        .calendar-day.absent {
+            background: var(--red);
+            color: white;
+        }
+        .stats-box {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f1faee;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            display: none;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 10px;
+            position: relative;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px; right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Header -->
+    <div class="header">
+        <img src="https://kumararat912-dotcom.github.io/Attendance-app/favicon.ico" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+        <h1>Prasanta Engineering & Contractor</h1>
+        <p>Official Attendance System</p>
+    </div>
+
+    <div class="content">
+        
+        <!-- Screen 1: Universal Email & OTP Login (Direct App Opening Screen) -->
+        <div id="screen-universal-login" class="screen active">
+            <div style="text-align: center; margin: 30px 0 20px;">
+                <h3 style="color: var(--primary);">Portal Login</h3>
+                <p style="color: #666; font-size: 13px;">Enter your Email ID to login (Owner or Employee)</p>
+            </div>
+            
+            <div id="step-email-input">
+                <label>Email Address</label>
+                <input type="email" id="login-email" placeholder="e.g. name@gmail.com">
+                <button class="btn" onclick="sendLoginOTP()">Send OTP</button>
+                <div style="margin-top: 15px; background: #eef2f7; padding: 10px; border-radius: 6px; font-size: 12px; color: #444;">
+                    <b>Owner Email:</b> owner@prasanta.com<br>
+                    <i>(Or use any registered employee email ID)</i>
+                </div>
+            </div>
+
+            <div id="step-otp-verify" style="display: none;">
+                <p style="font-size: 13px; color: var(--blue);">OTP sent! (Demo OTP Code: <b id="display-otp">1234</b>)</p>
+                <label>Enter 4-Digit OTP</label>
+                <input type="text" id="login-otp" placeholder="Enter OTP">
+                <button class="btn" onclick="verifyLoginOTP()">Verify & Login</button>
+                <button class="btn btn-outline" onclick="resetLoginStep()">Back to Email</button>
+            </div>
+        </div>
+
+        <!-- Screen 2: Owner Dashboard -->
+        <div id="screen-owner-dashboard" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <h3 style="margin:0; color:var(--primary);">Owner Portal</h3>
+                <button class="btn-outline" style="padding: 5px 10px; width: auto; font-size: 12px; margin:0;" onclick="appLogout()">Logout</button>
+            </div>
+            
+            <div class="tabs" style="margin-top: 15px;">
+                <button class="tab-btn active" onclick="switchOwnerTab('home')">(i) Home Tab</button>
+                <button class="tab-btn" onclick="switchOwnerTab('add')">(ii) Add Employees</button>
+            </div>
+
+            <!-- Owner Tab 1: Home Tab -->
+            <div id="owner-tab-home" style="margin-top: 15px;">
+                <input type="text" id="search-employee" placeholder="Search employee by name, ID or email..." oninput="filterOwnerEmployees()">
+                <div id="owner-employee-list">
+                    <!-- Dynamic Employee Line-by-Line List -->
+                </div>
+            </div>
+
+            <!-- Owner Tab 2: Add Employees -->
+            <div id="owner-tab-add" style="margin-top: 15px; display: none;">
+                <h4 style="color:var(--primary); margin-top:0;">Add New Employee Details</h4>
+                <label>Employee Photo Upload</label>
+                <input type="file" id="emp-photo" accept="image/*">
+                <label>Employee Name</label>
+                <input type="text" id="emp-name" placeholder="Full Name">
+                <label>Email Address (For Login)</label>
+                <input type="email" id="emp-email" placeholder="employee@gmail.com">
+                <label>Date of Birth</label>
+                <input type="date" id="emp-dob">
+                <label>Aadhar No</label>
+                <input type="text" id="emp-aadhar" placeholder="12-digit Aadhar number">
+                <label>Joining Date</label>
+                <input type="date" id="emp-joining">
+                <label>Position / Designation</label>
+                <input type="text" id="emp-position" placeholder="e.g. Operator, Supervisor">
+                <button class="btn" onclick="createNewEmployee()">Create Employee & Generate ID</button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Employee Dashboard -->
+        <div id="screen-employee-dashboard" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <h3 id="emp-welcome-title" style="margin:0; color:var(--primary);">Employee Panel</h3>
+                <button class="btn-outline" style="padding: 5px 10px; width: auto; font-size: 12px; margin:0;" onclick="appLogout()">Logout</button>
+            </div>
+
+            <div class="tabs" style="margin-top: 15px;">
+                <button class="tab-btn active" onclick="switchEmpTab('profile')">(i) Profile</button>
+                <button class="tab-btn" onclick="switchEmpTab('attendance')">(ii) Add Attendance</button>
+                <button class="tab-btn" onclick="switchEmpTab('history')">(iii) Attendance History</button>
+            </div>
+
+            <!-- Employee Tab 1: Profile -->
+            <div id="emp-tab-profile" style="margin-top: 15px;">
+                <div class="card" id="emp-profile-card" style="cursor: default;">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Employee Tab 2: Add Attendance -->
+            <div id="emp-tab-attendance" style="margin-top: 15px; text-align: center;">
+                <h4 style="color:var(--primary);">Mark Today's Attendance</h4>
+                <p style="font-size: 13px; color: #666;">Face selfie camera verification required.</p>
+                <div style="margin: 15px 0; background: #000; border-radius: 8px; overflow: hidden; min-height: 220px; display: flex; align-items: center; justify-content: center;">
+                    <video id="video" width="100%" height="240" autoplay style="display:none; object-fit: cover;"></video>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                    <img id="selfie-preview" style="width: 100%; max-height: 240px; display: none; object-fit: cover;" alt="Selfie Preview"/>
+                    <span id="cam-placeholder" style="color: #aaa; font-size: 14px;">Camera is closed</span>
+                </div>
+                <button class="btn" id="btn-start-cam" onclick="startCamera()">Open Camera</button>
+                <button class="btn" id="btn-capture" onclick="captureSelfie()" style="background: var(--secondary); display: none;">Capture Selfie & Submit Attendance</button>
+            </div>
+
+            <!-- Employee Tab 3: Attendance History -->
+            <div id="emp-tab-history" style="margin-top: 15px;">
+                <h4 style="color:var(--primary);">Attendance History Record</h4>
+                <div style="display: flex; gap: 10px;">
+                    <select id="filter-year" onchange="renderCalendar()">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+                    <select id="filter-month" onchange="renderCalendar()">
+                        <option value="0">January</option>
+                        <option value="1">February</option>
+                        <option value="2" selected>March</option>
+                        <option value="3">April</option>
+                        <option value="4">May</option>
+                        <option value="5">June</option>
+                        <option value="6">July</option>
+                        <option value="7">August</option>
+                        <option value="8">September</option>
+                        <option value="9">October</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                    </select>
+                </div>
+                <div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; color:#555;">
+                    <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                </div>
+                <div class="calendar-grid" id="calendar-days">
+                    <!-- Generated calendar days -->
+                </div>
+                <div class="stats-box">
+                    <div>
+                        <span style="font-size: 18px; font-weight: bold; color: var(--blue);" id="count-present">0</span><br>
+                        <span style="font-size: 11px; color: #555;">Present Days (Blue)</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 18px; font-weight: bold; color: var(--red);" id="count-absent">0</span><br>
+                        <span style="font-size: 11px; color: #555;">Absent Days (Red)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal for Owner viewing individual Employee Profile -->
+<div id="employee-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h3 style="color: var(--primary); margin-top:0;">Employee Profile Details</h3>
+        <div id="modal-profile-body">
+            <!-- Details populated here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    const OWNER_EMAIL = "owner@prasanta.com";
+
+    // Local Storage Data Initialization
+    let employees = JSON.parse(localStorage.getItem('pec_employees')) || [
+        { id: 'PEC101', name: 'Ramesh Kumar', email: 'ramesh@gmail.com', dob: '1998-05-12', aadhar: '123456789012', joining: '2025-01-10', position: 'Operator', photo: '', attendance: { '2026-2-1': 'present', '2026-2-2': 'present', '2026-2-3': 'absent' } }
+    ];
+    let sessionUserType = localStorage.getItem('pec_user_type') || null; // 'owner' or 'employee'
+    let currentEmpId = localStorage.getItem('pec_current_emp_id') || null;
+    let generatedOTP = '1234';
+    let tempLoginEmail = '';
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        if(screenId === 'screen-owner-dashboard') loadOwnerHomeList();
+        if(screenId === 'screen-employee-dashboard' && currentEmpId) loadEmployeeDashboard();
+    }
+
+    // Universal Email OTP Login Flow
+    function sendLoginOTP() {
+        const emailInput = document.getElementById('login-email').value.trim().toLowerCase();
+        if(!emailInput) {
+            alert('Please enter your email ID!');
+            return;
+        }
+
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || employees;
+        const isOwner = (emailInput === OWNER_EMAIL);
+        const emp = employees.find(e => e.email === emailInput);
+
+        if(!isOwner && !emp) {
+            alert('This email ID is not recognized as Owner or registered Employee!');
+            return;
+        }
+
+        tempLoginEmail = emailInput;
+        generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
+        document.getElementById('display-otp').innerText = generatedOTP;
+
+        document.getElementById('step-email-input').style.display = 'none';
+        document.getElementById('step-otp-verify').style.display = 'block';
+    }
+
+    function resetLoginStep() {
+        document.getElementById('step-otp-verify').style.display = 'none';
+        document.getElementById('step-email-input').style.display = 'block';
+        document.getElementById('login-otp').value = '';
+    }
+
+    function verifyLoginOTP() {
+        const enteredOtp = document.getElementById('login-otp').value.trim();
+        if(enteredOtp === generatedOTP) {
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-otp').value = '';
+            resetLoginStep();
+
+            if(tempLoginEmail === OWNER_EMAIL) {
+                sessionUserType = 'owner';
+                localStorage.setItem('pec_user_type', 'owner');
+                showScreen('screen-owner-dashboard');
+            } else {
+                employees = JSON.parse(localStorage.getItem('pec_employees')) || employees;
+                const emp = employees.find(e => e.email === tempLoginEmail);
+                if(emp) {
+                    sessionUserType = 'employee';
+                    currentEmpId = emp.id;
+                    localStorage.setItem('pec_user_type', 'employee');
+                    localStorage.setItem('pec_current_emp_id', currentEmpId);
+                    showScreen('screen-employee-dashboard');
+                }
+            }
+        } else {
+            alert('Incorrect OTP! Please check the displayed OTP code.');
+        }
+    }
+
+    function appLogout() {
+        sessionUserType = null;
+        currentEmpId = null;
+        localStorage.removeItem('pec_user_type');
+        localStorage.removeItem('pec_current_emp_id');
+        showScreen('screen-universal-login');
+    }
+
+    // Owner Dashboard Tabs & Features
+    function switchOwnerTab(tab) {
+        document.querySelectorAll('#screen-owner-dashboard .tab-btn').forEach(b => b.classList.remove('active'));
+        if(tab === 'home') {
+            document.querySelectorAll('#screen-owner-dashboard .tab-btn')[0].classList.add('active');
+            document.getElementById('owner-tab-home').style.display = 'block';
+            document.getElementById('owner-tab-add').style.display = 'none';
+            loadOwnerHomeList();
+        } else {
+            document.querySelectorAll('#screen-owner-dashboard .tab-btn')[1].classList.add('active');
+            document.getElementById('owner-tab-home').style.display = 'none';
+            document.getElementById('owner-tab-add').style.display = 'block';
+        }
+    }
+
+    function createNewEmployee() {
+        const name = document.getElementById('emp-name').value.trim();
+        const email = document.getElementById('emp-email').value.trim().toLowerCase();
+        const dob = document.getElementById('emp-dob').value;
+        const aadhar = document.getElementById('emp-aadhar').value.trim();
+        const joining = document.getElementById('emp-joining').value;
+        const position = document.getElementById('emp-position').value.trim();
+        const photoInput = document.getElementById('emp-photo');
+
+        if(!name || !email || !aadhar) {
+            alert('Please fill Name, Email and Aadhar number!');
+            return;
+        }
+
+        const newId = 'PEC' + (100 + employees.length + 1);
+
+        let reader = new FileReader();
+        if(photoInput.files && photoInput.files[0]) {
+            reader.readAsDataURL(photoInput.files[0]);
+            reader.onload = function(e) {
+                saveEmployeeData(newId, name, email, dob, aadhar, joining, position, e.target.result);
+            }
+        } else {
+            saveEmployeeData(newId, name, email, dob, aadhar, joining, position, '');
+        }
+    }
+
+    function saveEmployeeData(id, name, email, dob, aadhar, joining, position, photo) {
+        employees.push({
+            id: id,
+            name: name,
+            email: email,
+            dob: dob,
+            aadhar: aadhar,
+            joining: joining,
+            position: position,
+            photo: photo,
+            attendance: {}
+        });
+        localStorage.setItem('pec_employees', JSON.stringify(employees));
+        alert('Employee created successfully! ID: ' + id + ' | Email: ' + email);
+        
+        // Clear inputs
+        document.getElementById('emp-name').value = '';
+        document.getElementById('emp-email').value = '';
+        document.getElementById('emp-dob').value = '';
+        document.getElementById('emp-aadhar').value = '';
+        document.getElementById('emp-joining').value = '';
+        document.getElementById('emp-position').value = '';
+        document.getElementById('emp-photo').value = '';
+        switchOwnerTab('home');
+    }
+
+    function loadOwnerHomeList() {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || employees;
+        const container = document.getElementById('owner-employee-list');
+        container.innerHTML = '';
+
+        if(employees.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#777;">No employees added yet.</p>';
+            return;
+        }
+
+        employees.forEach(emp => {
+            const totalRecorded = Object.keys(emp.attendance || {}).length;
+            let card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => openEmployeeProfileModal(emp.id);
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${emp.name} (${emp.id})</strong>
+                    <span style="font-size:12px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${emp.position || 'Staff'}</span>
+                </div>
+                <div style="margin-top: 4px; font-size: 12px; color: #555;">Email: ${emp.email || 'N/A'}</div>
+                <div style="margin-top: 4px; font-size: 12px; color: #444;">
+                    Attendance Recorded: <b>${totalRecorded} days</b> (Click to view profile)
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function filterOwnerEmployees() {
+        const query = document.getElementById('search-employee').value.toLowerCase();
+        const container = document.getElementById('owner-employee-list');
+        container.innerHTML = '';
+
+        const filtered = employees.filter(e => e.name.toLowerCase().includes(query) || (e.email && e.email.toLowerCase().includes(query)) || e.id.toLowerCase().includes(query));
+        if(filtered.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#777;">No matching employee found.</p>';
+            return;
+        }
+
+        filtered.forEach(emp => {
+            const totalRecorded = Object.keys(emp.attendance || {}).length;
+            let card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => openEmployeeProfileModal(emp.id);
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${emp.name} (${emp.id})</strong>
+                    <span style="font-size:12px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${emp.position || 'Staff'}</span>
+                </div>
+                <div style="margin-top: 4px; font-size: 12px; color: #555;">Email: ${emp.email || 'N/A'}</div>
+                <div style="margin-top: 4px; font-size: 12px; color: #444;">
+                    Attendance Recorded: <b>${totalRecorded} days</b>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function openEmployeeProfileModal(empId) {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || employees;
+        const emp = employees.find(e => e.id === empId);
+        if(!emp) return;
+
+        const modalBody = document.getElementById('modal-profile-body');
+        let photoHtml = emp.photo ? `<img src="${emp.photo}" style="width:70px; height:70px; border-radius:50%; object-fit:cover; margin-bottom:8px;" />` : `<div style="width:70px; height:70px; border-radius:50%; background:#ddd; display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-weight:bold; color:#555; font-size:12px;">No Photo</div>`;
+
+        modalBody.innerHTML = `
+            <div style="text-align:center;">
+                ${photoHtml}
+                <h4 style="margin:5px 0;">${emp.name}</h4>
+                <p style="color:var(--secondary); font-size:13px; margin:0;"><b>ID:</b> ${emp.id} | <b>Position:</b> ${emp.position || 'N/A'}</p>
+            </div>
+            <hr style="border:0; border-top:1px solid #eee; margin:12px 0;">
+            <p style="font-size:13px; margin:5px 0;"><b>Email:</b> ${emp.email || 'N/A'}</p>
+            <p style="font-size:13px; margin:5px 0;"><b>Aadhar No:</b> [Aadhaar Redacted]</p>
+            <p style="font-size:13px; margin:5px 0;"><b>Date of Birth:</b> ${emp.dob || 'N/A'}</p>
+            <p style="font-size:13px; margin:5px 0;"><b>Joining Date:</b> ${emp.joining || 'N/A'}</p>
+            <h5 style="margin:12px 0 5px; color:var(--primary);">Attendance Record Summary:</h5>
+            <div style="font-size:12px; color:#555; max-height:120px; overflow-y:auto; background:#f8f9fa; padding:8px; border-radius:6px;">
+                ${Object.keys(emp.attendance || {}).length > 0 ? Object.entries(emp.attendance).map(([date, status]) => `<div>${date}: <span style="color:${status==='present'?'var(--blue)':'var(--red)'}; font-weight:bold;">${status.toUpperCase()}</span></div>`).join('') : 'No attendance marked yet.'}
+            </div>
+        `;
+        document.getElementById('employee-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('employee-modal').style.display = 'none';
+    }
+
+    // Employee Dashboard Logic
+    function switchEmpTab(tab) {
+        document.querySelectorAll('#screen-employee-dashboard .tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('emp-tab-profile').style.display = 'none';
+        document.getElementById('emp-tab-attendance').style.display = 'none';
+        document.getElementById('emp-tab-history').style.display = 'none';
+
+        if(tab === 'profile') {
+            document.querySelectorAll('#screen-employee-dashboard .tab-btn')[0].classList.add('active');
+            document.getElementById('emp-tab-profile').style.display = 'block';
+            loadEmpProfileCard();
+        } else if(tab === 'attendance') {
+            document.querySelectorAll('#screen-employee-dashboard .tab-btn')[1].classList.add('active');
+            document.getElementById('emp-tab-attendance').style.display = 'block';
+        } else if(tab === 'history') {
+            document.querySelectorAll('#screen-employee-dashboard .tab-btn')[2].classList.add('active');
+            document.getElementById('emp-tab-history').style.display = 'block';
+            renderCalendar();
+        }
+    }
+
+    function loadEmployeeDashboard() {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || employees;
+        const emp = employees.find(e => e.id === currentEmpId);
+        if(!emp) {
+            appLogout();
+            return;
+        }
+        document.getElementById('emp-welcome-title').innerText = 'Welcome, ' + emp.name;
+        loadEmpProfileCard();
+        switchEmpTab('profile');
+    }
+
+    function loadEmpProfileCard() {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || employees;
+        const emp = employees.find(e => e.id === currentEmpId);
+        if(!emp) return;
+
+        const cardContainer = document.getElementById('emp-profile-card');
+        let photoHtml = emp.photo ? `<img src="${emp.photo}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px;" />` : `<div style="width:80px; height:80px; border-radius:50%; background:#ddd; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-weight:bold; color:#555;">No Photo</div>`;
+
+        cardContainer.innerHTML = `
+            <div style="text-align: center;">
+                ${photoHtml}
+                <h3 style="margin:5px 0;">${emp.name}</h3>
+                <p style="color: var(--secondary); margin:0; font-size:14px;"><b>ID:</b> ${emp.id} | <b>Position:</b> ${emp.position || 'N/A'}</p>
+            </div>
+            <hr style="border:0; border-top:1px solid #ddd; margin:15px 0;">
+            <p style="font-size:14px; margin:6px 0;"><b>Email:</b> ${emp.email || 'N/A'}</p>
+            <p style="font-size:14px; margin:6px 0;"><b>Aadhar Number:</b> [Aadhaar Redacted]</p>
+            <p style="font-size:14px; margin:6px 0;"><b>Date of Birth:</b> ${emp.dob || 'N/A'}</p>
+            <p style="font-size:14px; margin:6px 0;"><b>Joining Date:</b> ${emp.joining || 'N/A'}</p>
+        `;
+    }
+
+    // Camera & Selfie Attendance
+    let videoStream = null;
+    function startCamera() {
+        const video = document.getElementById('video');
+        const placeholder = document.getElementById('cam-placeholder');
+        const preview = document.getElementById('selfie-preview');
+        const btnStart = document.getElementById('btn-start-cam');
+        const btnCapture = document.getElementById('btn-capture');
+
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(stream => {
+                videoStream = stream;
+                video.srcObject = stream;
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+                preview.style.display = 'none';
+                btnStart.style.display = 'none';
+                btnCapture.style.display = 'block';
+            })
+            .catch(err => {
+                alert('Camera access denied or unavailable!');
+            });
+    }
+
+    function captureSelfie() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const preview = document.getElementById('selfie-preview');
+        const placeholder = document.getElementById('cam-placeholder');
+
+        canvas.width = video.videoWidth || 300;
+        canvas.height = video.videoHeight || 240;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const dataUrl = canvas.toDataURL('image/png');
+        preview.src = dataUrl;
+        preview.style.display = 'block';
+        video.style.display = 'none';
+
+        if(videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
+
+        document.getElementById('btn-start-cam').style.display = 'block';
+        document.getElementById('btn-capture').style.display = 'none';
+
+        markAttendanceToday();
+    }
+
+    function markAttendanceToday() {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || employees;
+        const emp = employees.find(e => e.id === currentEmpId);
+        if(!emp) return;
+
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth(); 
+        const day = today.getDate();
+        const dateKey = `${year}-${month}-${day}`;
+
+        if(!emp.attendance) emp.attendance = {};
+        emp.attendance[dateKey] = 'present';
+
+        localStorage.setItem('pec_employees', JSON.stringify(employees));
+        alert('Attendance marked successfully as PRESENT for today!');
+        switchEmpTab('history');
+    }
+
+    // Attendance Calendar Rendering with Month/Year filter & auto counts
+    function renderCalendar() {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || employees;
+        const emp = employees.find(e => e.id === currentEmpId);
+        if(!emp) return;
+
+        const year = parseInt(document.getElementById('filter-year').value);
+        const month = parseInt(document.getElementById('filter-month').value);
+
+        const calendarDaysContainer = document.getElementById('calendar-days');
+        calendarDaysContainer.innerHTML = '';
+
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+
+        let presentCount = 0;
+        let absentCount = 0;
+
+        for(let i = 0; i < firstDayIndex; i++) {
+            let emptyDiv = document.createElement('div');
+            calendarDaysContainer.appendChild(emptyDiv);
+        }
+
+        for(let d = 1; d <= totalDays; d++) {
+            let dayDiv = document.createElement('div');
+            dayDiv.className = 'calendar-day';
+            dayDiv.innerText = d;
+
+            const dateKey = `${year}-${month}-${d}`;
+            const status = emp.attendance ? emp.attendance[dateKey] : null;
+
+            if(status === 'present') {
+                dayDiv.classList.add('present');
+                presentCount++;
+            } else if(status === 'absent') {
+                dayDiv.classList.add('absent');
+                absentCount++;
+            }
+            calendarDaysContainer.appendChild(dayDiv);
+        }
+
+        document.getElementById('count-present').innerText = presentCount;
+        document.getElementById('count-absent').innerText = absentCount;
+    }
+
+    // Auto-login check on page load
+    window.onload = function() {
+        if(sessionUserType === 'owner') {
+            showScreen('screen-owner-dashboard');
+        } else if(sessionUserType === 'employee' && currentEmpId) {
+            showScreen('screen-employee-dashboard');
+        } else {
+            showScreen('screen-universal-login');
+        }
+    }
+</script>
+</body>
+</html>
