@@ -3,11 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification App</title>
+    <title>Real Email OTP App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        // EmailJS Initialization with Public Key
+        emailjs.init("dx_EZ5roIzsVPTokP");
+    </script>
 </head>
 <body class="bg-slate-50">
     <div id="root"></div>
@@ -20,23 +26,42 @@
             const [generatedOtp, setGeneratedOtp] = React.useState('');
             const [enteredOtp, setEnteredOtp] = React.useState('');
             const [error, setError] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
 
             const handleSendOtp = (e) => {
                 e.preventDefault();
                 if (!email || !email.includes('@')) {
-                    setError('Sahi email addressantu.');
+                    setError('Daya kari gote satha email address diantu.');
                     return;
                 }
+                
                 setError('');
+                setLoading(true);
+
                 const mockOtp = Math.floor(1000 + Math.random() * 9000).toString();
                 setGeneratedOtp(mockOtp);
-                setStep('otp');
+
+                // EmailJS Parameters matching template placeholders
+                const templateParams = {
+                    email: email, 
+                    otp: mockOtp  
+                };
+
+                emailjs.send("service_33ql72e", "template_qs9fv3s", templateParams)
+                    .then((response) => {
+                        setLoading(false);
+                        setStep('otp');
+                    }, (err) => {
+                        setLoading(false);
+                        setError('Email pathae belare samasya hela. Purnibara chesta karantu.');
+                        console.error('FAILED...', err);
+                    });
             };
 
             const handleVerifyOtp = (e) => {
                 e.preventDefault();
                 if (enteredOtp !== generatedOtp) {
-                    setError('Bhul OTP! Demo banner re thiba code tiantu.');
+                    setError('Bhul OTP! Apananka email inbox check karantu.');
                     return;
                 }
                 setError('');
@@ -48,8 +73,8 @@
                     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
                         {step === 'login' ? (
                             <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
-                                <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">App Access Gate</h1>
-                                <p className="text-sm text-slate-500 text-center mb-6">App kholiba purbaru email verification darkar</p>
+                                <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">Email Verification</h1>
+                                <p className="text-sm text-slate-500 text-center mb-6">Real OTP apananka email ku asiba</p>
                                 {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
                                 <form onSubmit={handleSendOtp} className="space-y-4">
                                     <div>
@@ -63,21 +88,19 @@
                                             required
                                         />
                                     </div>
-                                    <button type="submit" className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700">
-                                        Send Verification OTP
+                                    <button 
+                                        type="submit" 
+                                        disabled={loading}
+                                        className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                                    >
+                                        {loading ? 'Sending Real OTP...' : 'Send Real OTP'}
                                     </button>
                                 </form>
                             </div>
                         ) : (
                             <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
-                                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">
-                                    <p className="text-xs font-bold uppercase mb-1">🛠️ Demo OTP Code</p>
-                                    <div className="text-center py-2 bg-white border border-amber-300 rounded font-mono text-xl font-bold text-amber-600 tracking-widest">
-                                        {generatedOtp}
-                                    </div>
-                                </div>
                                 <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">Enter OTP</h1>
-                                <p className="text-sm text-slate-500 text-center mb-6">Code sent to {email}</p>
+                                <p className="text-sm text-slate-500 text-center mb-6">OTP code sent to {email}</p>
                                 {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
                                 <form onSubmit={handleVerifyOtp} className="space-y-4">
                                     <input 
@@ -90,7 +113,7 @@
                                         required
                                     />
                                     <button type="submit" className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700">
-                                        Verify & Open App
+                                        Verify OTP & Open App
                                     </button>
                                     <button type="button" onClick={() => setStep('login')} className="w-full text-sm text-slate-500 pt-2">
                                         ← Back
@@ -106,7 +129,7 @@
                 <div className="min-h-screen bg-slate-100 p-8">
                     <div className="max-w-4xl mx-auto bg-white rounded-xl shadow p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-2xl font-bold text-slate-800">🎉 Welcome to the Main App!</h1>
+                            <h1 className="text-2xl font-bold text-slate-800">🎉 Welcome to Main App!</h1>
                             <button 
                                 onClick={() => { setIsVerified(false); setStep('login'); setEmail(''); setEnteredOtp(''); }}
                                 className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100"
@@ -114,7 +137,7 @@
                                 Log Out
                             </button>
                         </div>
-                        <p className="text-slate-600">Apana successful email verify kari app bhitare enter karichanti ({email}).</p>
+                        <p className="text-slate-600">Apana successful real email verify kari app bhitare enter karichanti ({email}).</p>
                     </div>
                 </div>
             );
