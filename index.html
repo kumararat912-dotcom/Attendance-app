@@ -1,626 +1,206 @@
-            flex-direction: column;
-            box-sizing: border-box;
-        }
-        @media(min-width: 481px) {
-            .container {
-                min-height: 85vh;
-                border-radius: 16px;
-                border: 1px solid var(--border);
-                overflow: hidden;
-            }
-        }
-        .header {
-            background-color: var(--navy);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        .logo-box {
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        .sub-logo {
-            font-size: 12px;
-            opacity: 0.8;
-            text-transform: uppercase;
-        }
-        .content {
-            padding: 20px;
-            flex: 1;
-            overflow-y: auto;
-        }
-        .card {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-        }
-        h2, h3 { color: var(--navy); margin-top: 0; }
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0 16px 0;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 15px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--navy);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-        button:hover { opacity: 0.9; }
-        button.secondary { background-color: var(--amber); }
-        button.danger { background-color: var(--red); }
-        .hidden { display: none !important; }
-        .flex-row { display: flex; gap: 10px; }
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            color: white;
-        }
-        .badge-blue { background-color: var(--blue); }
-        .badge-red { background-color: var(--red); }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            text-align: center;
-            margin-top: 15px;
-        }
-        .cal-day {
-            padding: 10px 0;
-            border-radius: 4px;
-            background: #eee;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .cal-day.present { background: var(--blue); color: white; }
-        .cal-day.absent { background: var(--red); color: white; }
-    </style>
-</head>
-<body>
+import React, { useState } from 'react';
 
-<div class="container">
-    <div class="header">
-        <div class="logo-box">Prasanta Engineering & Contractor</div>
-        <div class="sub-logo">Official Attendance System</div>
-    </div>
+export default function App() {
+  // Navigation & Flow States
+  const [step, setStep] = useState('login'); // 'login' | 'otp' | 'dashboard'
+  const [email, setEmail] = useState('');
+  const [userType, setUserType] = useState('employee'); // 'owner' | 'employee'
+  
+  // OTP States
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [enteredOtp, setEnteredOtp] = useState('');
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
-    <div class="content">
+  // Step 1: Send / Generate OTP
+  const handleSendOtp = (e) => {
+    e.preventDefault();
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    
+    setError('');
+    // Generate a random 4-digit OTP for demo purposes
+    const mockOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    setGeneratedOtp(mockOtp);
+    setStep('otp');
+    setSuccessMsg('Verification code generated!');
+  };
 
-        <div id="screen-verify" class="card">
-            <h3>Email Verification</h3>
-            <p style="font-size: 14px; color: #666;">Enter your email to check account status.</p>
-            <input type="email" id="input-email" placeholder="Enter your email address">
-            <button onclick="verifyEmail()">Verify Email</button>
-        </div>
+  // Step 2: Verify OTP
+  const handleVerifyOtp = (e) => {
+    e.preventDefault();
+    if (enteredOtp !== generatedOtp) {
+      setError('Incorrect OTP. Please check the demo banner above.');
+      return;
+    }
 
-        <div id="screen-owner-login" class="card hidden">
-            <h3>Owner Login</h3>
-            <p style="font-size: 13px; color: #666;" id="txt-owner-email"></p>
-            <input type="password" id="input-owner-pass" placeholder="Enter Password (Prasanta@123)">
-            <button onclick="loginOwner()">Login</button>
-            <button class="secondary" onclick="resetFlow()">Back</button>
-        </div>
+    setError('');
+    setStep('dashboard');
+  };
 
-        <div id="screen-owner-register" class="card hidden">
-            <h3>New Owner Registration</h3>
-            <p style="font-size: 13px; color: #666;" id="txt-reg-email"></p>
-            <input type="text" id="reg-name" placeholder="Full Name">
-            <input type="password" id="reg-pass" placeholder="Create Password">
-            <button onclick="registerOwner()">Register</button>
-            <button class="secondary" onclick="resetFlow()">Back</button>
-        </div>
+  // Reset flow to log out
+  const handleLogout = () => {
+    setStep('login');
+    setEmail('');
+    setEnteredOtp('');
+    setGeneratedOtp('');
+    setError('');
+    setSuccessMsg('');
+  };
 
-        <div id="screen-role-select" class="card hidden">
-            <h3>Select Mode</h3>
-            <p style="font-size: 14px; color: #666;">Choose your app entry portal:</p>
-            <button onclick="openOwnerPortal()">1. Owner Use (Management)</button>
-            <button class="secondary" onclick="openEmployeePortalSelect()">2. Employee Use (Mark Attendance)</button>
-            <button class="danger" onclick="resetFlow()" style="margin-top: 20px;">Logout / Switch Email</button>
-        </div>
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
+      
+      {/* 1. LOGIN / REGISTER SCREEN */}
+      {step === 'login' && (
+        <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-slate-800">Welcome Back</h1>
+            <p className="text-sm text-slate-500 mt-1">Sign in or register with your email to continue</p>
+          </div>
 
-        <div id="screen-owner-dashboard" class="hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin:0;">Owner Control Panel</h3>
-                <button onclick="backToRoleSelect()" style="width: auto; padding: 6px 12px; margin:0;">Menu</button>
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
+              {error}
             </div>
+          )}
+
+          <form onSubmit={handleSendOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@company.com" 
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition"
+            >
+              Continue with Email (Send OTP)
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* 2. OTP VERIFICATION SCREEN */}
+      {step === 'otp' && (
+        <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
+          
+          {/* DEMO BANNER - Clearly explains why the OTP is visible */}
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-900 mb-1">🛠️ Developer Demo Banner</p>
+            <p className="text-sm">
+              Since this is a client-only static app, no real email was sent. Your mock verification code is:
+            </p>
+            <div className="mt-2 text-center py-2 bg-white border border-amber-300 rounded font-mono text-xl font-bold text-amber-600 tracking-widest">
+              {generatedOtp}
+            </div>
+          </div>
+
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-slate-800">Enter Verification Code</h1>
+            <p className="text-sm text-slate-500 mt-1">We sent a code to <span className="font-semibold text-slate-700">{email}</span></p>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <input 
+                type="text" 
+                maxLength="4"
+                value={enteredOtp}
+                onChange={(e) => setEnteredOtp(e.target.value)}
+                placeholder="1234" 
+                className="w-full text-center tracking-widest text-2xl font-mono px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition"
+            >
+              Verify & Proceed
+            </button>
             
-            <div class="flex-row" style="margin-bottom: 15px;">
-                <button onclick="switchOwnerTab('home')" id="tab-btn-home">(i) Home Tab</button>
-                <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employees</button>
-            </div>
-
-            <div id="owner-tab-home" class="card">
-                <h3>Employees Attendance Record</h3>
-                <input type="text" id="search-employee" placeholder="Search employee by name or ID..." onkeyup="filterEmployees()">
-                <div id="employee-list-container">
-                    </div>
-            </div>
-
-            <div id="owner-tab-add" class="card hidden">
-                <h3>Add Employee Details</h3>
-                <input type="text" id="emp-name" placeholder="Employee Name">
-                <input type="date" id="emp-dob" placeholder="Date of Birth">
-                <input type="text" id="emp-aadhaar" placeholder="Aadhaar No (Redacted securely)">
-                <input type="date" id="emp-joining" placeholder="Joining Date">
-                <input type="text" id="emp-position" placeholder="Position / Designation">
-                <button onclick="saveNewEmployee()">Create Employee & Generate ID</button>
-            </div>
+            <button 
+              type="button" 
+              onClick={() => setStep('login')}
+              className="w-full text-sm text-slate-500 hover:text-slate-700 pt-2"
+            >
+              ← Back to email entry
+            </button>
+          </form>
         </div>
+      )}
 
-        <div id="screen-emp-login" class="card hidden">
-            <h3>Employee Login</h3>
-            <p style="font-size: 14px; color: #666;">Enter your employee ID created by owner.</p>
-            <input type="text" id="emp-login-id" placeholder="e.g. PEC-EMP-101">
-            <button onclick="loginEmployee()">Login</button>
-            <button class="secondary" onclick="backToRoleSelect()">Back</button>
+      {/* 3. OWNER / EMPLOYEE DASHBOARD GATE */}
+      {step === 'dashboard' && (
+        <div className="max-w-2xl w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
+          <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">Access Granted</h1>
+              <p className="text-sm text-slate-500">Logged in as: {email}</p>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="text-sm px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition"
+            >
+              Log Out
+            </button>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Select Your View / Role:</label>
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => setUserType('employee')}
+                className={`p-4 rounded-xl border text-left transition ${userType === 'employee' ? 'border-blue-500 bg-blue-50/50 text-blue-900' : 'border-slate-200 hover:bg-slate-50'}`}
+              >
+                <p className="font-semibold">Employee View</p>
+                <p className="text-xs text-slate-500 mt-1">Standard member permissions & tasks.</p>
+              </button>
+              
+              <button 
+                onClick={() => setUserType('owner')}
+                className={`p-4 rounded-xl border text-left transition ${userType === 'owner' ? 'border-blue-500 bg-blue-50/50 text-blue-900' : 'border-slate-200 hover:bg-slate-50'}`}
+              >
+                <p className="font-semibold">Owner View</p>
+                <p className="text-xs text-slate-500 mt-1">Administrative tools & full controls.</p>
+              </button>
+            </div>
+          </div>
+
+          {/* Dynamic Content Based on Role */}
+          <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
+            {userType === 'owner' ? (
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg mb-1">👑 Owner Control Center</h3>
+                <p className="text-sm text-slate-600">You have full management access. You can configure settings, review analytics, and manage team members.</p>
+              </div>
+            ) : (
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg mb-1">👤 Employee Portal</h3>
+                <p className="text-sm text-slate-600">Welcome to your workspace dashboard. View assigned duties and check-in status here.</p>
+              </div>
+            )}
+          </div>
         </div>
-
-        <div id="screen-emp-dashboard" class="hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin:0;" id="emp-welcome-title">Employee Portal</h3>
-                <button onclick="logoutEmployee()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
-            </div>
-
-            <div class="flex-row" style="margin-bottom: 15px; font-size: 13px;">
-                <button onclick="switchEmpTab('profile')" id="emp-t-1">(i) Profile</button>
-                <button onclick="switchEmpTab('attendance')" id="emp-t-2" class="secondary">(ii) Add Attendance</button>
-                <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) History</button>
-            </div>
-
-            <div id="emp-pane-profile" class="card">
-                <h3>My Profile</h3>
-                <div id="emp-profile-content"></div>
-            </div>
-
-            <div id="emp-pane-attendance" class="card hidden">
-                <h3>Mark Attendance</h3>
-                <p style="font-size: 13px; color: #666;">Take face selfie camera verification.</p>
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <video id="camera-preview" autoplay playsinline style="width: 100%; max-height: 200px; background: #000; border-radius: 6px;"></video>
-                </div>
-                <button onclick="captureSelfieAttendance()">Capture Selfie & Submit</button>
-            </div>
-
-            <div id="emp-pane-history" class="card hidden">
-                <h3>Attendance History</h3>
-                <div class="flex-row">
-                    <select id="filter-month" onchange="renderCalendar()">
-                        <option value="2026-03">March 2026</option>
-                        <option value="2026-04">April 2026</option>
-                        <option value="2026-05">May 2026</option>
-                        <option value="2026-06" selected>June 2026</option>
-                        <option value="2026-07">July 2026</option>
-                        <option value="2026-08">August 2026</option>
-                    </select>
-                </div>
-                <div style="font-size: 14px; margin: 10px 0; font-weight: bold;" id="attendance-summary-count"></div>
-                <div class="calendar-grid" id="calendar-days-container"></div>
-            </div>
-        </div>
+      )}
 
     </div>
-</div>
-
-<script>
-    const oldOwners = ["kumararat912@gmail.com", "admin@pec.com"];
-    let employees = JSON.parse(localStorage.getItem('pec_employees')) || [
-        { id: "PEC-EMP-101", name: "Rahul Kumar", dob: "2000-01-15", aadhaar: "XXXX-XXXX-1234", joining: "2025-01-01", position: "Helper", attendance: {"2026-06-01": "present", "2026-06-02": "present", "2026-06-03": "absent"} }
-    ];
-    let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
-
-    function hideAllScreens() {
-        document.querySelectorAll('.content > div').forEach(el => el.classList.add('hidden'));
-    }
-
-    function resetFlow() {
-        hideAllScreens();
-        document.getElementById('screen-verify').classList.remove('hidden');
-    }
-
-    // 1. Email Verification
-    function verifyEmail() {
-        const email = document.getElementById('input-email').value.trim().toLowerCase();
-        if(!email || !email.includes('@')) {
-            alert('Please enter a valid email address.');
-            return;
-        }
-        hideAllScreens();
-        if(oldOwners.includes(email)) {
-            document.getElementById('txt-owner-email').innerText = "Owner email verified: " + email;
-            document.getElementById('screen-owner-login').classList.remove('hidden');
-        } else {
-            document.getElementById('txt-reg-email').innerText = "New email detected: " + email;
-            document.getElementById('screen-owner-register').classList.remove('hidden');
-        }
-    }
-
-    function loginOwner() {
-        const pass = document.getElementById('input-owner-pass').value;
-        if(pass === "Prasanta@123") {
-            hideAllScreens();
-            document.getElementById('screen-role-select').classList.remove('hidden');
-        } else {
-            alert('Incorrect password! Default is: Prasanta@123');
-        }
-    }
-
-    function registerOwner() {
-        const name = document.getElementById('reg-name').value;
-        const pass = document.getElementById('reg-pass').value;
-        if(!name || !pass) {
-            alert('Please fill all details.');
-            return;
-        }
-        alert('Registration successful! Please login with your email.');
-        resetFlow();
-    }
-
-    function openOwnerPortal() {
-        hideAllScreens();
-        document.getElementById('screen-owner-dashboard').classList.remove('hidden');
-        renderEmployeeList();
-    }
-
-    function openEmployeePortalSelect() {
-        if(currentLoggedInEmpId) {
-            loadEmployeeDashboard(currentLoggedInEmpId);
-        } else {
-            hideAllScreens();
-            document.getElementById('screen-emp-login').classList.remove('hidden');
-        }
-    }
-
-    function backToRoleSelect() {
-        hideAllScreens();
-        document.getElementById('screen-role-select').classList.remove('hidden');
-    }
-
-    // Owner Tabs
-    function switchOwnerTab(tab) {
-        if(tab === 'home') {
-            document.getElementById('owner-tab-home').classList.remove('hidden');
-            document.getElementById('owner-tab-add').classList.add('hidden');
-            document.getElementById('tab-btn-home').classList.remove('secondary');
-            document.getElementById('tab-btn-add').classList.add('secondary');
-            renderEmployeeList();
-        } else {
-            document.getElementById('owner-tab-home').classList.add('hidden');
-            document.getElementById('owner-tab-add').classList.remove('hidden');
-            document.getElementById('tab-btn-home').classList.add('secondary');
-            document.getElementById('tab-btn-add').classList.remove('secondary');
-        }
-    }
-
-    function saveNewEmployee() {
-        const name = document.getElementById('emp-name').value;
-        const dob = document.getElementById('emp-dob').value;
-        const aadhaar = document.getElementById('emp-aadhaar').value;
-        const joining = document.getElementById('emp-joining').value;
-        const position = document.getElementById('emp-position').value;
-
-        if(!name || !position) {
-            alert('Please fill Name and Position.');
-            return;
-        }
-
-        const newId = "PEC-EMP-" + Math.floor(100 + Math.random() * 900);
-        employees.push({
-            id: newId,
-            name: name,
-            dob: dob,
-            aadhaar: aadhaar ? "[Aadhaar Redacted]" : "N/A",
-            joining: joining,
-            position: position,
-            attendance: {}
-        });
-
-        localStorage.setItem('pec_employees', JSON.stringify(employees));
-        alert('Employee created successfully! ID: ' + newId);
-        document.getElementById('emp-name').value = "";
-        document.getElementById('emp-position').value = "";
-        switchOwnerTab('home');
-    }
-
-    function renderEmployeeList() {
-        const container = document.getElementById('employee-list-container');
-        container.innerHTML = "";
-        if(employees.length === 0) {
-            container.innerHTML = "<p>No employees found.</p>";
-            return;
-        }
-
-        employees.forEach(emp => {
-            let div = document.createElement('div');
-            div.style.cssText = "padding: 10px; border-bottom: 1px solid #ddd; margin-top: 5px;";
-            div.innerHTML = `<strong>${emp.name}</strong> (${emp.id})<br><small>Position: ${emp.position} | Joining: ${emp.joining}</small>`;
-            container.appendChild(div);
-        });
-    }
-
-    function filterEmployees() {
-        let query = document.getElementById('search-employee').value.toLowerCase();
-        let container = document.getElementById('employee-list-container');
-        container.innerHTML = "";
-        
-        let filtered = employees.filter(e => e.name.toLowerCase().includes(query) || e.id.toLowerCase().includes(query));
-        filtered.forEach(emp => {
-            let div = document.createElement('div');
-            div.style.cssText = "padding: 10px; border-bottom: 1px solid #ddd; margin-top: 5px;";
-            div.innerHTML = `<strong>${emp.name}</strong> (${emp.id})<br><small>Position: ${emp.position}</small>`;
-            container.appendChild(div);
-        });
-    }
-
-    // Employee Login & Portal
-    function loginEmployee() {
-        const idInput = document.getElementById('emp-login-id').value.trim();
-        const found = employees.find(e => e.id.toLowerCase() === idInput.toLowerCase());
-        if(found) {
-            currentLoggedInEmpId = found.id;
-            localStorage.setItem('pec_current_emp', currentLoggedInEmpId);
-            loadEmployeeDashboard(currentLoggedInEmpId);
-        } else {
-            alert('Invalid Employee ID!');
-        }
-    }
-
-    function logoutEmployee() {
-        currentLoggedInEmpId = null;
-        localStorage.removeItem('pec_current_emp');
-        stopCamera();
-        backToRoleSelect();
-    }
-
-    function loadEmployeeDashboard(empId) {
-        hideAllScreens();
-        document.getElementById('screen-emp-dashboard').classList.remove('hidden');
-        const emp = employees.find(e => e.id === empId);
-        if(emp) {
-            document.getElementById('emp-welcome-title').innerText = emp.name;
-            document.getElementById('emp-profile-content').innerHTML = `
-                <p><strong>Employee ID:</strong> ${emp.id}</p>
-                <p><strong>Full Name:</strong> ${emp.name}</p>
-                <p><strong>Position:</strong> ${emp.position}</p>
-                <p><strong>Date of Birth:</strong> ${emp.dob || 'N/A'}</p>
-                <p><strong>Joining Date:</strong> ${emp.joining || 'N/A'}</p>
-                <p><strong>Aadhaar Status:</strong> ${emp.aadhaar}</p>
-            `;
-            switchEmpTab('profile');
-        }
-    }
-
-    function switchEmpTab(tab) {
-        document.getElementById('emp-pane-profile').classList.add('hidden');
-        document.getElementById('emp-pane-attendance').classList.add('hidden');
-        document.getElementById('emp-pane-history').classList.add('hidden');
-        stopCamera();
-
-        if(tab === 'profile') {
-            document.getElementById('emp-pane-profile').classList.remove('hidden');
-        } else if(tab === 'attendance') {
-            document.getElementById('emp-pane-attendance').classList.remove('hidden');
-            startCamera();
-        } else if(tab === 'history') {
-            document.getElementById('emp-pane-history').classList.remove('hidden');
-            renderCalendar();
-        }
-    }
-
-    let videoStream = null;
-    function startCamera() {
-        const video = document.getElementById('camera-preview');
-        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-            .then(stream => {
-                videoStream = stream;
-                video.srcObject = stream;
-            })
-            .catch(err => console.log("Camera error"));
-    }
-
-    function stopCamera() {
-        if(videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());
-            videoStream = null;
-        }
-    }
-
-    function captureSelfieAttendance() {
-        const emp = employees.find(e => e.id === currentLoggedInEmpId);
-        if(!emp) return;
-
-        const todayStr = new Date().toISOString().split('T')[0];
-        emp.attendance[todayStr] = 'present';
-        localStorage.setItem('pec_employees', JSON.stringify(employees));
-        alert('Attendance marked successfully for today!');
-        switchEmpTab('history');
-    }
-
-    function renderCalendar() {
-        const container = document.getElementById('calendar-days-container');
-        container.innerHTML = "";
-        const emp = employees.find(e => e.id === currentLoggedInEmpId);
-        if(!emp) return;
-
-        const selectedMonth = document.getElementById('filter-month').value;
-        let [year, month] = selectedMonth.split('-');
-        let daysInMonth = new Date(year, month, 0).getDate();
-
-        let presentCount = 0;
-        let absentCount = 0;
-
-        for(let d = 1; d <= daysInMonth; d++) {
-            let dayStr = d < 10 ? '0' + d : d;
-            let fullDateStr = `${year}-${month}-${dayStr}`;
-            let status = emp.attendance[fullDateStr];
-
-            let cell = document.createElement('div');
-            cell.className = "cal-day";
-            cell.innerText = d;
-
-            if(status === 'present') {
-                cell.classList.add('present');
-                presentCount++;
-            } else {
-                cell.classList.add('absent');
-                absentCount++;
-            }
-            container.appendChild(cell);
-        }
-
-        document.getElementById('attendance-summary-count').innerHTML = `
-            <span class="badge badge-blue">Present: ${presentCount}</span> 
-            <span class="badge badge-red">Absent: ${absentCount}</span>
-        `;
-    }
-</script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prasanta Engineering & Contractor - Attendance System</title>
-    <style>
-        :root {
-            --bg: #FFFFFF;
-            --panel: #F5F7F9;
-            --ink: #1C2430;
-            --navy: #1D3557;
-            --amber: #D98E2B;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--ink);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        .card {
-            background: var(--panel);
-            padding: 24px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            text-align: center;
-            box-sizing: border-box;
-        }
-        h2 {
-            margin-top: 0;
-            color: var(--navy);
-        }
-        input, button {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: var(--navy);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:hover {
-            opacity: 0.9;
-        }
-        button.secondary {
-            background-color: var(--amber);
-        }
-        .info-text {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 15px;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- 1. Email Verification Screen -->
-    <div class="card" id="auth-screen">
-        <h2>PEC Attendance</h2>
-        <p class="info-text">Please enter your email to continue</p>
-        <input type="email" id="user-email" placeholder="Enter your email address">
-        <button onclick="handleVerification()">Verify Email</button>
-    </div>
-
-    <!-- 2. Old Owner Login Screen -->
-    <div class="card" id="login-screen" style="display:none;">
-        <h2>Owner Login</h2>
-        <p class="info-text" id="display-email"></p>
-        <input type="password" placeholder="Enter Password">
-        <button onclick="alert('Login Successful!')">Login</button>
-        <button class="secondary" onclick="backToVerify()">Back</button>
-    </div>
-
-    <!-- 3. New Owner Register Screen -->
-    <div class="card" id="register-screen" style="display:none;">
-        <h2>New Owner Registration</h2>
-        <p class="info-text" id="display-reg-email"></p>
-        <input type="text" placeholder="Full Name">
-        <input type="password" placeholder="Create Password">
-        <button onclick="alert('Registration Successful!')">Register</button>
-        <button class="secondary" onclick="backToVerify()">Back</button>
-    </div>
-
-    <script>
-        // Old owner registered email list (Apni ebe chahinle eithi email change ba add kari paribe)
-        const oldOwners = ["kumararat912@gmail.com", "admin@pec.com"];
-
-        function handleVerification() {
-            const emailInput = document.getElementById('user-email').value.trim();
-            if(!emailInput) {
-                alert('Please enter a valid email address!');
-                return;
-            }
-
-            // Check if email belongs to old owner
-            if(oldOwners.includes(emailInput.toLowerCase())) {
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('display-email').innerText = "Welcome back! Login for: " + emailInput;
-                document.getElementById('login-screen').style.display = 'block';
-            } else {
-                // New owner registration flow
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('display-reg-email').innerText = "Register new account for: " + emailInput;
-                document.getElementById('register-screen').style.display = 'block';
-            }
-        }
-
-        function backToVerify() {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('register-screen').style.display = 'none';
-            document.getElementById('auth-screen').style.display = 'block';
-        }
-    </script>
-</body>
-</html>
-
+  );
+}
