@@ -1,206 +1,130 @@
-import React, { useState } from 'react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- Babel for JSX compilation in browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
 
-export default function App() {
-  // Navigation & Flow States
-  const [step, setStep] = useState('login'); // 'login' | 'otp' | 'dashboard'
-  const [email, setEmail] = useState('');
-  const [userType, setUserType] = useState('employee'); // 'owner' | 'employee'
-  
-  // OTP States
-  const [generatedOtp, setGeneratedOtp] = useState('');
-  const [enteredOtp, setEnteredOtp] = useState('');
-  const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+    <script type="text/babel">
+        function App() {
+            const [isVerified, setIsVerified] = React.useState(false);
+            const [step, setStep] = React.useState('login');
+            const [email, setEmail] = React.useState('');
+            const [generatedOtp, setGeneratedOtp] = React.useState('');
+            const [enteredOtp, setEnteredOtp] = React.useState('');
+            const [error, setError] = React.useState('');
 
-  // Step 1: Send / Generate OTP
-  const handleSendOtp = (e) => {
-    e.preventDefault();
-    if (!email || !email.includes('@')) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    
-    setError('');
-    // Generate a random 4-digit OTP for demo purposes
-    const mockOtp = Math.floor(1000 + Math.random() * 9000).toString();
-    setGeneratedOtp(mockOtp);
-    setStep('otp');
-    setSuccessMsg('Verification code generated!');
-  };
+            const handleSendOtp = (e) => {
+                e.preventDefault();
+                if (!email || !email.includes('@')) {
+                    setError('Sahi email addressantu.');
+                    return;
+                }
+                setError('');
+                const mockOtp = Math.floor(1000 + Math.random() * 9000).toString();
+                setGeneratedOtp(mockOtp);
+                setStep('otp');
+            };
 
-  // Step 2: Verify OTP
-  const handleVerifyOtp = (e) => {
-    e.preventDefault();
-    if (enteredOtp !== generatedOtp) {
-      setError('Incorrect OTP. Please check the demo banner above.');
-      return;
-    }
+            const handleVerifyOtp = (e) => {
+                e.preventDefault();
+                if (enteredOtp !== generatedOtp) {
+                    setError('Bhul OTP! Demo banner re thiba code tiantu.');
+                    return;
+                }
+                setError('');
+                setIsVerified(true);
+            };
 
-    setError('');
-    setStep('dashboard');
-  };
+            if (!isVerified) {
+                return (
+                    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
+                        {step === 'login' ? (
+                            <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
+                                <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">App Access Gate</h1>
+                                <p className="text-sm text-slate-500 text-center mb-6">App kholiba purbaru email verification darkar</p>
+                                {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
+                                <form onSubmit={handleSendOtp} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                                        <input 
+                                            type="email" 
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="name@example.com" 
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        />
+                                    </div>
+                                    <button type="submit" className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700">
+                                        Send Verification OTP
+                                    </button>
+                                </form>
+                            </div>
+                        ) : (
+                            <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
+                                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">
+                                    <p className="text-xs font-bold uppercase mb-1">🛠️ Demo OTP Code</p>
+                                    <div className="text-center py-2 bg-white border border-amber-300 rounded font-mono text-xl font-bold text-amber-600 tracking-widest">
+                                        {generatedOtp}
+                                    </div>
+                                </div>
+                                <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">Enter OTP</h1>
+                                <p className="text-sm text-slate-500 text-center mb-6">Code sent to {email}</p>
+                                {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
+                                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                                    <input 
+                                        type="text" 
+                                        maxLength="4"
+                                        value={enteredOtp}
+                                        onChange={(e) => setEnteredOtp(e.target.value)}
+                                        placeholder="1234" 
+                                        className="w-full text-center tracking-widest text-2xl font-mono px-4 py-3 border border-slate-300 rounded-lg focus:outline-none"
+                                        required
+                                    />
+                                    <button type="submit" className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700">
+                                        Verify & Open App
+                                    </button>
+                                    <button type="button" onClick={() => setStep('login')} className="w-full text-sm text-slate-500 pt-2">
+                                        ← Back
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
 
-  // Reset flow to log out
-  const handleLogout = () => {
-    setStep('login');
-    setEmail('');
-    setEnteredOtp('');
-    setGeneratedOtp('');
-    setError('');
-    setSuccessMsg('');
-  };
+            return (
+                <div className="min-h-screen bg-slate-100 p-8">
+                    <div className="max-w-4xl mx-auto bg-white rounded-xl shadow p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h1 className="text-2xl font-bold text-slate-800">🎉 Welcome to the Main App!</h1>
+                            <button 
+                                onClick={() => { setIsVerified(false); setStep('login'); setEmail(''); setEnteredOtp(''); }}
+                                className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100"
+                            >
+                                Log Out
+                            </button>
+                        </div>
+                        <p className="text-slate-600">Apana successful email verify kari app bhitare enter karichanti ({email}).</p>
+                    </div>
+                </div>
+            );
+        }
 
-  return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-      
-      {/* 1. LOGIN / REGISTER SCREEN */}
-      {step === 'login' && (
-        <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-slate-800">Welcome Back</h1>
-            <p className="text-sm text-slate-500 mt-1">Sign in or register with your email to continue</p>
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSendOtp} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-              <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@company.com" 
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition"
-            >
-              Continue with Email (Send OTP)
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* 2. OTP VERIFICATION SCREEN */}
-      {step === 'otp' && (
-        <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
-          
-          {/* DEMO BANNER - Clearly explains why the OTP is visible */}
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">
-            <p className="text-xs font-bold uppercase tracking-wider text-amber-900 mb-1">🛠️ Developer Demo Banner</p>
-            <p className="text-sm">
-              Since this is a client-only static app, no real email was sent. Your mock verification code is:
-            </p>
-            <div className="mt-2 text-center py-2 bg-white border border-amber-300 rounded font-mono text-xl font-bold text-amber-600 tracking-widest">
-              {generatedOtp}
-            </div>
-          </div>
-
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-slate-800">Enter Verification Code</h1>
-            <p className="text-sm text-slate-500 mt-1">We sent a code to <span className="font-semibold text-slate-700">{email}</span></p>
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
-            <div>
-              <input 
-                type="text" 
-                maxLength="4"
-                value={enteredOtp}
-                onChange={(e) => setEnteredOtp(e.target.value)}
-                placeholder="1234" 
-                className="w-full text-center tracking-widest text-2xl font-mono px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition"
-            >
-              Verify & Proceed
-            </button>
-            
-            <button 
-              type="button" 
-              onClick={() => setStep('login')}
-              className="w-full text-sm text-slate-500 hover:text-slate-700 pt-2"
-            >
-              ← Back to email entry
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* 3. OWNER / EMPLOYEE DASHBOARD GATE */}
-      {step === 'dashboard' && (
-        <div className="max-w-2xl w-full bg-white rounded-xl shadow-md p-8 border border-slate-100">
-          <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800">Access Granted</h1>
-              <p className="text-sm text-slate-500">Logged in as: {email}</p>
-            </div>
-            <button 
-              onClick={handleLogout}
-              className="text-sm px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition"
-            >
-              Log Out
-            </button>
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Select Your View / Role:</label>
-            <div className="grid grid-cols-2 gap-4">
-              <button 
-                onClick={() => setUserType('employee')}
-                className={`p-4 rounded-xl border text-left transition ${userType === 'employee' ? 'border-blue-500 bg-blue-50/50 text-blue-900' : 'border-slate-200 hover:bg-slate-50'}`}
-              >
-                <p className="font-semibold">Employee View</p>
-                <p className="text-xs text-slate-500 mt-1">Standard member permissions & tasks.</p>
-              </button>
-              
-              <button 
-                onClick={() => setUserType('owner')}
-                className={`p-4 rounded-xl border text-left transition ${userType === 'owner' ? 'border-blue-500 bg-blue-50/50 text-blue-900' : 'border-slate-200 hover:bg-slate-50'}`}
-              >
-                <p className="font-semibold">Owner View</p>
-                <p className="text-xs text-slate-500 mt-1">Administrative tools & full controls.</p>
-              </button>
-            </div>
-          </div>
-
-          {/* Dynamic Content Based on Role */}
-          <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
-            {userType === 'owner' ? (
-              <div>
-                <h3 className="font-bold text-slate-800 text-lg mb-1">👑 Owner Control Center</h3>
-                <p className="text-sm text-slate-600">You have full management access. You can configure settings, review analytics, and manage team members.</p>
-              </div>
-            ) : (
-              <div>
-                <h3 className="font-bold text-slate-800 text-lg mb-1">👤 Employee Portal</h3>
-                <p className="text-sm text-slate-600">Welcome to your workspace dashboard. View assigned duties and check-in status here.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-    </div>
-  );
-}
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
