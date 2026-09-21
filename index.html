@@ -105,6 +105,7 @@
         button:hover { opacity: 0.9; }
         button.secondary { background-color: var(--amber); }
         button.danger { background-color: var(--red); }
+        button.success { background-color: #2a9d8f; }
         .hidden { display: none !important; }
         .flex-row { display: flex; gap: 10px; }
         .badge {
@@ -142,7 +143,6 @@
             align-items: center;
             z-index: 100;
         }
-        
         .emp-item-card {
             display: flex;
             justify-content: space-between;
@@ -199,7 +199,6 @@
         .dropdown-menu button.delete-opt {
             color: var(--red);
         }
-        /* Rectangular Compact Camera Box styling */
         .camera-box-preview {
             width: 100%;
             height: 180px;
@@ -282,9 +281,10 @@
                 <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employee</button>
             </div>
 
-            <!-- Owner Tab 1: Home / Employees List & Filter -->
+            <!-- Owner Tab 1: Home / Employees List -->
             <div id="owner-tab-home" class="card">
                 <h3>Manage Employees</h3>
+                <button class="success" onclick="exportMonthlyReportCSV()">📥 Download Monthly Report (CSV)</button>
                 <input type="text" id="search-employee" placeholder="Filter by employee name or ID..." onkeyup="filterEmployees()">
                 <div id="employee-list-container"></div>
             </div>
@@ -324,7 +324,7 @@
         <div id="screen-emp-login" class="card hidden">
             <h3>Employee Portal Login</h3>
             <p style="font-size: 14px; color: #666;">Enter your employee ID assigned by owner.</p>
-            <input type="text" id="emp-login-id" placeholder="e.g. PEC-EMP-101">
+            <input type="text" id="emp-login-id" placeholder="e.g. PEC-EMP-987">
             <button onclick="loginEmployee()">Login</button>
             <button class="secondary" onclick="backToWelcome()">Back</button>
         </div>
@@ -348,10 +348,10 @@
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance Rectangular Live Camera Preview & Location -->
+            <!-- Employee Tab 2: Attendance -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Daily Attendance</h3>
-                <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time with rect-frame front camera preview & exact address GPS.</p>
+                <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time with front camera preview & exact address GPS.</p>
                 
                 <div style="margin-bottom: 20px;">
                     <label><strong>1. In-Time Attendance Selfie</strong></label>
@@ -415,7 +415,7 @@
     </div>
 </div>
 
-<!-- Modal for Viewing Detailed Attendance Log & Photos -->
+<!-- Modal for Viewing Detailed Attendance Log -->
 <div id="employee-modal" class="modal hidden">
     <div class="card" style="width: 92%; max-width: 420px; background: white; max-height: 90vh; overflow-y: auto;">
         <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
@@ -434,7 +434,24 @@
     let ownerAccounts = savedOwners ? { ...defaultOwnerAccounts, ...savedOwners } : defaultOwnerAccounts;
     localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
 
-    let employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+    let hardcodedEmployees = [
+        {
+            id: "PEC-EMP-987",
+            name: "Arata kumar sahoo",
+            dob: "2005-04-27",
+            aadhaar: "[Aadhaar Redacted]",
+            joining: "2024-01-01",
+            position: "Production officer",
+            salary: "25000",
+            photo: "",
+            attendance: {}
+        }
+    ];
+
+    let localStoredEmployees = JSON.parse(localStorage.getItem('pec_employees'));
+    let employees = localStoredEmployees && localStoredEmployees.length > 0 ? localStoredEmployees : hardcodedEmployees;
+    localStorage.setItem('pec_employees', JSON.stringify(employees));
+
     let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
     let currentSessionUser = localStorage.getItem('pec_current_user') || null;
 
@@ -661,7 +678,7 @@
     }
 
     function processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, photo) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
         if(editIndex !== "") {
             let idx = parseInt(editIndex);
             employees[idx].name = name;
@@ -693,7 +710,7 @@
     }
 
     function renderEmployeeList() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
         const container = document.getElementById('employee-list-container');
         container.innerHTML = "";
         if(employees.length === 0) {
@@ -725,7 +742,7 @@
     }
 
     function filterEmployees() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
         let query = document.getElementById('search-employee').value.toLowerCase();
         let container = document.getElementById('employee-list-container');
         container.innerHTML = "";
@@ -771,7 +788,7 @@
     }
 
     function editEmployee(index) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
         const emp = employees[index];
         document.getElementById('form-title-text').innerText = "Edit Employee Details";
         document.getElementById('edit-emp-index').value = index;
@@ -796,8 +813,51 @@
         }
     }
 
+    // EXPORT MONTHLY REPORT CSV FUNCTION
+    function exportMonthlyReportCSV() {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
+        if(employees.length === 0) {
+            alert('No employee data available to export.');
+            return;
+        }
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        let daysInMonth = new Date(year, month + 1, 0).getDate();
+        let monthName = now.toLocaleString('default', { month: 'long' });
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += `Prasanta Engineering & Contractor - Monthly Attendance Report (${monthName} ${year})\n`;
+        csvContent += "Employee ID,Employee Name,Designation,Monthly Base Salary,Present Days,Absent Days,Estimated Earned Salary\n";
+
+        employees.forEach(emp => {
+            let presentCount = 0;
+            for(let d = 1; d <= daysInMonth; d++) {
+                let fullDateStr = `${year}-${month}-${d}`;
+                if(emp.attendance[fullDateStr] && emp.attendance[fullDateStr].status === 'present') {
+                    presentCount++;
+                }
+            }
+            let absentCount = daysInMonth - presentCount;
+            let baseSal = parseFloat(emp.salary);
+            let estEarned = (!isNaN(baseSal)) ? Math.round((baseSal / 30) * presentCount) : "N/A";
+            let rowSalary = (!isNaN(baseSal)) ? baseSal : "Not Assigned";
+
+            csvContent += `"${emp.id}","${emp.name}","${emp.position}","${rowSalary}","${presentCount}","${absentCount}","${estEarned}"\n`;
+        });
+
+        let encodedUri = encodeURI(csvContent);
+        let link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `PEC_Attendance_Report_${monthName}_${year}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     function openOwnerEmployeeDetailModal(empId) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
         const emp = employees.find(e => e.id === empId);
         if(!emp) return;
 
@@ -863,7 +923,7 @@
 
     function loginEmployee() {
         const idInput = document.getElementById('emp-login-id').value.trim();
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
         const found = employees.find(e => e.id.toLowerCase() === idInput.toLowerCase() || e.id === idInput);
         if(found) {
             currentLoggedInEmpId = found.id;
@@ -884,7 +944,7 @@
     function loadEmployeeDashboard(empId) {
         hideAllScreens();
         document.getElementById('screen-emp-dashboard').classList.remove('hidden');
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
         const emp = employees.find(e => e.id === empId);
         if(emp) {
             document.getElementById('emp-welcome-title').innerText = emp.name;
@@ -917,7 +977,6 @@
         }
     }
 
-    // Camera Access for Front Rectangular View
     function startCamera(type) {
         stopActiveCamera();
         const video = document.getElementById(`video-${type}`);
@@ -940,9 +999,8 @@
             });
     }
 
-    // Capture Photo and fetch Location Address with Pincode
     function captureAndSubmitAttendance(type) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
         const emp = employees.find(e => e.id === currentLoggedInEmpId);
         if(!emp) return;
 
@@ -955,14 +1013,12 @@
             return;
         }
 
-        // Draw video frame to canvas
         canvas.width = video.videoWidth || 320;
         canvas.height = video.videoHeight || 240;
         let ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         let photoData = canvas.toDataURL('image/jpeg');
 
-        // Show captured image preview inside box
         video.style.display = 'none';
         previewImg.src = photoData;
         previewImg.style.display = 'block';
@@ -975,7 +1031,6 @@
                 let lon = position.coords.longitude;
                 let timeStr = new Date().toLocaleTimeString();
 
-                // Reverse geocoding for exact address & pincode
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
                     .then(response => response.json())
                     .then(data => {
@@ -1017,7 +1072,7 @@
     }
 
     function renderCalendar() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
         const container = document.getElementById('calendar-days-container');
         container.innerHTML = "";
         const emp = employees.find(e => e.id === currentLoggedInEmpId);
@@ -1065,7 +1120,7 @@
     }
 
     function showAttendanceDetailModal(empId, dateStr) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
         const emp = employees.find(e => e.id === empId);
         if(!emp || !emp.attendance[dateStr]) return;
 
