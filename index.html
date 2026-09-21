@@ -410,7 +410,6 @@
                 if(data.owners) ownerAccounts = data.owners;
                 if(data.employees) employees = Object.values(data.employees);
             } else {
-                // Initialize default database if empty
                 syncDataToFirebase();
             }
             if(currentSessionUser) {
