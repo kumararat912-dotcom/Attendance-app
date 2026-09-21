@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prasanta Engineering & Contractor - Attendance & Management System</title>
-    <!-- EmailJS SDK for sending OTP emails -->
+    <title>Prasanta Engineering & Contractor - Cloud Attendance System</title>
+    <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
@@ -105,7 +105,6 @@
         button:hover { opacity: 0.9; }
         button.secondary { background-color: var(--amber); }
         button.danger { background-color: var(--red); }
-        button.success { background-color: #2a9d8f; }
         .hidden { display: none !important; }
         .flex-row { display: flex; gap: 10px; }
         .badge {
@@ -153,69 +152,30 @@
             border-radius: 8px;
             margin-bottom: 8px;
         }
-        .menu-container {
-            position: relative;
-        }
+        .menu-container { position: relative; }
         .dots-btn {
-            background: none;
-            border: none;
-            color: var(--ink);
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            padding: 0 8px;
-            width: auto;
-            margin: 0;
+            background: none; border: none; color: var(--ink);
+            font-size: 20px; font-weight: bold; cursor: pointer; padding: 0 8px; width: auto; margin: 0;
         }
         .dropdown-menu {
-            position: absolute;
-            right: 0;
-            top: 30px;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            display: none;
-            z-index: 10;
-            width: 100px;
+            position: absolute; right: 0; top: 30px; background: white;
+            border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none; z-index: 10; width: 100px;
         }
-        .dropdown-menu.show {
-            display: block;
-        }
+        .dropdown-menu.show { display: block; }
         .dropdown-menu button {
-            background: none;
-            color: var(--ink);
-            border: none;
-            width: 100%;
-            text-align: left;
-            padding: 8px 12px;
-            font-size: 14px;
-            margin: 0;
-            border-radius: 0;
+            background: none; color: var(--ink); border: none; width: 100%;
+            text-align: left; padding: 8px 12px; font-size: 14px; margin: 0; border-radius: 0;
         }
-        .dropdown-menu button:hover {
-            background: #f1f1f1;
-        }
-        .dropdown-menu button.delete-opt {
-            color: var(--red);
-        }
+        .dropdown-menu button:hover { background: #f1f1f1; }
+        .dropdown-menu button.delete-opt { color: var(--red); }
         .camera-box-preview {
-            width: 100%;
-            height: 180px;
-            background: #000;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            margin-bottom: 10px;
-            position: relative;
-            border: 1px solid var(--border);
+            width: 100%; height: 180px; background: #000; border-radius: 8px;
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+            margin-bottom: 10px; position: relative; border: 1px solid var(--border);
         }
         .camera-box-preview video, .camera-box-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 100%; height: 100%; object-fit: cover;
         }
     </style>
 </head>
@@ -224,7 +184,7 @@
 <div class="container">
     <div class="header">
         <div class="logo-box">Prasanta Engineering & Contractor</div>
-        <div class="sub-logo">Official Attendance & Management System</div>
+        <div class="sub-logo">Cloud Attendance System (Firebase)</div>
     </div>
 
     <div class="content">
@@ -241,18 +201,16 @@
         <!-- LOGIN SCREEN -->
         <div id="screen-login" class="card hidden">
             <h3>Owner Login</h3>
-            <p style="font-size: 13px; color: #666;">Enter your owner credentials.</p>
             <input type="email" id="login-email" placeholder="Enter owner email">
             <input type="password" id="login-password" placeholder="Enter password">
             <button onclick="loginOwnerWithPassword()">Login</button>
-            <button class="secondary" onclick="showForgotPasswordModal()">Forgot Password / Reset via Email?</button>
+            <button class="secondary" onclick="showForgotPasswordModal()">Forgot Password / Reset?</button>
             <button class="danger" onclick="backToWelcome()">Back</button>
         </div>
 
         <!-- REGISTER SCREEN -->
         <div id="screen-register" class="card hidden">
             <h3>Register Admin Account</h3>
-            <p style="font-size: 13px; color: #666;">Create a new owner account with password.</p>
             <input type="text" id="reg-name" placeholder="Full Name">
             <input type="email" id="reg-email" placeholder="Email Address">
             <input type="password" id="reg-pass" placeholder="Create Password">
@@ -272,7 +230,7 @@
         <!-- OWNER DASHBOARD -->
         <div id="screen-owner-dashboard" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin:0;">Owner Control Panel</h3>
+                <h3 style="margin:0;">Owner Control Panel (Cloud)</h3>
                 <button onclick="logoutApp()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
             </div>
             
@@ -281,20 +239,17 @@
                 <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employee</button>
             </div>
 
-            <!-- Owner Tab 1: Home / Employees List -->
             <div id="owner-tab-home" class="card">
-                <h3>Manage Employees</h3>
-                <button class="success" onclick="exportMonthlyReportCSV()">📥 Download Monthly Report (CSV)</button>
+                <h3>Manage Employees (Real-Time Sync)</h3>
                 <input type="text" id="search-employee" placeholder="Filter by employee name or ID..." onkeyup="filterEmployees()">
-                <div id="employee-list-container"></div>
+                <div id="employee-list-container">Loading from Cloud...</div>
             </div>
 
-            <!-- Owner Tab 2: Add / Edit Employees -->
             <div id="owner-tab-add" class="card hidden">
                 <h3 id="form-title-text">Add Employee Details</h3>
-                <input type="hidden" id="edit-emp-index" value="">
+                <input type="hidden" id="edit-emp-id" value="">
                 
-                <label>Employee Photo Upload (Camera or Gallery)</label>
+                <label>Employee Photo Upload</label>
                 <input type="file" id="emp-photo" accept="image/*">
                 
                 <label>Employee Name *</label>
@@ -312,10 +267,10 @@
                 <label>Position / Designation *</label>
                 <input type="text" id="emp-position" placeholder="Position / Designation">
 
-                <label>Salary Details (Optional)</label>
-                <input type="number" id="emp-salary" placeholder="Monthly Salary (Optional)">
+                <label>Monthly Salary (Optional)</label>
+                <input type="number" id="emp-salary" placeholder="Salary">
 
-                <button onclick="saveEmployeeData()">Save Employee</button>
+                <button onclick="saveEmployeeDataToCloud()">Save to Cloud</button>
                 <button class="secondary" onclick="switchOwnerTab('home')">Cancel</button>
             </div>
         </div>
@@ -342,16 +297,14 @@
                 <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) Calendar & Salary</button>
             </div>
 
-            <!-- Employee Tab 1: Profile -->
             <div id="emp-pane-profile" class="card">
                 <h3>My Profile</h3>
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance -->
             <div id="emp-pane-attendance" class="card hidden">
-                <h3>Mark Daily Attendance</h3>
-                <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time with front camera preview & exact address GPS.</p>
+                <h3>Mark Daily Attendance (Cloud Sync)</h3>
+                <p style="font-size: 13px; color: #666;">Submit In/Out selfie with GPS address directly to Cloud Database.</p>
                 
                 <div style="margin-bottom: 20px;">
                     <label><strong>1. In-Time Attendance Selfie</strong></label>
@@ -361,7 +314,7 @@
                         <img id="preview-in-img" style="display:none;" alt="In-Time Preview">
                         <span id="placeholder-in-text" style="color: #aaa; font-size: 13px;">Camera Inactive</span>
                     </div>
-                    <button type="button" class="secondary" onclick="startCamera('in')" style="margin-bottom: 6px;">Open Camera Frame</button>
+                    <button type="button" class="secondary" onclick="startCamera('in')" style="margin-bottom: 6px;">Open Camera</button>
                     <button type="button" onclick="captureAndSubmitAttendance('in')">Capture & Submit In-Time</button>
                 </div>
 
@@ -375,15 +328,13 @@
                         <img id="preview-out-img" style="display:none;" alt="Out-Time Preview">
                         <span id="placeholder-out-text" style="color: #aaa; font-size: 13px;">Camera Inactive</span>
                     </div>
-                    <button type="button" class="secondary" onclick="startCamera('out')" style="margin-bottom: 6px;">Open Camera Frame</button>
+                    <button type="button" class="secondary" onclick="startCamera('out')" style="margin-bottom: 6px;">Open Camera</button>
                     <button type="button" class="secondary" onclick="captureAndSubmitAttendance('out')">Capture & Submit Out-Time</button>
                 </div>
             </div>
 
-            <!-- Employee Tab 3: Calendar & Calculation -->
             <div id="emp-pane-history" class="card hidden">
-                <h3>Attendance Calendar & Salary Calculation</h3>
-                <p style="font-size: 12px; color: #666;">Click on any blue date to view In-Time and Out-Time details, photos, and address locations.</p>
+                <h3>Attendance Calendar & Salary</h3>
                 <div class="flex-row">
                     <select id="filter-year" onchange="renderCalendar()">
                         <option value="2026" selected>2026</option>
@@ -415,76 +366,172 @@
     </div>
 </div>
 
-<!-- Modal for Viewing Detailed Attendance Log -->
+<!-- Modal -->
 <div id="employee-modal" class="modal hidden">
     <div class="card" style="width: 92%; max-width: 420px; background: white; max-height: 90vh; overflow-y: auto;">
         <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
-        <h3 style="margin-top:0;">Attendance & Employee Details</h3>
+        <h3 style="margin-top:0;">Attendance & Details</h3>
         <div id="modal-body-content"></div>
     </div>
 </div>
 
-<script>
+<!-- Firebase & Main Script -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBCj4EEYDKbtuBtdHsHEssW3zHcLAv0CRA",
+      authDomain: "prasanta-attendance-system.firebaseapp.com",
+      projectId: "prasanta-attendance-system",
+      storageBucket: "prasanta-attendance-system.firebasestorage.app",
+      messagingSenderId: "265672524321",
+      appId: "1:265672524321:web:7f656a0db2b127db6e1960",
+      measurementId: "G-624KWXRXV0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.colRef = collection(db, "employees");
+
+    let employeesList = [];
+    let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
+    let currentSessionUser = localStorage.getItem('pec_current_user') || null;
+    let generatedOTP = "", pendingEmail = "", pendingPassword = "", authMode = "", activeStream = null;
+
     let defaultOwnerAccounts = {
         "aratakumarsahoo3@gmail.com": "admin123",
         "admin@pec.com": "password"
     };
+    let ownerAccounts = JSON.parse(localStorage.getItem('pec_owner_accounts')) || defaultOwnerAccounts;
 
-    let savedOwners = JSON.parse(localStorage.getItem('pec_owner_accounts'));
-    let ownerAccounts = savedOwners ? { ...defaultOwnerAccounts, ...savedOwners } : defaultOwnerAccounts;
-    localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
-
-    let hardcodedEmployees = [
-        {
-            id: "PEC-EMP-987",
-            name: "Arata kumar sahoo",
-            dob: "2005-04-27",
-            aadhaar: "[Aadhaar Redacted]",
-            joining: "2024-01-01",
-            position: "Production officer",
-            salary: "25000",
-            photo: "",
-            attendance: {}
+    // Real-time listener for employees from Firestore
+    onSnapshot(window.colRef, (snapshot) => {
+        employeesList = [];
+        snapshot.forEach((docSnap) => {
+            employeesList.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        
+        // Seed default if empty
+        if(employeesList.length === 0) {
+            let defaultEmp = {
+                name: "Arata kumar sahoo",
+                dob: "2005-04-27",
+                aadhaar: "[Aadhaar Redacted]",
+                joining: "2024-01-01",
+                position: "Production officer",
+                salary: "25000",
+                photo: "",
+                attendance: {}
+            };
+            setDoc(doc(db, "employees", "PEC-EMP-987"), defaultEmp);
         }
-    ];
 
-    let localStoredEmployees = JSON.parse(localStorage.getItem('pec_employees'));
-    let employees = localStoredEmployees && localStoredEmployees.length > 0 ? localStoredEmployees : hardcodedEmployees;
-    localStorage.setItem('pec_employees', JSON.stringify(employees));
-
-    let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
-    let currentSessionUser = localStorage.getItem('pec_current_user') || null;
-
-    let generatedOTP = "";
-    let pendingEmail = "";
-    let pendingPassword = "";
-    let authMode = ""; 
-    let activeStream = null;
-
-    window.onload = function() {
         if(currentSessionUser) {
-            showOwnerDashboard();
+            renderEmployeeList();
         }
-        window.onclick = function(event) {
-            if (!event.target.matches('.dots-btn')) {
-                let dropdowns = document.getElementsByClassName("dropdown-menu");
-                for (let i = 0; i < dropdowns.length; i++) {
-                    dropdowns[i].classList.remove('show');
-                }
-            }
+        if(currentLoggedInEmpId) {
+            loadEmployeeDashboard(currentLoggedInEmpId);
         }
-    };
+    });
 
-    function hideAllScreens() {
-        stopActiveCamera();
-        document.querySelectorAll('.content > div').forEach(el => el.classList.add('hidden'));
+    window.saveEmployeeDataToCloud = async function() {
+        const name = document.getElementById('emp-name').value;
+        const dob = document.getElementById('emp-dob').value;
+        const aadhaar = document.getElementById('emp-aadhaar').value;
+        const joining = document.getElementById('emp-joining').value;
+        const position = document.getElementById('emp-position').value;
+        const salary = document.getElementById('emp-salary').value || "Not Assigned";
+        const photoInput = document.getElementById('emp-photo');
+        const editEmpId = document.getElementById('edit-emp-id').value;
+
+        if(!name || !position) {
+            alert('Please fill Name and Position.');
+            return;
+        }
+
+        let empId = editEmpId ? editEmpId : "PEC-EMP-" + Math.floor(100 + Math.random() * 900);
+        let existingEmp = employeesList.find(e => e.id === empId) || { attendance: {}, photo: "" };
+
+        let saveToFirestore = async (photoData) => {
+            try {
+                await setDoc(doc(db, "employees", empId), {
+                    name, dob, aadhaar: aadhaar || "N/A", joining, position, salary,
+                    photo: photoData || existingEmp.photo,
+                    attendance: existingEmp.attendance || {}
+                });
+                alert('Employee data saved successfully to Cloud!');
+                switchOwnerTab('home');
+            } catch (err) {
+                alert('Error saving to cloud: ' + err.message);
+            }
+        };
+
+        if(photoInput.files && photoInput.files[0]) {
+            let reader = new FileReader();
+            reader.readAsDataURL(photoInput.files[0]);
+            reader.onload = function(e) { saveToFirestore(e.target.result); }
+        } else {
+            saveToFirestore(existingEmp.photo);
+        }
     }
 
-    function stopActiveCamera() {
-        if(activeStream) {
-            activeStream.getTracks().forEach(track => track.stop());
-            activeStream = null;
+    window.deleteEmployee = async function(empId) {
+        if(confirm("Are you sure you want to delete this employee from Cloud?")) {
+            try {
+                await deleteDoc(doc(db, "employees", empId));
+                alert('Employee deleted.');
+            } catch (err) {
+                alert('Error deleting: ' + err.message);
+            }
         }
+    }
+
+    window.saveAttendanceRecordToCloud = async function(empId, type, timeStr, photoData, locationStr) {
+        const now = new Date();
+        const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+        
+        let emp = employeesList.find(e => e.id === empId);
+        if(!emp) return;
+
+        if(!emp.attendance) emp.attendance = {};
+        if(!emp.attendance[dateKey]) {
+            emp.attendance[dateKey] = { status: 'present', inTime: '', inPhoto: '', inLoc: '', outTime: '', outPhoto: '', outLoc: '' };
+        }
+
+        if(type === 'in') {
+            emp.attendance[dateKey].inTime = timeStr;
+            emp.attendance[dateKey].inPhoto = photoData;
+            emp.attendance[dateKey].inLoc = locationStr;
+            alert('In-Time attendance saved live to Cloud!');
+        } else {
+            emp.attendance[dateKey].outTime = timeStr;
+            emp.attendance[dateKey].outPhoto = photoData;
+            emp.attendance[dateKey].outLoc = locationStr;
+            alert('Out-Time attendance saved live to Cloud!');
+        }
+
+        try {
+            await setDoc(doc(db, "employees", empId), emp);
+        } catch(e) {
+            alert('Sync error: ' + e.message);
+        }
+    }
+
+    // Expose helpers globally
+    window.employeesList = () => employeesList;
+</script>
+
+<script>
+    // UI Navigation & Handlers
+    function hideAllScreens() {
+        if(window.activeStream) {
+            window.activeStream.getTracks().forEach(t => t.stop());
+            window.activeStream = null;
+        }
+        document.querySelectorAll('.content > div').forEach(el => el.classList.add('hidden'));
     }
 
     function backToWelcome() {
@@ -505,103 +552,12 @@
     function loginOwnerWithPassword() {
         const email = document.getElementById('login-email').value.trim().toLowerCase();
         const pass = document.getElementById('login-password').value;
-
-        if(!email || !pass) {
-            alert('Please enter email and password.');
-            return;
-        }
-
         if(ownerAccounts[email] && ownerAccounts[email] === pass) {
-            currentSessionUser = email;
-            localStorage.setItem('pec_current_user', currentSessionUser);
+            localStorage.setItem('pec_current_user', email);
             alert('Login Successful!');
             showOwnerDashboard();
         } else {
             alert('Invalid email or password!');
-        }
-    }
-
-    function showForgotPasswordModal() {
-        const email = prompt("Enter your registered owner email for password reset OTP:");
-        if(email && email.includes('@')) {
-            let cleanEmail = email.trim().toLowerCase();
-            if(ownerAccounts[cleanEmail]) {
-                generateAndSendOTP(cleanEmail, 'forgot');
-            } else {
-                alert('Email not found in owner database.');
-            }
-        }
-    }
-
-    function generateAndSendOTP(email, mode) {
-        pendingEmail = email;
-        authMode = mode;
-        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-
-        let templateParams = {
-            to_email: email,
-            otp_code: generatedOTP,
-            time: new Date().toLocaleTimeString(),
-            message: "Your OTP code for Prasanta Engineering & Contractor is: " + generatedOTP
-        };
-
-        emailjs.send("service_33ql72e", "template_qs9fv3s", templateParams)
-            .then(function(response) {
-                alert('OTP sent successfully to your email: ' + email);
-                hideAllScreens();
-                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
-                document.getElementById('screen-otp').classList.remove('hidden');
-            }, function(error) {
-                alert('EmailJS simulation OTP: ' + generatedOTP);
-                hideAllScreens();
-                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
-                document.getElementById('screen-otp').classList.remove('hidden');
-            });
-    }
-
-    function requestRegisterOTP() {
-        const name = document.getElementById('reg-name').value;
-        const email = document.getElementById('reg-email').value.trim().toLowerCase();
-        const pass = document.getElementById('reg-pass').value;
-
-        if(!name || !email || !pass) {
-            alert('Please fill all details.');
-            return;
-        }
-
-        if(ownerAccounts[email]) {
-            alert('Email already registered! Please login.');
-            showLoginScreen();
-            return;
-        }
-
-        pendingPassword = pass;
-        generateAndSendOTP(email, 'register');
-    }
-
-    function verifyOTP() {
-        const userOTP = document.getElementById('entered-otp').value.trim();
-        if(userOTP === generatedOTP) {
-            alert('Verification successful!');
-            document.getElementById('entered-otp').value = "";
-
-            if(authMode === 'register') {
-                ownerAccounts[pendingEmail] = pendingPassword;
-                localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
-            } else if(authMode === 'forgot') {
-                let newPass = prompt("Enter your new password:");
-                if(newPass) {
-                    ownerAccounts[pendingEmail] = newPass;
-                    localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
-                    alert('Password updated successfully!');
-                }
-            }
-
-            currentSessionUser = pendingEmail;
-            localStorage.setItem('pec_current_user', currentSessionUser);
-            showOwnerDashboard();
-        } else {
-            alert('Invalid OTP! Please try again.');
         }
     }
 
@@ -612,7 +568,6 @@
     }
 
     function logoutApp() {
-        currentSessionUser = null;
         localStorage.removeItem('pec_current_user');
         backToWelcome();
     }
@@ -620,6 +575,101 @@
     function openEmployeePortalSelect() {
         hideAllScreens();
         document.getElementById('screen-emp-login').classList.remove('hidden');
+    }
+
+    function renderEmployeeList() {
+        const list = window.employeesList();
+        const container = document.getElementById('employee-list-container');
+        container.innerHTML = "";
+        if(list.length === 0) {
+            container.innerHTML = "<p>No employees in Cloud.</p>";
+            return;
+        }
+
+        list.forEach((emp, index) => {
+            let div = document.createElement('div');
+            div.className = "emp-item-card";
+            div.innerHTML = `
+                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
+                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
+                    <div>
+                        <strong>${emp.name}</strong> (${emp.id})<br>
+                        <small style="color: #666;">${emp.position}</small>
+                    </div>
+                </div>
+                <div class="menu-container">
+                    <button class="dots-btn" onclick="toggleMenu(event, ${index})">&#8942;</button>
+                    <div id="dropdown-menu-${index}" class="dropdown-menu">
+                        <button onclick="editEmployee('${emp.id}')">Edit</button>
+                        <button class="delete-opt" onclick="deleteEmployee('${emp.id}')">Delete</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function filterEmployees() {
+        const list = window.employeesList();
+        let query = document.getElementById('search-employee').value.toLowerCase();
+        let container = document.getElementById('employee-list-container');
+        container.innerHTML = "";
+        
+        let filtered = list.filter(e => e.name.toLowerCase().includes(query) || e.id.toLowerCase().includes(query));
+        if(filtered.length === 0) {
+            container.innerHTML = "<p>No matching employees found.</p>";
+            return;
+        }
+
+        filtered.forEach((emp, index) => {
+            let div = document.createElement('div');
+            div.className = "emp-item-card";
+            div.innerHTML = `
+                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
+                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
+                    <div>
+                        <strong>${emp.name}</strong> (${emp.id})<br>
+                        <small style="color: #666;">${emp.position}</small>
+                    </div>
+                </div>
+                <div class="menu-container">
+                    <button class="dots-btn" onclick="toggleMenu(event, ${index})">&#8942;</button>
+                    <div id="dropdown-menu-${index}" class="dropdown-menu">
+                        <button onclick="editEmployee('${emp.id}')">Edit</button>
+                        <button class="delete-opt" onclick="deleteEmployee('${emp.id}')">Delete</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function toggleMenu(event, index) {
+        event.stopPropagation();
+        let dropdowns = document.getElementsByClassName("dropdown-menu");
+        for (let i = 0; i < dropdowns.length; i++) {
+            if (i !== index) dropdowns[i].classList.remove('show');
+        }
+        document.getElementById(`dropdown-menu-${index}`).classList.toggle('show');
+    }
+
+    function editEmployee(empId) {
+        const list = window.employeesList();
+        const emp = list.find(e => e.id === empId);
+        if(!emp) return;
+        document.getElementById('form-title-text').innerText = "Edit Employee Details";
+        document.getElementById('edit-emp-id').value = emp.id;
+        document.getElementById('emp-name').value = emp.name;
+        document.getElementById('emp-dob').value = emp.dob || "";
+        document.getElementById('emp-aadhaar').value = emp.aadhaar !== "N/A" ? emp.aadhaar : "";
+        document.getElementById('emp-joining').value = emp.joining || "";
+        document.getElementById('emp-position').value = emp.position;
+        document.getElementById('emp-salary').value = emp.salary !== "Not Assigned" ? emp.salary : "";
+        
+        document.getElementById('owner-tab-home').classList.add('hidden');
+        document.getElementById('owner-tab-add').classList.remove('hidden');
+        document.getElementById('tab-btn-home').classList.add('secondary');
+        document.getElementById('tab-btn-add').classList.remove('secondary');
     }
 
     function switchOwnerTab(tab) {
@@ -634,9 +684,8 @@
             document.getElementById('owner-tab-add').classList.remove('hidden');
             document.getElementById('tab-btn-home').classList.add('secondary');
             document.getElementById('tab-btn-add').classList.remove('secondary');
-            
             document.getElementById('form-title-text').innerText = "Add Employee Details";
-            document.getElementById('edit-emp-index').value = "";
+            document.getElementById('edit-emp-id').value = "";
             document.getElementById('emp-name').value = "";
             document.getElementById('emp-dob').value = "";
             document.getElementById('emp-aadhaar').value = "";
@@ -647,296 +696,19 @@
         }
     }
 
-    function saveEmployeeData() {
-        const name = document.getElementById('emp-name').value;
-        const dob = document.getElementById('emp-dob').value;
-        const aadhaar = document.getElementById('emp-aadhaar').value;
-        const joining = document.getElementById('emp-joining').value;
-        const position = document.getElementById('emp-position').value;
-        const salary = document.getElementById('emp-salary').value || "Not Assigned";
-        const photoInput = document.getElementById('emp-photo');
-        const editIndex = document.getElementById('edit-emp-index').value;
-
-        if(!name || !position) {
-            alert('Please fill Name and Position.');
-            return;
-        }
-
-        let reader = new FileReader();
-        if(photoInput.files && photoInput.files[0]) {
-            reader.readAsDataURL(photoInput.files[0]);
-            reader.onload = function(e) {
-                processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, e.target.result);
-            }
-        } else {
-            let existingPhoto = "";
-            if(editIndex !== "") {
-                existingPhoto = employees[editIndex].photo;
-            }
-            processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, existingPhoto);
-        }
-    }
-
-    function processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, photo) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        if(editIndex !== "") {
-            let idx = parseInt(editIndex);
-            employees[idx].name = name;
-            employees[idx].dob = dob;
-            employees[idx].aadhaar = aadhaar || "N/A";
-            employees[idx].joining = joining;
-            employees[idx].position = position;
-            employees[idx].salary = salary;
-            if(photo) employees[idx].photo = photo;
-            alert('Employee updated successfully!');
-        } else {
-            const newId = "PEC-EMP-" + Math.floor(100 + Math.random() * 900);
-            employees.push({
-                id: newId,
-                name: name,
-                dob: dob,
-                aadhaar: aadhaar || "N/A",
-                joining: joining,
-                position: position,
-                salary: salary,
-                photo: photo,
-                attendance: {}
-            });
-            alert('Employee created successfully! ID: ' + newId);
-        }
-
-        localStorage.setItem('pec_employees', JSON.stringify(employees));
-        switchOwnerTab('home');
-    }
-
-    function renderEmployeeList() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const container = document.getElementById('employee-list-container');
-        container.innerHTML = "";
-        if(employees.length === 0) {
-            container.innerHTML = "<p>No employees found.</p>";
-            return;
-        }
-
-        employees.forEach((emp, index) => {
-            let div = document.createElement('div');
-            div.className = "emp-item-card";
-            div.innerHTML = `
-                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
-                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
-                    <div>
-                        <strong>${emp.name}</strong> (${emp.id})<br>
-                        <small style="color: #666;">${emp.position}</small>
-                    </div>
-                </div>
-                <div class="menu-container">
-                    <button class="dots-btn" onclick="toggleMenu(event, ${index})">&#8942;</button>
-                    <div id="dropdown-menu-${index}" class="dropdown-menu">
-                        <button onclick="editEmployee(${index})">Edit</button>
-                        <button class="delete-opt" onclick="deleteEmployee(${index})">Delete</button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function filterEmployees() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        let query = document.getElementById('search-employee').value.toLowerCase();
-        let container = document.getElementById('employee-list-container');
-        container.innerHTML = "";
-        
-        let filtered = employees.filter(e => e.name.toLowerCase().includes(query) || e.id.toLowerCase().includes(query));
-        if(filtered.length === 0) {
-            container.innerHTML = "<p>No matching employees found.</p>";
-            return;
-        }
-
-        filtered.forEach((emp) => {
-            let originalIndex = employees.findIndex(item => item.id === emp.id);
-            let div = document.createElement('div');
-            div.className = "emp-item-card";
-            div.innerHTML = `
-                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
-                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
-                    <div>
-                        <strong>${emp.name}</strong> (${emp.id})<br>
-                        <small style="color: #666;">${emp.position}</small>
-                    </div>
-                </div>
-                <div class="menu-container">
-                    <button class="dots-btn" onclick="toggleMenu(event, ${originalIndex})">&#8942;</button>
-                    <div id="dropdown-menu-${originalIndex}" class="dropdown-menu">
-                        <button onclick="editEmployee(${originalIndex})">Edit</button>
-                        <button class="delete-opt" onclick="deleteEmployee(${originalIndex})">Delete</button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function toggleMenu(event, index) {
-        event.stopPropagation();
-        let dropdowns = document.getElementsByClassName("dropdown-menu");
-        for (let i = 0; i < dropdowns.length; i++) {
-            if (i !== index) dropdowns[i].classList.remove('show');
-        }
-        let menu = document.getElementById(`dropdown-menu-${index}`);
-        menu.classList.toggle('show');
-    }
-
-    function editEmployee(index) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const emp = employees[index];
-        document.getElementById('form-title-text').innerText = "Edit Employee Details";
-        document.getElementById('edit-emp-index').value = index;
-        document.getElementById('emp-name').value = emp.name;
-        document.getElementById('emp-dob').value = emp.dob || "";
-        document.getElementById('emp-aadhaar').value = emp.aadhaar !== "N/A" ? emp.aadhaar : "";
-        document.getElementById('emp-joining').value = emp.joining || "";
-        document.getElementById('emp-position').value = emp.position;
-        document.getElementById('emp-salary').value = emp.salary !== "Not Assigned" ? emp.salary : "";
-        
-        document.getElementById('owner-tab-home').classList.add('hidden');
-        document.getElementById('owner-tab-add').classList.remove('hidden');
-        document.getElementById('tab-btn-home').classList.add('secondary');
-        document.getElementById('tab-btn-add').classList.remove('secondary');
-    }
-
-    function deleteEmployee(index) {
-        if(confirm("Are you sure you want to delete this employee?")) {
-            employees.splice(index, 1);
-            localStorage.setItem('pec_employees', JSON.stringify(employees));
-            renderEmployeeList();
-        }
-    }
-
-    // EXPORT MONTHLY REPORT CSV FUNCTION
-    function exportMonthlyReportCSV() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        if(employees.length === 0) {
-            alert('No employee data available to export.');
-            return;
-        }
-
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        let daysInMonth = new Date(year, month + 1, 0).getDate();
-        let monthName = now.toLocaleString('default', { month: 'long' });
-
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += `Prasanta Engineering & Contractor - Monthly Attendance Report (${monthName} ${year})\n`;
-        csvContent += "Employee ID,Employee Name,Designation,Monthly Base Salary,Present Days,Absent Days,Estimated Earned Salary\n";
-
-        employees.forEach(emp => {
-            let presentCount = 0;
-            for(let d = 1; d <= daysInMonth; d++) {
-                let fullDateStr = `${year}-${month}-${d}`;
-                if(emp.attendance[fullDateStr] && emp.attendance[fullDateStr].status === 'present') {
-                    presentCount++;
-                }
-            }
-            let absentCount = daysInMonth - presentCount;
-            let baseSal = parseFloat(emp.salary);
-            let estEarned = (!isNaN(baseSal)) ? Math.round((baseSal / 30) * presentCount) : "N/A";
-            let rowSalary = (!isNaN(baseSal)) ? baseSal : "Not Assigned";
-
-            csvContent += `"${emp.id}","${emp.name}","${emp.position}","${rowSalary}","${presentCount}","${absentCount}","${estEarned}"\n`;
-        });
-
-        let encodedUri = encodeURI(csvContent);
-        let link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `PEC_Attendance_Report_${monthName}_${year}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function openOwnerEmployeeDetailModal(empId) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const emp = employees.find(e => e.id === empId);
-        if(!emp) return;
-
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        
-        let firstDayIndex = new Date(year, month, 1).getDay();
-        let daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        let presentCount = 0;
-        let absentCount = 0;
-
-        let calHtml = `<div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; color:#555;"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>`;
-        calHtml += `<div class="calendar-grid">`;
-
-        for(let i = 0; i < firstDayIndex; i++) {
-            calHtml += `<div></div>`;
-        }
-
-        for(let d = 1; d <= daysInMonth; d++) {
-            let fullDateStr = `${year}-${month}-${d}`;
-            let record = emp.attendance[fullDateStr];
-            let cls = "cal-day";
-            if(record && record.status === 'present') {
-                cls += " present";
-                presentCount++;
-                calHtml += `<div class="${cls}" onclick="showAttendanceDetailModal('${empId}', '${fullDateStr}')">${d}</div>`;
-            } else {
-                cls += " absent";
-                absentCount++;
-                calHtml += `<div class="${cls}">${d}</div>`;
-            }
-        }
-        calHtml += `</div>`;
-
-        let baseSalary = parseFloat(emp.salary);
-        let estimatedSalary = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * presentCount) : "N/A";
-
-        document.getElementById('modal-body-content').innerHTML = `
-            <div style="text-align: center; margin-bottom: 15px;">
-                ${emp.photo ? `<img src="${emp.photo}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 8px;">` : `<div style="width: 80px; height: 80px; border-radius: 50%; background: #ccc; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">${emp.name.charAt(0)}</div>`}
-                <h4 style="margin:0;">${emp.name}</h4>
-                <small style="color: #666;">ID: ${emp.id} | ${emp.position}</small>
-            </div>
-            <p><strong>Salary:</strong> ${emp.salary} | <strong>Est. Earned:</strong> ${estimatedSalary}</p>
-            <p><strong>DOB:</strong> ${emp.dob || 'N/A'} | <strong>Joining:</strong> ${emp.joining || 'N/A'}</p>
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
-            <h4 style="margin-bottom: 5px;">Current Month Attendance</h4>
-            <div style="margin-bottom: 10px;">
-                <span class="badge badge-blue">Present: ${presentCount} Days</span> 
-                <span class="badge badge-red">Absent: ${absentCount} Days</span>
-            </div>
-            <p style="font-size: 11px; color: #666;">Click blue date tiles to check In/Out selfies and exact addresses.</p>
-            ${calHtml}
-        `;
-        document.getElementById('employee-modal').classList.remove('hidden');
-    }
-
-    function closeModal() {
-        document.getElementById('employee-modal').classList.add('hidden');
-    }
-
     function loginEmployee() {
         const idInput = document.getElementById('emp-login-id').value.trim();
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const found = employees.find(e => e.id.toLowerCase() === idInput.toLowerCase() || e.id === idInput);
+        const list = window.employeesList();
+        const found = list.find(e => e.id.toLowerCase() === idInput.toLowerCase() || e.id === idInput);
         if(found) {
-            currentLoggedInEmpId = found.id;
-            localStorage.setItem('pec_current_emp', currentLoggedInEmpId);
-            loadEmployeeDashboard(currentLoggedInEmpId);
+            localStorage.setItem('pec_current_emp', found.id);
+            loadEmployeeDashboard(found.id);
         } else {
-            alert('Invalid Employee ID! Please check your ID again.');
+            alert('Invalid Employee ID!');
         }
     }
 
     function logoutEmployee() {
-        stopActiveCamera();
-        currentLoggedInEmpId = null;
         localStorage.removeItem('pec_current_emp');
         backToWelcome();
     }
@@ -944,8 +716,8 @@
     function loadEmployeeDashboard(empId) {
         hideAllScreens();
         document.getElementById('screen-emp-dashboard').classList.remove('hidden');
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const emp = employees.find(e => e.id === empId);
+        const list = window.employeesList();
+        const emp = list.find(e => e.id === empId);
         if(emp) {
             document.getElementById('emp-welcome-title').innerText = emp.name;
             document.getElementById('emp-profile-content').innerHTML = `
@@ -962,54 +734,50 @@
     }
 
     function switchEmpTab(tab) {
-        stopActiveCamera();
         document.getElementById('emp-pane-profile').classList.add('hidden');
         document.getElementById('emp-pane-attendance').classList.add('hidden');
         document.getElementById('emp-pane-history').classList.add('hidden');
 
-        if(tab === 'profile') {
-            document.getElementById('emp-pane-profile').classList.remove('hidden');
-        } else if(tab === 'attendance') {
-            document.getElementById('emp-pane-attendance').classList.remove('hidden');
-        } else if(tab === 'history') {
+        if(tab === 'profile') document.getElementById('emp-pane-profile').classList.remove('hidden');
+        else if(tab === 'attendance') document.getElementById('emp-pane-attendance').classList.remove('hidden');
+        else if(tab === 'history') {
             document.getElementById('emp-pane-history').classList.remove('hidden');
             renderCalendar();
         }
     }
 
     function startCamera(type) {
-        stopActiveCamera();
         const video = document.getElementById(`video-${type}`);
         const placeholder = document.getElementById(`placeholder-${type}-text`);
         const previewImg = document.getElementById(`preview-${type}-img`);
-
         video.style.display = 'block';
         previewImg.style.display = 'none';
         placeholder.style.display = 'none';
 
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
             .then(stream => {
-                activeStream = stream;
+                window.activeStream = stream;
                 video.srcObject = stream;
             })
             .catch(err => {
-                alert('Unable to access front camera: ' + err.message);
+                alert('Camera error: ' + err.message);
                 video.style.display = 'none';
                 placeholder.style.display = 'block';
             });
     }
 
     function captureAndSubmitAttendance(type) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const emp = employees.find(e => e.id === currentLoggedInEmpId);
+        const currentEmpId = localStorage.getItem('pec_current_emp');
+        const list = window.employeesList();
+        const emp = list.find(e => e.id === currentEmpId);
         if(!emp) return;
 
         const video = document.getElementById(`video-${type}`);
         const canvas = document.getElementById(`canvas-${type}`);
         const previewImg = document.getElementById(`preview-${type}-img`);
 
-        if(!activeStream || video.style.display === 'none') {
-            alert('Please click "Open Camera Frame" first.');
+        if(!window.activeStream || video.style.display === 'none') {
+            alert('Please open camera first.');
             return;
         }
 
@@ -1023,7 +791,10 @@
         previewImg.src = photoData;
         previewImg.style.display = 'block';
 
-        stopActiveCamera();
+        if(window.activeStream) {
+            window.activeStream.getTracks().forEach(t => t.stop());
+            window.activeStream = null;
+        }
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(position => {
@@ -1032,76 +803,47 @@
                 let timeStr = new Date().toLocaleTimeString();
 
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
-                    .then(response => response.json())
+                    .then(res => res.json())
                     .then(data => {
                         let addressStr = data.display_name || `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
-                        saveAttendanceRecord(emp, type, timeStr, photoData, addressStr);
+                        saveAttendanceRecordToCloud(emp.id, type, timeStr, photoData, addressStr);
                     })
                     .catch(() => {
-                        let fallbackLoc = `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
-                        saveAttendanceRecord(emp, type, timeStr, photoData, fallbackLoc);
+                        saveAttendanceRecordToCloud(emp.id, type, timeStr, photoData, `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`);
                     });
-            }, error => {
-                alert("GPS Location access error: " + error.message);
-            }, { enableHighAccuracy: true });
+            }, err => alert("GPS Error: " + err.message), { enableHighAccuracy: true });
         } else {
-            alert("Geolocation is not supported by your browser.");
+            alert("Geolocation not supported.");
         }
-    }
-
-    function saveAttendanceRecord(emp, type, timeStr, photoData, locationStr) {
-        const now = new Date();
-        const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-        
-        if(!emp.attendance[dateKey]) {
-            emp.attendance[dateKey] = { status: 'present', inTime: '', inPhoto: '', inLoc: '', outTime: '', outPhoto: '', outLoc: '' };
-        }
-
-        if(type === 'in') {
-            emp.attendance[dateKey].inTime = timeStr;
-            emp.attendance[dateKey].inPhoto = photoData;
-            emp.attendance[dateKey].inLoc = locationStr;
-            alert('In-Time attendance recorded successfully with live address!');
-        } else {
-            emp.attendance[dateKey].outTime = timeStr;
-            emp.attendance[dateKey].outPhoto = photoData;
-            emp.attendance[dateKey].outLoc = locationStr;
-            alert('Out-Time attendance recorded successfully with live address!');
-        }
-        localStorage.setItem('pec_employees', JSON.stringify(employees));
     }
 
     function renderCalendar() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const container = document.getElementById('calendar-days-container');
-        container.innerHTML = "";
-        const emp = employees.find(e => e.id === currentLoggedInEmpId);
+        const currentEmpId = localStorage.getItem('pec_current_emp');
+        const list = window.employeesList();
+        const emp = list.find(e => e.id === currentEmpId);
         if(!emp) return;
 
+        const container = document.getElementById('calendar-days-container');
+        container.innerHTML = "";
         const selectedYear = parseInt(document.getElementById('filter-year').value);
         const selectedMonth = parseInt(document.getElementById('filter-month').value);
         
         let firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
         let daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+        let presentCount = 0, absentCount = 0;
 
-        let presentCount = 0;
-        let absentCount = 0;
-
-        for(let i = 0; i < firstDayIndex; i++) {
-            container.appendChild(document.createElement('div'));
-        }
+        for(let i = 0; i < firstDayIndex; i++) container.appendChild(document.createElement('div'));
 
         for(let d = 1; d <= daysInMonth; d++) {
             let fullDateStr = `${selectedYear}-${selectedMonth}-${d}`;
-            let record = emp.attendance[fullDateStr];
-
+            let record = emp.attendance && emp.attendance[fullDateStr];
             let cell = document.createElement('div');
             cell.className = "cal-day";
             cell.innerText = d;
 
             if(record && record.status === 'present') {
                 cell.classList.add('present');
-                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
+                cell.onclick = () => showAttendanceDetailModal(emp.id, fullDateStr);
                 presentCount++;
             } else {
                 cell.classList.add('absent');
@@ -1110,18 +852,18 @@
         }
 
         let baseSalary = parseFloat(emp.salary);
-        let calculatedEarnings = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * presentCount) : "N/A";
+        let calcEarn = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * presentCount) : "N/A";
 
         document.getElementById('attendance-summary-count').innerHTML = `
             <span class="badge badge-blue">Present: ${presentCount} Days</span> 
             <span class="badge badge-red">Absent: ${absentCount} Days</span><br><br>
-            <strong>Estimated Salary for Month:</strong> ${calculatedEarnings}
+            <strong>Estimated Salary:</strong> ${calcEarn}
         `;
     }
 
     function showAttendanceDetailModal(empId, dateStr) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const emp = employees.find(e => e.id === empId);
+        const list = window.employeesList();
+        const emp = list.find(e => e.id === empId);
         if(!emp || !emp.attendance[dateStr]) return;
 
         let rec = emp.attendance[dateStr];
@@ -1134,17 +876,26 @@
                 <strong>In-Time Record:</strong><br>
                 Time: ${rec.inTime || 'N/A'}<br>
                 Address: ${rec.inLoc || 'N/A'}<br>
-                ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No In-Time selfie uploaded</small>'}
+                ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : ''}
             </div>
             <div style="background: #f1f1f1; padding: 10px; border-radius: 6px;">
                 <strong>Out-Time Record:</strong><br>
                 Time: ${rec.outTime || 'N/A'}<br>
                 Address: ${rec.outLoc || 'N/A'}<br>
-                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100% ; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No Out-Time selfie uploaded</small>'}
+                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : ''}
             </div>
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
     }
+
+    function closeModal() {
+        document.getElementById('employee-modal').classList.add('hidden');
+    }
+
+    window.onload = function() {
+        if(localStorage.getItem('pec_current_user')) showOwnerDashboard();
+        else if(localStorage.getItem('pec_current_emp')) loadEmployeeDashboard(localStorage.getItem('pec_current_emp'));
+    };
 </script>
 
 </body>
