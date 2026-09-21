@@ -386,7 +386,7 @@
 </div>
 
 <script>
-    // Hardcoded global owner credentials so login works across all devices and browsers
+    // Default Owner accounts combined with LocalStorage so any new registered admin works across browsers via OTP
     let defaultOwnerAccounts = {
         "aratakumarsahoo3@gmail.com": "admin123",
         "admin@pec.com": "password"
@@ -453,7 +453,10 @@
             return;
         }
 
-        if(ownerAccounts[email] && ownerAccounts[email] === pass) {
+        // Fetch latest saved accounts from localStorage in case registered from another browser session
+        let latestOwners = JSON.parse(localStorage.getItem('pec_owner_accounts')) || ownerAccounts;
+
+        if(latestOwners[email] && latestOwners[email] === pass) {
             currentSessionUser = email;
             localStorage.setItem('pec_current_user', currentSessionUser);
             alert('Login Successful!');
@@ -467,7 +470,8 @@
         const email = prompt("Enter your registered owner email for password reset OTP:");
         if(email && email.includes('@')) {
             let cleanEmail = email.trim().toLowerCase();
-            if(ownerAccounts[cleanEmail]) {
+            let latestOwners = JSON.parse(localStorage.getItem('pec_owner_accounts')) || ownerAccounts;
+            if(latestOwners[cleanEmail]) {
                 generateAndSendOTP(cleanEmail, 'forgot');
             } else {
                 alert('Email not found in owner database.');
@@ -511,7 +515,8 @@
             return;
         }
 
-        if(ownerAccounts[email]) {
+        let latestOwners = JSON.parse(localStorage.getItem('pec_owner_accounts')) || ownerAccounts;
+        if(latestOwners[email]) {
             alert('Email already registered! Please login.');
             showLoginScreen();
             return;
@@ -527,14 +532,18 @@
             alert('Verification successful!');
             document.getElementById('entered-otp').value = "";
 
+            let latestOwners = JSON.parse(localStorage.getItem('pec_owner_accounts')) || ownerAccounts;
+
             if(authMode === 'register') {
-                ownerAccounts[pendingEmail] = pendingPassword;
-                localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
+                latestOwners[pendingEmail] = pendingPassword;
+                localStorage.setItem('pec_owner_accounts', JSON.stringify(latestOwners));
+                ownerAccounts = latestOwners;
             } else if(authMode === 'forgot') {
                 let newPass = prompt("Enter your new password:");
                 if(newPass) {
-                    ownerAccounts[pendingEmail] = newPass;
-                    localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
+                    latestOwners[pendingEmail] = newPass;
+                    localStorage.setItem('pec_owner_accounts', JSON.stringify(latestOwners));
+                    ownerAccounts = latestOwners;
                     alert('Password updated successfully!');
                 }
             }
@@ -650,7 +659,6 @@
         switchOwnerTab('home');
     }
 
-    // --- RENDER EMPLOYEE LIST WITH 3-DOT MENU ---
     function renderEmployeeList() {
         const container = document.getElementById('employee-list-container');
         container.innerHTML = "";
@@ -682,7 +690,6 @@
         });
     }
 
-    // --- FILTER EMPLOYEES BY NAME OR ID ---
     function filterEmployees() {
         let query = document.getElementById('search-employee').value.toLowerCase();
         let container = document.getElementById('employee-list-container');
@@ -753,7 +760,6 @@
         }
     }
 
-    // --- OWNER VIEW FOR EMPLOYEE DETAILS & ATTENDANCE HISTORY ---
     function openOwnerEmployeeDetailModal(empId) {
         const emp = employees.find(e => e.id === empId);
         if(!emp) return;
