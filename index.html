@@ -386,10 +386,16 @@
 </div>
 
 <script>
-    let ownerAccounts = JSON.parse(localStorage.getItem('pec_owner_accounts')) || {
+    // Hardcoded global owner credentials so login works across all devices and browsers
+    let defaultOwnerAccounts = {
         "aratakumarsahoo3@gmail.com": "admin123",
         "admin@pec.com": "password"
     };
+
+    let savedOwners = JSON.parse(localStorage.getItem('pec_owner_accounts'));
+    let ownerAccounts = savedOwners ? { ...defaultOwnerAccounts, ...savedOwners } : defaultOwnerAccounts;
+    localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
+
     let employees = JSON.parse(localStorage.getItem('pec_employees')) || [
         { id: "PEC-EMP-101", name: "Rahul Kumar", dob: "2000-01-15", aadhaar: "Redacted", joining: "2025-01-01", position: "Helper", salary: "12000", photo: "", attendance: {"2026-5-1": "present", "2026-5-2": "present"} }
     ];
@@ -714,7 +720,6 @@
 
     function toggleMenu(event, index) {
         event.stopPropagation();
-        // Hide all other open menus
         let dropdowns = document.getElementsByClassName("dropdown-menu");
         for (let i = 0; i < dropdowns.length; i++) {
             if (i !== index) dropdowns[i].classList.remove('show');
@@ -748,12 +753,11 @@
         }
     }
 
-    // --- OWNER VIEW FOR EMPLOYEE DETAILS & ATTENDANCE HISTORY (WITH PHOTO, PRESENT/ABSENT COUNT) ---
+    // --- OWNER VIEW FOR EMPLOYEE DETAILS & ATTENDANCE HISTORY ---
     function openOwnerEmployeeDetailModal(empId) {
         const emp = employees.find(e => e.id === empId);
         if(!emp) return;
 
-        // Current month & year calendar calculation for preview
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth();
