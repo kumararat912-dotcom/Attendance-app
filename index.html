@@ -3,1149 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prasanta Engineering & Contractor - Attendance & Management System</title>
-    <!-- EmailJS SDK for sending OTP emails -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function() {
-            emailjs.init("dx_EZ5roIzsVPTokP");
-        })();
-    </script>
-    <style>
-        :root {
-            --bg: #FFFFFF;
-            --panel: #F8F9FA;
-            --ink: #1C2430;
-            --navy: #1D3557;
-            --amber: #D98E2B;
-            --blue: #2A6F97;
-            --red: #E63946;
-            --border: #DEE2E6;
-        }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--ink);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 480px;
-            background: var(--bg);
-            min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-        }
-        @media(min-width: 481px) {
-            .container {
-                min-height: 85vh;
-                border-radius: 16px;
-                border: 1px solid var(--border);
-                overflow: hidden;
-            }
-        }
-        .header {
-            background-color: var(--navy);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        .logo-box {
-            font-size: 18px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        .sub-logo {
-            font-size: 12px;
-            opacity: 0.8;
-            text-transform: uppercase;
-        }
-        .content {
-            padding: 20px;
-            flex: 1;
-            overflow-y: auto;
-        }
-        .card {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-        }
-        h2, h3 { color: var(--navy); margin-top: 0; }
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0 16px 0;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 15px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--navy);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-        button:hover { opacity: 0.9; }
-        button.secondary { background-color: var(--amber); }
-        button.danger { background-color: var(--red); }
-        button.success { background-color: #2a9d8f; }
-        .hidden { display: none !important; }
-        .flex-row { display: flex; gap: 10px; }
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            color: white;
-        }
-        .badge-blue { background-color: var(--blue); }
-        .badge-red { background-color: var(--red); }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            text-align: center;
-            margin-top: 15px;
-        }
-        .cal-day {
-            padding: 8px 0;
-            border-radius: 4px;
-            background: #eee;
-            font-size: 13px;
-            font-weight: bold;
-        }
-        .cal-day.present { background: var(--blue); color: white; cursor: pointer; }
-        .cal-day.absent { background: var(--red); color: white; }
-        .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .emp-item-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-        .menu-container {
-            position: relative;
-        }
-        .dots-btn {
-            background: none;
-            border: none;
-            color: var(--ink);
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            padding: 0 8px;
-            width: auto;
-            margin: 0;
-        }
-        .dropdown-menu {
-            position: absolute;
-            right: 0;
-            top: 30px;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            display: none;
-            z-index: 10;
-            width: 100px;
-        }
-        .dropdown-menu.show {
-            display: block;
-        }
-        .dropdown-menu button {
-            background: none;
-            color: var(--ink);
-            border: none;
-            width: 100%;
-            text-align: left;
-            padding: 8px 12px;
-            font-size: 14px;
-            margin: 0;
-            border-radius: 0;
-        }
-        .dropdown-menu button:hover {
-            background: #f1f1f1;
-        }
-        .dropdown-menu button.delete-opt {
-            color: var(--red);
-        }
-        .camera-box-preview {
-            width: 100%;
-            height: 180px;
-            background: #000;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            margin-bottom: 10px;
-            position: relative;
-            border: 1px solid var(--border);
-        }
-        .camera-box-preview video, .camera-box-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-    </style>
+    <title>Prasanta Engineering & Contractor - Attendance System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body>
+<body class="bg-slate-100 min-h-screen font-sans">
 
-<div class="container">
-    <div class="header">
-        <div class="logo-box">Prasanta Engineering & Contractor</div>
-        <div class="sub-logo">Official Attendance & Management System</div>
-    </div>
+    <div class="max-w-md mx-auto bg-white shadow-lg min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-blue-900 text-white p-4 text-center">
+            <h1 class="text-xl font-bold">Prasanta Engineering & Contractor</h1>
+            <p class="text-xs text-blue-200 mt-1">Cloud Attendance System</p>
+        </header>
 
-    <div class="content">
-
-        <!-- WELCOME SCREEN -->
-        <div id="screen-welcome" class="card" style="text-align: center; padding: 40px 20px;">
-            <h3>Welcome</h3>
-            <p style="font-size: 14px; color: #666; margin-bottom: 30px;">Please select an option to continue</p>
-            <button onclick="showLoginScreen()">I. Owner/Admin Login</button>
-            <button class="secondary" onclick="showRegisterScreen()">II. Register New Admin</button>
-            <button style="background-color: var(--blue);" onclick="openEmployeePortalSelect()">III. Employee Portal</button>
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-gray-200 bg-gray-50">
+            <button onclick="switchTab('employee')" id="tab-employee" class="flex-1 py-3 text-center font-medium text-blue-600 border-b-2 border-blue-600">Employee View</button>
+            <button onclick="switchTab('owner')" id="tab-owner" class="flex-1 py-3 text-center font-medium text-gray-500">Owner Dashboard</button>
         </div>
 
-        <!-- LOGIN SCREEN -->
-        <div id="screen-login" class="card hidden">
-            <h3>Owner Login</h3>
-            <p style="font-size: 13px; color: #666;">Enter your owner credentials.</p>
-            <input type="email" id="login-email" placeholder="Enter owner email">
-            <input type="password" id="login-password" placeholder="Enter password">
-            <button onclick="loginOwnerWithPassword()">Login</button>
-            <button class="secondary" onclick="showForgotPasswordModal()">Forgot Password / Reset via Email?</button>
-            <button class="danger" onclick="backToWelcome()">Back</button>
-        </div>
-
-        <!-- REGISTER SCREEN -->
-        <div id="screen-register" class="card hidden">
-            <h3>Register Admin Account</h3>
-            <p style="font-size: 13px; color: #666;">Create a new owner account with password.</p>
-            <input type="text" id="reg-name" placeholder="Full Name">
-            <input type="email" id="reg-email" placeholder="Email Address">
-            <input type="password" id="reg-pass" placeholder="Create Password">
-            <button onclick="requestRegisterOTP()">Send Verification OTP</button>
-            <button class="secondary" onclick="backToWelcome()">Back</button>
-        </div>
-
-        <!-- OTP VERIFICATION SCREEN -->
-        <div id="screen-otp" class="card hidden">
-            <h3>Verify Email OTP</h3>
-            <p style="font-size: 13px; color: #666;" id="otp-instruction">Enter the 6-digit OTP sent to your email.</p>
-            <input type="text" id="entered-otp" placeholder="Enter 6-digit OTP" maxlength="6">
-            <button onclick="verifyOTP()">Verify & Proceed</button>
-            <button class="secondary" onclick="backToWelcome()">Cancel</button>
-        </div>
-
-        <!-- OWNER DASHBOARD -->
-        <div id="screen-owner-dashboard" class="hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin:0;">Owner Control Panel</h3>
-                <button onclick="logoutApp()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
-            </div>
-            
-            <div class="flex-row" style="margin-bottom: 15px;">
-                <button onclick="switchOwnerTab('home')" id="tab-btn-home">(i) Employees List</button>
-                <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employee</button>
-            </div>
-
-            <!-- Owner Tab 1: Home / Employees List -->
-            <div id="owner-tab-home" class="card">
-                <h3>Manage Employees</h3>
-                <button class="success" onclick="exportMonthlyReportCSV()">📥 Download Monthly Report (CSV)</button>
-                <input type="text" id="search-employee" placeholder="Filter by employee name or ID..." onkeyup="filterEmployees()">
-                <div id="employee-list-container"></div>
-            </div>
-
-            <!-- Owner Tab 2: Add / Edit Employees -->
-            <div id="owner-tab-add" class="card hidden">
-                <h3 id="form-title-text">Add Employee Details</h3>
-                <input type="hidden" id="edit-emp-index" value="">
-                
-                <label>Employee Photo Upload (Camera or Gallery)</label>
-                <input type="file" id="emp-photo" accept="image/*">
-                
-                <label>Employee Name *</label>
-                <input type="text" id="emp-name" placeholder="Full Name">
-                
-                <label>Date of Birth</label>
-                <input type="date" id="emp-dob">
-                
-                <label>Aadhar No</label>
-                <input type="text" id="emp-aadhaar" placeholder="Aadhar No">
-                
-                <label>Joining Date</label>
-                <input type="date" id="emp-joining">
-                
-                <label>Position / Designation *</label>
-                <input type="text" id="emp-position" placeholder="Position / Designation">
-
-                <label>Salary Details (Optional)</label>
-                <input type="number" id="emp-salary" placeholder="Monthly Salary (Optional)">
-
-                <button onclick="saveEmployeeData()">Save Employee</button>
-                <button class="secondary" onclick="switchOwnerTab('home')">Cancel</button>
-            </div>
-        </div>
-
-        <!-- EMPLOYEE LOGIN -->
-        <div id="screen-emp-login" class="card hidden">
-            <h3>Employee Portal Login</h3>
-            <p style="font-size: 14px; color: #666;">Enter your employee ID assigned by owner.</p>
-            <input type="text" id="emp-login-id" placeholder="e.g. PEC-EMP-987">
-            <button onclick="loginEmployee()">Login</button>
-            <button class="secondary" onclick="backToWelcome()">Back</button>
-        </div>
-
-        <!-- EMPLOYEE DASHBOARD -->
-        <div id="screen-emp-dashboard" class="hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin:0;" id="emp-welcome-title">Employee Portal</h3>
-                <button onclick="logoutEmployee()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
-            </div>
-
-            <div class="flex-row" style="margin-bottom: 15px; font-size: 13px;">
-                <button onclick="switchEmpTab('profile')" id="emp-t-1">(i) Profile</button>
-                <button onclick="switchEmpTab('attendance')" id="emp-t-2" class="secondary">(ii) Mark Attendance</button>
-                <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) Calendar & Salary</button>
-            </div>
-
-            <!-- Employee Tab 1: Profile -->
-            <div id="emp-pane-profile" class="card">
-                <h3>My Profile</h3>
-                <div id="emp-profile-content"></div>
-            </div>
-
-            <!-- Employee Tab 2: Attendance -->
-            <div id="emp-pane-attendance" class="card hidden">
-                <h3>Mark Daily Attendance</h3>
-                <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time with front camera preview & exact address GPS.</p>
-                
-                <div style="margin-bottom: 20px;">
-                    <label><strong>1. In-Time Attendance Selfie</strong></label>
-                    <div class="camera-box-preview">
-                        <video id="video-in" autoplay playsinline muted style="display:none;"></video>
-                        <canvas id="canvas-in" style="display:none;"></canvas>
-                        <img id="preview-in-img" style="display:none;" alt="In-Time Preview">
-                        <span id="placeholder-in-text" style="color: #aaa; font-size: 13px;">Camera Inactive</span>
+        <!-- Main Content Area -->
+        <main class="p-4 flex-1">
+            <!-- Employee Section -->
+            <div id="section-employee" class="space-y-4">
+                <h2 class="text-lg font-semibold text-gray-800">Mark Attendance</h2>
+                <form id="attendance-form" class="space-y-3" onsubmit="markAttendance(event)">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Employee Name</label>
+                        <input type="text" id="emp-name" required placeholder="Enter your full name" class="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                    <button type="button" class="secondary" onclick="startCamera('in')" style="margin-bottom: 6px;">Open Camera Frame</button>
-                    <button type="button" onclick="captureAndSubmitAttendance('in')">Capture & Submit In-Time</button>
-                </div>
-
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
-
-                <div style="margin-bottom: 15px;">
-                    <label><strong>2. Out-Time Attendance Selfie</strong></label>
-                    <div class="camera-box-preview">
-                        <video id="video-out" autoplay playsinline muted style="display:none;"></video>
-                        <canvas id="canvas-out" style="display:none;"></canvas>
-                        <img id="preview-out-img" style="display:none;" alt="Out-Time Preview">
-                        <span id="placeholder-out-text" style="color: #aaa; font-size: 13px;">Camera Inactive</span>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Select Status</label>
+                        <select id="emp-status" class="mt-1 w-full p-2 border border-gray-300 rounded-md">
+                            <option value="Present">Present</option>
+                            <option value="Half-Day">Half-Day</option>
+                            <option value="Absent">Absent</option>
+                        </select>
                     </div>
-                    <button type="button" class="secondary" onclick="startCamera('out')" style="margin-bottom: 6px;">Open Camera Frame</button>
-                    <button type="button" class="secondary" onclick="captureAndSubmitAttendance('out')">Capture & Submit Out-Time</button>
-                </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition font-medium">Submit Attendance</button>
+                </form>
+                <div id="employee-msg" class="text-sm text-center mt-2"></div>
             </div>
 
-            <!-- Employee Tab 3: Calendar & Calculation -->
-            <div id="emp-pane-history" class="card hidden">
-                <h3>Attendance Calendar & Salary Calculation</h3>
-                <p style="font-size: 12px; color: #666;">Click on any blue date to view In-Time and Out-Time details, photos, and address locations.</p>
-                <div class="flex-row">
-                    <select id="filter-year" onchange="renderCalendar()">
-                        <option value="2026" selected>2026</option>
-                        <option value="2025">2025</option>
-                    </select>
-                    <select id="filter-month" onchange="renderCalendar()">
-                        <option value="0">January</option>
-                        <option value="1">February</option>
-                        <option value="2">March</option>
-                        <option value="3">April</option>
-                        <option value="4">May</option>
-                        <option value="5" selected>June</option>
-                        <option value="6">July</option>
-                        <option value="7">August</option>
-                        <option value="8">September</option>
-                        <option value="9">October</option>
-                        <option value="10">November</option>
-                        <option value="11">December</option>
-                    </select>
+            <!-- Owner Section -->
+            <div id="section-owner" class="hidden space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-800">Live Attendance Records</h2>
+                    <button onclick="loadAttendanceRecords()" class="text-xs bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">Refresh</button>
                 </div>
-                <div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; color:#555; margin-top: 10px;">
-                    <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b text-xs text-gray-600">
+                                <th class="p-2">Name</th>
+                                <th class="p-2">Status</th>
+                                <th class="p-2">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-table-body" class="text-sm">
+                            <tr>
+                                <td colspan="3" class="p-4 text-center text-gray-500">Loading records...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="calendar-grid" id="calendar-days-container"></div>
-                <div style="font-size: 14px; margin-top: 15px; text-align: center; background: white; padding: 10px; border-radius: 6px;" id="attendance-summary-count"></div>
             </div>
-        </div>
-
+        </main>
     </div>
-</div>
 
-<!-- Modal for Viewing Detailed Attendance Log -->
-<div id="employee-modal" class="modal hidden">
-    <div class="card" style="width: 92%; max-width: 420px; background: white; max-height: 90vh; overflow-y: auto;">
-        <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
-        <h3 style="margin-top:0;">Attendance & Employee Details</h3>
-        <div id="modal-body-content"></div>
-    </div>
-</div>
+    <!-- Firebase SDK Scripts (Modular Version) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-<script>
-    let defaultOwnerAccounts = {
-        "aratakumarsahoo3@gmail.com": "admin123",
-        "admin@pec.com": "password"
-    };
-
-    let savedOwners = JSON.parse(localStorage.getItem('pec_owner_accounts'));
-    let ownerAccounts = savedOwners ? { ...defaultOwnerAccounts, ...savedOwners } : defaultOwnerAccounts;
-    localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
-
-    let hardcodedEmployees = [
-        {
-            id: "PEC-EMP-987",
-            name: "Arata kumar sahoo",
-            dob: "2005-04-27",
-            aadhaar: "[Aadhaar Redacted]",
-            joining: "2024-01-01",
-            position: "Production officer",
-            salary: "25000",
-            photo: "",
-            attendance: {}
-        }
-    ];
-
-    let localStoredEmployees = JSON.parse(localStorage.getItem('pec_employees'));
-    let employees = localStoredEmployees && localStoredEmployees.length > 0 ? localStoredEmployees : hardcodedEmployees;
-    localStorage.setItem('pec_employees', JSON.stringify(employees));
-
-    let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
-    let currentSessionUser = localStorage.getItem('pec_current_user') || null;
-
-    let generatedOTP = "";
-    let pendingEmail = "";
-    let pendingPassword = "";
-    let authMode = ""; 
-    let activeStream = null;
-
-    window.onload = function() {
-        if(currentSessionUser) {
-            showOwnerDashboard();
-        }
-        window.onclick = function(event) {
-            if (!event.target.matches('.dots-btn')) {
-                let dropdowns = document.getElementsByClassName("dropdown-menu");
-                for (let i = 0; i < dropdowns.length; i++) {
-                    dropdowns[i].classList.remove('show');
-                }
-            }
-        }
-    };
-
-    function hideAllScreens() {
-        stopActiveCamera();
-        document.querySelectorAll('.content > div').forEach(el => el.classList.add('hidden'));
-    }
-
-    function stopActiveCamera() {
-        if(activeStream) {
-            activeStream.getTracks().forEach(track => track.stop());
-            activeStream = null;
-        }
-    }
-
-    function backToWelcome() {
-        hideAllScreens();
-        document.getElementById('screen-welcome').classList.remove('hidden');
-    }
-
-    function showLoginScreen() {
-        hideAllScreens();
-        document.getElementById('screen-login').classList.remove('hidden');
-    }
-
-    function showRegisterScreen() {
-        hideAllScreens();
-        document.getElementById('screen-register').classList.remove('hidden');
-    }
-
-    function loginOwnerWithPassword() {
-        const email = document.getElementById('login-email').value.trim().toLowerCase();
-        const pass = document.getElementById('login-password').value;
-
-        if(!email || !pass) {
-            alert('Please enter email and password.');
-            return;
-        }
-
-        if(ownerAccounts[email] && ownerAccounts[email] === pass) {
-            currentSessionUser = email;
-            localStorage.setItem('pec_current_user', currentSessionUser);
-            alert('Login Successful!');
-            showOwnerDashboard();
-        } else {
-            alert('Invalid email or password!');
-        }
-    }
-
-    function showForgotPasswordModal() {
-        const email = prompt("Enter your registered owner email for password reset OTP:");
-        if(email && email.includes('@')) {
-            let cleanEmail = email.trim().toLowerCase();
-            if(ownerAccounts[cleanEmail]) {
-                generateAndSendOTP(cleanEmail, 'forgot');
-            } else {
-                alert('Email not found in owner database.');
-            }
-        }
-    }
-
-    function generateAndSendOTP(email, mode) {
-        pendingEmail = email;
-        authMode = mode;
-        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-
-        let templateParams = {
-            to_email: email,
-            otp_code: generatedOTP,
-            time: new Date().toLocaleTimeString(),
-            message: "Your OTP code for Prasanta Engineering & Contractor is: " + generatedOTP
+        // Your Exact Firebase Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyBCj4EEYDKbtuBtdHsHEssW3zHcLAv0CRA",
+          authDomain: "prasanta-attendance-system.firebaseapp.com",
+          projectId: "prasanta-attendance-system",
+          storageBucket: "prasanta-attendance-system.firebasestorage.app",
+          messagingSenderId: "265672524321",
+          appId: "1:265672524321:web:7f656a0db2b127db6e1960",
+          measurementId: "G-624KWXRXV0"
         };
 
-        emailjs.send("service_33ql72e", "template_qs9fv3s", templateParams)
-            .then(function(response) {
-                alert('OTP sent successfully to your email: ' + email);
-                hideAllScreens();
-                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
-                document.getElementById('screen-otp').classList.remove('hidden');
-            }, function(error) {
-                alert('EmailJS simulation OTP: ' + generatedOTP);
-                hideAllScreens();
-                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
-                document.getElementById('screen-otp').classList.remove('hidden');
-            });
-    }
+        // Initialize Firebase & Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    function requestRegisterOTP() {
-        const name = document.getElementById('reg-name').value;
-        const email = document.getElementById('reg-email').value.trim().toLowerCase();
-        const pass = document.getElementById('reg-pass').value;
+        // Make db globally available for form submission & fetching
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.query = query;
+        window.orderBy = orderBy;
 
-        if(!name || !email || !pass) {
-            alert('Please fill all details.');
-            return;
-        }
+        // Initial fetch for owner view if opened
+        loadAttendanceRecords();
+    </script>
 
-        if(ownerAccounts[email]) {
-            alert('Email already registered! Please login.');
-            showLoginScreen();
-            return;
-        }
+    <!-- App Logic Script -->
+    <script>
+        function switchTab(role) {
+            const empTab = document.getElementById('tab-employee');
+            const ownerTab = document.getElementById('tab-owner');
+            const empSection = document.getElementById('section-employee');
+            const ownerSection = document.getElementById('section-owner');
 
-        pendingPassword = pass;
-        generateAndSendOTP(email, 'register');
-    }
-
-    function verifyOTP() {
-        const userOTP = document.getElementById('entered-otp').value.trim();
-        if(userOTP === generatedOTP) {
-            alert('Verification successful!');
-            document.getElementById('entered-otp').value = "";
-
-            if(authMode === 'register') {
-                ownerAccounts[pendingEmail] = pendingPassword;
-                localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
-            } else if(authMode === 'forgot') {
-                let newPass = prompt("Enter your new password:");
-                if(newPass) {
-                    ownerAccounts[pendingEmail] = newPass;
-                    localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
-                    alert('Password updated successfully!');
-                }
-            }
-
-            currentSessionUser = pendingEmail;
-            localStorage.setItem('pec_current_user', currentSessionUser);
-            showOwnerDashboard();
-        } else {
-            alert('Invalid OTP! Please try again.');
-        }
-    }
-
-    function showOwnerDashboard() {
-        hideAllScreens();
-        document.getElementById('screen-owner-dashboard').classList.remove('hidden');
-        renderEmployeeList();
-    }
-
-    function logoutApp() {
-        currentSessionUser = null;
-        localStorage.removeItem('pec_current_user');
-        backToWelcome();
-    }
-
-    function openEmployeePortalSelect() {
-        hideAllScreens();
-        document.getElementById('screen-emp-login').classList.remove('hidden');
-    }
-
-    function switchOwnerTab(tab) {
-        if(tab === 'home') {
-            document.getElementById('owner-tab-home').classList.remove('hidden');
-            document.getElementById('owner-tab-add').classList.add('hidden');
-            document.getElementById('tab-btn-home').classList.remove('secondary');
-            document.getElementById('tab-btn-add').classList.add('secondary');
-            renderEmployeeList();
-        } else {
-            document.getElementById('owner-tab-home').classList.add('hidden');
-            document.getElementById('owner-tab-add').classList.remove('hidden');
-            document.getElementById('tab-btn-home').classList.add('secondary');
-            document.getElementById('tab-btn-add').classList.remove('secondary');
-            
-            document.getElementById('form-title-text').innerText = "Add Employee Details";
-            document.getElementById('edit-emp-index').value = "";
-            document.getElementById('emp-name').value = "";
-            document.getElementById('emp-dob').value = "";
-            document.getElementById('emp-aadhaar').value = "";
-            document.getElementById('emp-joining').value = "";
-            document.getElementById('emp-position').value = "";
-            document.getElementById('emp-salary').value = "";
-            document.getElementById('emp-photo').value = "";
-        }
-    }
-
-    function saveEmployeeData() {
-        const name = document.getElementById('emp-name').value;
-        const dob = document.getElementById('emp-dob').value;
-        const aadhaar = document.getElementById('emp-aadhaar').value;
-        const joining = document.getElementById('emp-joining').value;
-        const position = document.getElementById('emp-position').value;
-        const salary = document.getElementById('emp-salary').value || "Not Assigned";
-        const photoInput = document.getElementById('emp-photo');
-        const editIndex = document.getElementById('edit-emp-index').value;
-
-        if(!name || !position) {
-            alert('Please fill Name and Position.');
-            return;
-        }
-
-        let reader = new FileReader();
-        if(photoInput.files && photoInput.files[0]) {
-            reader.readAsDataURL(photoInput.files[0]);
-            reader.onload = function(e) {
-                processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, e.target.result);
-            }
-        } else {
-            let existingPhoto = "";
-            if(editIndex !== "") {
-                existingPhoto = employees[editIndex].photo;
-            }
-            processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, existingPhoto);
-        }
-    }
-
-    function processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, photo) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        if(editIndex !== "") {
-            let idx = parseInt(editIndex);
-            employees[idx].name = name;
-            employees[idx].dob = dob;
-            employees[idx].aadhaar = aadhaar || "N/A";
-            employees[idx].joining = joining;
-            employees[idx].position = position;
-            employees[idx].salary = salary;
-            if(photo) employees[idx].photo = photo;
-            alert('Employee updated successfully!');
-        } else {
-            const newId = "PEC-EMP-" + Math.floor(100 + Math.random() * 900);
-            employees.push({
-                id: newId,
-                name: name,
-                dob: dob,
-                aadhaar: aadhaar || "N/A",
-                joining: joining,
-                position: position,
-                salary: salary,
-                photo: photo,
-                attendance: {}
-            });
-            alert('Employee created successfully! ID: ' + newId);
-        }
-
-        localStorage.setItem('pec_employees', JSON.stringify(employees));
-        switchOwnerTab('home');
-    }
-
-    function renderEmployeeList() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const container = document.getElementById('employee-list-container');
-        container.innerHTML = "";
-        if(employees.length === 0) {
-            container.innerHTML = "<p>No employees found.</p>";
-            return;
-        }
-
-        employees.forEach((emp, index) => {
-            let div = document.createElement('div');
-            div.className = "emp-item-card";
-            div.innerHTML = `
-                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
-                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
-                    <div>
-                        <strong>${emp.name}</strong> (${emp.id})<br>
-                        <small style="color: #666;">${emp.position}</small>
-                    </div>
-                </div>
-                <div class="menu-container">
-                    <button class="dots-btn" onclick="toggleMenu(event, ${index})">&#8942;</button>
-                    <div id="dropdown-menu-${index}" class="dropdown-menu">
-                        <button onclick="editEmployee(${index})">Edit</button>
-                        <button class="delete-opt" onclick="deleteEmployee(${index})">Delete</button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function filterEmployees() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        let query = document.getElementById('search-employee').value.toLowerCase();
-        let container = document.getElementById('employee-list-container');
-        container.innerHTML = "";
-        
-        let filtered = employees.filter(e => e.name.toLowerCase().includes(query) || e.id.toLowerCase().includes(query));
-        if(filtered.length === 0) {
-            container.innerHTML = "<p>No matching employees found.</p>";
-            return;
-        }
-
-        filtered.forEach((emp) => {
-            let originalIndex = employees.findIndex(item => item.id === emp.id);
-            let div = document.createElement('div');
-            div.className = "emp-item-card";
-            div.innerHTML = `
-                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
-                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
-                    <div>
-                        <strong>${emp.name}</strong> (${emp.id})<br>
-                        <small style="color: #666;">${emp.position}</small>
-                    </div>
-                </div>
-                <div class="menu-container">
-                    <button class="dots-btn" onclick="toggleMenu(event, ${originalIndex})">&#8942;</button>
-                    <div id="dropdown-menu-${originalIndex}" class="dropdown-menu">
-                        <button onclick="editEmployee(${originalIndex})">Edit</button>
-                        <button class="delete-opt" onclick="deleteEmployee(${originalIndex})">Delete</button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function toggleMenu(event, index) {
-        event.stopPropagation();
-        let dropdowns = document.getElementsByClassName("dropdown-menu");
-        for (let i = 0; i < dropdowns.length; i++) {
-            if (i !== index) dropdowns[i].classList.remove('show');
-        }
-        let menu = document.getElementById(`dropdown-menu-${index}`);
-        menu.classList.toggle('show');
-    }
-
-    function editEmployee(index) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const emp = employees[index];
-        document.getElementById('form-title-text').innerText = "Edit Employee Details";
-        document.getElementById('edit-emp-index').value = index;
-        document.getElementById('emp-name').value = emp.name;
-        document.getElementById('emp-dob').value = emp.dob || "";
-        document.getElementById('emp-aadhaar').value = emp.aadhaar !== "N/A" ? emp.aadhaar : "";
-        document.getElementById('emp-joining').value = emp.joining || "";
-        document.getElementById('emp-position').value = emp.position;
-        document.getElementById('emp-salary').value = emp.salary !== "Not Assigned" ? emp.salary : "";
-        
-        document.getElementById('owner-tab-home').classList.add('hidden');
-        document.getElementById('owner-tab-add').classList.remove('hidden');
-        document.getElementById('tab-btn-home').classList.add('secondary');
-        document.getElementById('tab-btn-add').classList.remove('secondary');
-    }
-
-    function deleteEmployee(index) {
-        if(confirm("Are you sure you want to delete this employee?")) {
-            employees.splice(index, 1);
-            localStorage.setItem('pec_employees', JSON.stringify(employees));
-            renderEmployeeList();
-        }
-    }
-
-    // EXPORT MONTHLY REPORT CSV FUNCTION
-    function exportMonthlyReportCSV() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        if(employees.length === 0) {
-            alert('No employee data available to export.');
-            return;
-        }
-
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        let daysInMonth = new Date(year, month + 1, 0).getDate();
-        let monthName = now.toLocaleString('default', { month: 'long' });
-
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += `Prasanta Engineering & Contractor - Monthly Attendance Report (${monthName} ${year})\n`;
-        csvContent += "Employee ID,Employee Name,Designation,Monthly Base Salary,Present Days,Absent Days,Estimated Earned Salary\n";
-
-        employees.forEach(emp => {
-            let presentCount = 0;
-            for(let d = 1; d <= daysInMonth; d++) {
-                let fullDateStr = `${year}-${month}-${d}`;
-                if(emp.attendance[fullDateStr] && emp.attendance[fullDateStr].status === 'present') {
-                    presentCount++;
-                }
-            }
-            let absentCount = daysInMonth - presentCount;
-            let baseSal = parseFloat(emp.salary);
-            let estEarned = (!isNaN(baseSal)) ? Math.round((baseSal / 30) * presentCount) : "N/A";
-            let rowSalary = (!isNaN(baseSal)) ? baseSal : "Not Assigned";
-
-            csvContent += `"${emp.id}","${emp.name}","${emp.position}","${rowSalary}","${presentCount}","${absentCount}","${estEarned}"\n`;
-        });
-
-        let encodedUri = encodeURI(csvContent);
-        let link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `PEC_Attendance_Report_${monthName}_${year}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function openOwnerEmployeeDetailModal(empId) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const emp = employees.find(e => e.id === empId);
-        if(!emp) return;
-
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        
-        let firstDayIndex = new Date(year, month, 1).getDay();
-        let daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        let presentCount = 0;
-        let absentCount = 0;
-
-        let calHtml = `<div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; color:#555;"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>`;
-        calHtml += `<div class="calendar-grid">`;
-
-        for(let i = 0; i < firstDayIndex; i++) {
-            calHtml += `<div></div>`;
-        }
-
-        for(let d = 1; d <= daysInMonth; d++) {
-            let fullDateStr = `${year}-${month}-${d}`;
-            let record = emp.attendance[fullDateStr];
-            let cls = "cal-day";
-            if(record && record.status === 'present') {
-                cls += " present";
-                presentCount++;
-                calHtml += `<div class="${cls}" onclick="showAttendanceDetailModal('${empId}', '${fullDateStr}')">${d}</div>`;
+            if (role === 'employee') {
+                empTab.className = "flex-1 py-3 text-center font-medium text-blue-600 border-b-2 border-blue-600";
+                ownerTab.className = "flex-1 py-3 text-center font-medium text-gray-500";
+                empSection.classList.remove('hidden');
+                ownerSection.classList.add('hidden');
             } else {
-                cls += " absent";
-                absentCount++;
-                calHtml += `<div class="${cls}">${d}</div>`;
+                ownerTab.className = "flex-1 py-3 text-center font-medium text-blue-600 border-b-2 border-blue-600";
+                empTab.className = "flex-1 py-3 text-center font-medium text-gray-500";
+                ownerSection.classList.remove('hidden');
+                empSection.classList.add('hidden');
+                loadAttendanceRecords();
             }
         }
-        calHtml += `</div>`;
 
-        let baseSalary = parseFloat(emp.salary);
-        let estimatedSalary = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * presentCount) : "N/A";
+        async function markAttendance(event) {
+            event.preventDefault();
+            const name = document.getElementById('emp-name').value;
+            const status = document.getElementById('emp-status').value;
+            const msgDiv = document.getElementById('employee-msg');
 
-        document.getElementById('modal-body-content').innerHTML = `
-            <div style="text-align: center; margin-bottom: 15px;">
-                ${emp.photo ? `<img src="${emp.photo}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 8px;">` : `<div style="width: 80px; height: 80px; border-radius: 50%; background: #ccc; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">${emp.name.charAt(0)}</div>`}
-                <h4 style="margin:0;">${emp.name}</h4>
-                <small style="color: #666;">ID: ${emp.id} | ${emp.position}</small>
-            </div>
-            <p><strong>Salary:</strong> ${emp.salary} | <strong>Est. Earned:</strong> ${estimatedSalary}</p>
-            <p><strong>DOB:</strong> ${emp.dob || 'N/A'} | <strong>Joining:</strong> ${emp.joining || 'N/A'}</p>
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
-            <h4 style="margin-bottom: 5px;">Current Month Attendance</h4>
-            <div style="margin-bottom: 10px;">
-                <span class="badge badge-blue">Present: ${presentCount} Days</span> 
-                <span class="badge badge-red">Absent: ${absentCount} Days</span>
-            </div>
-            <p style="font-size: 11px; color: #666;">Click blue date tiles to check In/Out selfies and exact addresses.</p>
-            ${calHtml}
-        `;
-        document.getElementById('employee-modal').classList.remove('hidden');
-    }
-
-    function closeModal() {
-        document.getElementById('employee-modal').classList.add('hidden');
-    }
-
-    function loginEmployee() {
-        const idInput = document.getElementById('emp-login-id').value.trim();
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const found = employees.find(e => e.id.toLowerCase() === idInput.toLowerCase() || e.id === idInput);
-        if(found) {
-            currentLoggedInEmpId = found.id;
-            localStorage.setItem('pec_current_emp', currentLoggedInEmpId);
-            loadEmployeeDashboard(currentLoggedInEmpId);
-        } else {
-            alert('Invalid Employee ID! Please check your ID again.');
-        }
-    }
-
-    function logoutEmployee() {
-        stopActiveCamera();
-        currentLoggedInEmpId = null;
-        localStorage.removeItem('pec_current_emp');
-        backToWelcome();
-    }
-
-    function loadEmployeeDashboard(empId) {
-        hideAllScreens();
-        document.getElementById('screen-emp-dashboard').classList.remove('hidden');
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const emp = employees.find(e => e.id === empId);
-        if(emp) {
-            document.getElementById('emp-welcome-title').innerText = emp.name;
-            document.getElementById('emp-profile-content').innerHTML = `
-                ${emp.photo ? `<img src="${emp.photo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 10px;">` : ''}
-                <p><strong>Employee ID:</strong> ${emp.id}</p>
-                <p><strong>Full Name:</strong> ${emp.name}</p>
-                <p><strong>Position:</strong> ${emp.position}</p>
-                <p><strong>Salary:</strong> ${emp.salary}</p>
-                <p><strong>Date of Birth:</strong> ${emp.dob || 'N/A'}</p>
-                <p><strong>Joining Date:</strong> ${emp.joining || 'N/A'}</p>
-            `;
-            switchEmpTab('profile');
-        }
-    }
-
-    function switchEmpTab(tab) {
-        stopActiveCamera();
-        document.getElementById('emp-pane-profile').classList.add('hidden');
-        document.getElementById('emp-pane-attendance').classList.add('hidden');
-        document.getElementById('emp-pane-history').classList.add('hidden');
-
-        if(tab === 'profile') {
-            document.getElementById('emp-pane-profile').classList.remove('hidden');
-        } else if(tab === 'attendance') {
-            document.getElementById('emp-pane-attendance').classList.remove('hidden');
-        } else if(tab === 'history') {
-            document.getElementById('emp-pane-history').classList.remove('hidden');
-            renderCalendar();
-        }
-    }
-
-    function startCamera(type) {
-        stopActiveCamera();
-        const video = document.getElementById(`video-${type}`);
-        const placeholder = document.getElementById(`placeholder-${type}-text`);
-        const previewImg = document.getElementById(`preview-${type}-img`);
-
-        video.style.display = 'block';
-        previewImg.style.display = 'none';
-        placeholder.style.display = 'none';
-
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
-            .then(stream => {
-                activeStream = stream;
-                video.srcObject = stream;
-            })
-            .catch(err => {
-                alert('Unable to access front camera: ' + err.message);
-                video.style.display = 'none';
-                placeholder.style.display = 'block';
-            });
-    }
-
-    function captureAndSubmitAttendance(type) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const emp = employees.find(e => e.id === currentLoggedInEmpId);
-        if(!emp) return;
-
-        const video = document.getElementById(`video-${type}`);
-        const canvas = document.getElementById(`canvas-${type}`);
-        const previewImg = document.getElementById(`preview-${type}-img`);
-
-        if(!activeStream || video.style.display === 'none') {
-            alert('Please click "Open Camera Frame" first.');
-            return;
-        }
-
-        canvas.width = video.videoWidth || 320;
-        canvas.height = video.videoHeight || 240;
-        let ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        let photoData = canvas.toDataURL('image/jpeg');
-
-        video.style.display = 'none';
-        previewImg.src = photoData;
-        previewImg.style.display = 'block';
-
-        stopActiveCamera();
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                let lat = position.coords.latitude;
-                let lon = position.coords.longitude;
-                let timeStr = new Date().toLocaleTimeString();
-
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        let addressStr = data.display_name || `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
-                        saveAttendanceRecord(emp, type, timeStr, photoData, addressStr);
-                    })
-                    .catch(() => {
-                        let fallbackLoc = `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
-                        saveAttendanceRecord(emp, type, timeStr, photoData, fallbackLoc);
-                    });
-            }, error => {
-                alert("GPS Location access error: " + error.message);
-            }, { enableHighAccuracy: true });
-        } else {
-            alert("Geolocation is not supported by your browser.");
-        }
-    }
-
-    function saveAttendanceRecord(emp, type, timeStr, photoData, locationStr) {
-        const now = new Date();
-        const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-        
-        if(!emp.attendance[dateKey]) {
-            emp.attendance[dateKey] = { status: 'present', inTime: '', inPhoto: '', inLoc: '', outTime: '', outPhoto: '', outLoc: '' };
-        }
-
-        if(type === 'in') {
-            emp.attendance[dateKey].inTime = timeStr;
-            emp.attendance[dateKey].inPhoto = photoData;
-            emp.attendance[dateKey].inLoc = locationStr;
-            alert('In-Time attendance recorded successfully with live address!');
-        } else {
-            emp.attendance[dateKey].outTime = timeStr;
-            emp.attendance[dateKey].outPhoto = photoData;
-            emp.attendance[dateKey].outLoc = locationStr;
-            alert('Out-Time attendance recorded successfully with live address!');
-        }
-        localStorage.setItem('pec_employees', JSON.stringify(employees));
-    }
-
-    function renderCalendar() {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const container = document.getElementById('calendar-days-container');
-        container.innerHTML = "";
-        const emp = employees.find(e => e.id === currentLoggedInEmpId);
-        if(!emp) return;
-
-        const selectedYear = parseInt(document.getElementById('filter-year').value);
-        const selectedMonth = parseInt(document.getElementById('filter-month').value);
-        
-        let firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
-        let daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
-
-        let presentCount = 0;
-        let absentCount = 0;
-
-        for(let i = 0; i < firstDayIndex; i++) {
-            container.appendChild(document.createElement('div'));
-        }
-
-        for(let d = 1; d <= daysInMonth; d++) {
-            let fullDateStr = `${selectedYear}-${selectedMonth}-${d}`;
-            let record = emp.attendance[fullDateStr];
-
-            let cell = document.createElement('div');
-            cell.className = "cal-day";
-            cell.innerText = d;
-
-            if(record && record.status === 'present') {
-                cell.classList.add('present');
-                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
-                presentCount++;
-            } else {
-                cell.classList.add('absent');
+            if (!window.db) {
+                msgDiv.innerHTML = "<span class='text-red-600'>Firebase is initializing, please wait a second.</span>";
+                return;
             }
-            container.appendChild(cell);
+
+            try {
+                msgDiv.innerHTML = "<span class='text-blue-600'>Saving attendance...</span>";
+                await window.addDoc(window.collection(window.db, "attendance"), {
+                    name: name,
+                    status: status,
+                    timestamp: new Date().toLocaleString()
+                });
+                msgDiv.innerHTML = "<span class='text-green-600 font-medium'>Attendance marked successfully!</span>";
+                document.getElementById('attendance-form').reset();
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                msgDiv.innerHTML = "<span class='text-red-600'>Error saving attendance. Try again.</span>";
+            }
         }
 
-        let baseSalary = parseFloat(emp.salary);
-        let calculatedEarnings = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * presentCount) : "N/A";
+        async function loadAttendanceRecords() {
+            const tableBody = document.getElementById('attendance-table-body');
+            if (!window.db) return;
 
-        document.getElementById('attendance-summary-count').innerHTML = `
-            <span class="badge badge-blue">Present: ${presentCount} Days</span> 
-            <span class="badge badge-red">Absent: ${absentCount} Days</span><br><br>
-            <strong>Estimated Salary for Month:</strong> ${calculatedEarnings}
-        `;
-    }
+            tableBody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-500">Loading records...</td></tr>`;
 
-    function showAttendanceDetailModal(empId, dateStr) {
-        employees = JSON.parse(localStorage.getItem('pec_employees')) || hardcodedEmployees;
-        const emp = employees.find(e => e.id === empId);
-        if(!emp || !emp.attendance[dateStr]) return;
+            try {
+                const q = window.query(window.collection(window.db, "attendance"));
+                const querySnapshot = await window.getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    tableBody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-500">No attendance records found.</td></tr>`;
+                    return;
+                }
 
-        let rec = emp.attendance[dateStr];
-        let [y, m, d] = dateStr.split('-');
-        let formattedDate = `${d}/${parseInt(m)+1}/${y}`;
-
-        document.getElementById('modal-body-content').innerHTML = `
-            <h4>Date: ${formattedDate}</h4>
-            <div style="background: #f1f1f1; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
-                <strong>In-Time Record:</strong><br>
-                Time: ${rec.inTime || 'N/A'}<br>
-                Address: ${rec.inLoc || 'N/A'}<br>
-                ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No In-Time selfie uploaded</small>'}
-            </div>
-            <div style="background: #f1f1f1; padding: 10px; border-radius: 6px;">
-                <strong>Out-Time Record:</strong><br>
-                Time: ${rec.outTime || 'N/A'}<br>
-                Address: ${rec.outLoc || 'N/A'}<br>
-                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100% ; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No Out-Time selfie uploaded</small>'}
-            </div>
-        `;
-        document.getElementById('employee-modal').classList.remove('hidden');
-    }
-</script>
-
+                let rows = '';
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    let badgeColor = data.status === 'Present' ? 'bg-green-100 text-green-800' : (data.status === 'Half-Day' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800');
+                    rows += `
+                        <tr class="border-b">
+                            <td class="p-2 font-medium text-gray-800">${data.name}</td>
+                            <td class="p-2"><span class="px-2 py-1 rounded text-xs font-semibold ${badgeColor}">${data.status}</span></td>
+                            <td class="p-2 text-xs text-gray-500">${data.timestamp}</td>
+                        </tr>
+                    `;
+                });
+                tableBody.innerHTML = rows;
+            } catch (error) {
+                console.error("Error loading documents: ", error);
+                tableBody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-500">Failed to load records.</td></tr>`;
+            }
+        }
+    </script>
 </body>
 </html>
