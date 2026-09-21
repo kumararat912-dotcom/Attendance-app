@@ -199,6 +199,25 @@
         .dropdown-menu button.delete-opt {
             color: var(--red);
         }
+        /* Rectangular Compact Camera Box styling */
+        .camera-box-preview {
+            width: 100%;
+            height: 180px;
+            background: #000;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-bottom: 10px;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+        .camera-box-preview video, .camera-box-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
@@ -329,30 +348,42 @@
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance Camera & Location -->
+            <!-- Employee Tab 2: Attendance Rectangular Live Camera Preview & Location -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Daily Attendance</h3>
-                <p style="font-size: 13px; color: #666;">Submit both In-Time and Out-Time verification with front camera selfie and location.</p>
+                <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time with rect-frame front camera preview & exact address GPS.</p>
                 
-                <div style="margin-bottom: 15px;">
-                    <label><strong>1. In-Time Attendance Selfie (Front Camera Only)</strong></label>
-                    <input type="file" id="emp-in-file" accept="image/*" capture="user">
-                    <button onclick="submitAttendanceType('in')">Submit In-Time</button>
+                <div style="margin-bottom: 20px;">
+                    <label><strong>1. In-Time Attendance Selfie</strong></label>
+                    <div class="camera-box-preview">
+                        <video id="video-in" autoplay playsinline muted style="display:none;"></video>
+                        <canvas id="canvas-in" style="display:none;"></canvas>
+                        <img id="preview-in-img" style="display:none;" alt="In-Time Preview">
+                        <span id="placeholder-in-text" style="color: #aaa; font-size: 13px;">Camera Inactive</span>
+                    </div>
+                    <button type="button" class="secondary" onclick="startCamera('in')" style="margin-bottom: 6px;">Open Camera Frame</button>
+                    <button type="button" onclick="captureAndSubmitAttendance('in')">Capture & Submit In-Time</button>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
                 <div style="margin-bottom: 15px;">
-                    <label><strong>2. Out-Time Attendance Selfie (Front Camera Only)</strong></label>
-                    <input type="file" id="emp-out-file" accept="image/*" capture="user">
-                    <button class="secondary" onclick="submitAttendanceType('out')">Submit Out-Time</button>
+                    <label><strong>2. Out-Time Attendance Selfie</strong></label>
+                    <div class="camera-box-preview">
+                        <video id="video-out" autoplay playsinline muted style="display:none;"></video>
+                        <canvas id="canvas-out" style="display:none;"></canvas>
+                        <img id="preview-out-img" style="display:none;" alt="Out-Time Preview">
+                        <span id="placeholder-out-text" style="color: #aaa; font-size: 13px;">Camera Inactive</span>
+                    </div>
+                    <button type="button" class="secondary" onclick="startCamera('out')" style="margin-bottom: 6px;">Open Camera Frame</button>
+                    <button type="button" class="secondary" onclick="captureAndSubmitAttendance('out')">Capture & Submit Out-Time</button>
                 </div>
             </div>
 
             <!-- Employee Tab 3: Calendar & Calculation -->
             <div id="emp-pane-history" class="card hidden">
                 <h3>Attendance Calendar & Salary Calculation</h3>
-                <p style="font-size: 12px; color: #666;">Click on any blue date to view In-Time and Out-Time details, photos, and locations.</p>
+                <p style="font-size: 12px; color: #666;">Click on any blue date to view In-Time and Out-Time details, photos, and address locations.</p>
                 <div class="flex-row">
                     <select id="filter-year" onchange="renderCalendar()">
                         <option value="2026" selected>2026</option>
@@ -411,6 +442,7 @@
     let pendingEmail = "";
     let pendingPassword = "";
     let authMode = ""; 
+    let activeStream = null;
 
     window.onload = function() {
         if(currentSessionUser) {
@@ -427,7 +459,15 @@
     };
 
     function hideAllScreens() {
+        stopActiveCamera();
         document.querySelectorAll('.content > div').forEach(el => el.classList.add('hidden'));
+    }
+
+    function stopActiveCamera() {
+        if(activeStream) {
+            activeStream.getTracks().forEach(track => track.stop());
+            activeStream = null;
+        }
     }
 
     function backToWelcome() {
@@ -811,7 +851,7 @@
                 <span class="badge badge-blue">Present: ${presentCount} Days</span> 
                 <span class="badge badge-red">Absent: ${absentCount} Days</span>
             </div>
-            <p style="font-size: 11px; color: #666;">Click blue date tiles to check In/Out selfies and GPS locations.</p>
+            <p style="font-size: 11px; color: #666;">Click blue date tiles to check In/Out selfies and exact addresses.</p>
             ${calHtml}
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
@@ -835,6 +875,7 @@
     }
 
     function logoutEmployee() {
+        stopActiveCamera();
         currentLoggedInEmpId = null;
         localStorage.removeItem('pec_current_emp');
         backToWelcome();
@@ -861,6 +902,7 @@
     }
 
     function switchEmpTab(tab) {
+        stopActiveCamera();
         document.getElementById('emp-pane-profile').classList.add('hidden');
         document.getElementById('emp-pane-attendance').classList.add('hidden');
         document.getElementById('emp-pane-history').classList.add('hidden');
@@ -875,11 +917,84 @@
         }
     }
 
-    function submitAttendanceType(type) {
+    // Camera Access for Front Rectangular View
+    function startCamera(type) {
+        stopActiveCamera();
+        const video = document.getElementById(`video-${type}`);
+        const placeholder = document.getElementById(`placeholder-${type}-text`);
+        const previewImg = document.getElementById(`preview-${type}-img`);
+
+        video.style.display = 'block';
+        previewImg.style.display = 'none';
+        placeholder.style.display = 'none';
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+            .then(stream => {
+                activeStream = stream;
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                alert('Unable to access front camera: ' + err.message);
+                video.style.display = 'none';
+                placeholder.style.display = 'block';
+            });
+    }
+
+    // Capture Photo and fetch Location Address with Pincode
+    function captureAndSubmitAttendance(type) {
         employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
         const emp = employees.find(e => e.id === currentLoggedInEmpId);
         if(!emp) return;
 
+        const video = document.getElementById(`video-${type}`);
+        const canvas = document.getElementById(`canvas-${type}`);
+        const previewImg = document.getElementById(`preview-${type}-img`);
+
+        if(!activeStream || video.style.display === 'none') {
+            alert('Please click "Open Camera Frame" first.');
+            return;
+        }
+
+        // Draw video frame to canvas
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 240;
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        let photoData = canvas.toDataURL('image/jpeg');
+
+        // Show captured image preview inside box
+        video.style.display = 'none';
+        previewImg.src = photoData;
+        previewImg.style.display = 'block';
+
+        stopActiveCamera();
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                let lat = position.coords.latitude;
+                let lon = position.coords.longitude;
+                let timeStr = new Date().toLocaleTimeString();
+
+                // Reverse geocoding for exact address & pincode
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let addressStr = data.display_name || `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
+                        saveAttendanceRecord(emp, type, timeStr, photoData, addressStr);
+                    })
+                    .catch(() => {
+                        let fallbackLoc = `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
+                        saveAttendanceRecord(emp, type, timeStr, photoData, fallbackLoc);
+                    });
+            }, error => {
+                alert("GPS Location access error: " + error.message);
+            }, { enableHighAccuracy: true });
+        } else {
+            alert("Geolocation is not supported by your browser.");
+        }
+    }
+
+    function saveAttendanceRecord(emp, type, timeStr, photoData, locationStr) {
         const now = new Date();
         const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
         
@@ -887,43 +1002,16 @@
             emp.attendance[dateKey] = { status: 'present', inTime: '', inPhoto: '', inLoc: '', outTime: '', outPhoto: '', outLoc: '' };
         }
 
-        let fileInput = document.getElementById(type === 'in' ? 'emp-in-file' : 'emp-out-file');
-        
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                let lat = position.coords.latitude.toFixed(4);
-                let lon = position.coords.longitude.toFixed(4);
-                let locationStr = `Lat: ${lat}, Lon: ${lon}`;
-                let timeStr = now.toLocaleTimeString();
-
-                if(fileInput.files && fileInput.files[0]) {
-                    let reader = new FileReader();
-                    reader.onload = function(e) {
-                        saveAttendanceRecord(emp, dateKey, type, timeStr, e.target.result, locationStr);
-                    };
-                    reader.readAsDataURL(fileInput.files[0]);
-                } else {
-                    alert("Please capture a front camera selfie to mark attendance.");
-                }
-            }, error => {
-                alert("GPS Location access is required to mark attendance.");
-            });
-        } else {
-            alert("Geolocation is not supported by your browser.");
-        }
-    }
-
-    function saveAttendanceRecord(emp, dateKey, type, timeStr, photoData, locationStr) {
         if(type === 'in') {
             emp.attendance[dateKey].inTime = timeStr;
             emp.attendance[dateKey].inPhoto = photoData;
             emp.attendance[dateKey].inLoc = locationStr;
-            alert('In-Time attendance recorded successfully!');
+            alert('In-Time attendance recorded successfully with live address!');
         } else {
             emp.attendance[dateKey].outTime = timeStr;
             emp.attendance[dateKey].outPhoto = photoData;
             emp.attendance[dateKey].outLoc = locationStr;
-            alert('Out-Time attendance recorded successfully!');
+            alert('Out-Time attendance recorded successfully with live address!');
         }
         localStorage.setItem('pec_employees', JSON.stringify(employees));
     }
@@ -990,13 +1078,13 @@
             <div style="background: #f1f1f1; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
                 <strong>In-Time Record:</strong><br>
                 Time: ${rec.inTime || 'N/A'}<br>
-                Location: ${rec.inLoc || 'N/A'}<br>
+                Address: ${rec.inLoc || 'N/A'}<br>
                 ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No In-Time selfie uploaded</small>'}
             </div>
             <div style="background: #f1f1f1; padding: 10px; border-radius: 6px;">
                 <strong>Out-Time Record:</strong><br>
                 Time: ${rec.outTime || 'N/A'}<br>
-                Location: ${rec.outLoc || 'N/A'}<br>
+                Address: ${rec.outLoc || 'N/A'}<br>
                 ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100% ; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No Out-Time selfie uploaded</small>'}
             </div>
         `;
