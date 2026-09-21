@@ -4,12 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prasanta Engineering & Contractor - Attendance & Management System</title>
-    <!-- EmailJS SDK for sending OTP emails -->
+    <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
             emailjs.init("dx_EZ5roIzsVPTokP");
         })();
+    </script>
+    <!-- Firebase App & Realtime Database SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Configuration (Cloud Database)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-CloudSyncDatabaseDefaultKeyExample",
+            authDomain: "prasanta-engineering.firebaseapp.com",
+            databaseURL: "https://prasanta-engineering-default-rtdb.firebaseio.com",
+            projectId: "prasanta-engineering",
+            storageBucket: "prasanta-engineering.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
     </script>
     <style>
         :root {
@@ -142,8 +159,6 @@
             align-items: center;
             z-index: 100;
         }
-        
-        /* 3-Dot Menu Styles */
         .emp-item-card {
             display: flex;
             justify-content: space-between;
@@ -180,9 +195,7 @@
             z-index: 10;
             width: 100px;
         }
-        .dropdown-menu.show {
-            display: block;
-        }
+        .dropdown-menu.show { display: block; }
         .dropdown-menu button {
             background: none;
             color: var(--ink);
@@ -194,12 +207,8 @@
             margin: 0;
             border-radius: 0;
         }
-        .dropdown-menu button:hover {
-            background: #f1f1f1;
-        }
-        .dropdown-menu button.delete-opt {
-            color: var(--red);
-        }
+        .dropdown-menu button:hover { background: #f1f1f1; }
+        .dropdown-menu button.delete-opt { color: var(--red); }
     </style>
 </head>
 <body>
@@ -207,7 +216,7 @@
 <div class="container">
     <div class="header">
         <div class="logo-box">Prasanta Engineering & Contractor</div>
-        <div class="sub-logo">Official Attendance & Management System</div>
+        <div class="sub-logo">Official Attendance & Management System (Cloud synced)</div>
     </div>
 
     <div class="content">
@@ -264,14 +273,12 @@
                 <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employee</button>
             </div>
 
-            <!-- Owner Tab 1: Home / Employees List & Filter -->
             <div id="owner-tab-home" class="card">
                 <h3>Manage Employees</h3>
                 <input type="text" id="search-employee" placeholder="Filter by employee name or ID..." onkeyup="filterEmployees()">
                 <div id="employee-list-container"></div>
             </div>
 
-            <!-- Owner Tab 2: Add / Edit Employees -->
             <div id="owner-tab-add" class="card hidden">
                 <h3 id="form-title-text">Add Employee Details</h3>
                 <input type="hidden" id="edit-emp-index" value="">
@@ -324,13 +331,11 @@
                 <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) Calendar & Salary</button>
             </div>
 
-            <!-- Employee Tab 1: Profile -->
             <div id="emp-pane-profile" class="card">
                 <h3>My Profile</h3>
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance Camera -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Attendance</h3>
                 <p style="font-size: 13px; color: #666;">Camera verification for today's attendance.</p>
@@ -342,7 +347,6 @@
                 <button onclick="captureSelfieAttendance()">Submit Today's Attendance</button>
             </div>
 
-            <!-- Employee Tab 3: Calendar & Calculation -->
             <div id="emp-pane-history" class="card hidden">
                 <h3>Attendance Calendar & Salary Calculation</h3>
                 <div class="flex-row">
@@ -376,7 +380,6 @@
     </div>
 </div>
 
-<!-- Modal for Owner to View Detailed Employee Info & Attendance History -->
 <div id="employee-modal" class="modal hidden">
     <div class="card" style="width: 92%; max-width: 420px; background: white; max-height: 90vh; overflow-y: auto;">
         <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
@@ -386,13 +389,11 @@
 </div>
 
 <script>
-    let ownerAccounts = JSON.parse(localStorage.getItem('pec_owner_accounts')) || {
+    let ownerAccounts = {
         "aratakumarsahoo3@gmail.com": "admin123",
         "admin@pec.com": "password"
     };
-    let employees = JSON.parse(localStorage.getItem('pec_employees')) || [
-        { id: "PEC-EMP-101", name: "Rahul Kumar", dob: "2000-01-15", aadhaar: "Redacted", joining: "2025-01-01", position: "Helper", salary: "12000", photo: "", attendance: {"2026-5-1": "present", "2026-5-2": "present"} }
-    ];
+    let employees = [];
     let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
     let currentSessionUser = localStorage.getItem('pec_current_user') || null;
 
@@ -402,22 +403,41 @@
     let authMode = ""; 
 
     window.onload = function() {
-        if(currentSessionUser) {
-            showOwnerDashboard();
-        }
-        // Close dropdown menus when clicking outside
+        // Fetch real-time live data from Firebase Database
+        db.ref('pec_data').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                if(data.owners) ownerAccounts = data.owners;
+                if(data.employees) employees = Object.values(data.employees);
+            } else {
+                // Initialize default database if empty
+                syncDataToFirebase();
+            }
+            if(currentSessionUser) {
+                showOwnerDashboard();
+            }
+        });
+
         window.onclick = function(event) {
             if (!event.target.matches('.dots-btn')) {
                 let dropdowns = document.getElementsByClassName("dropdown-menu");
                 for (let i = 0; i < dropdowns.length; i++) {
-                    let openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
+                    dropdowns[i].classList.remove('show');
                 }
             }
         }
     };
+
+    function syncDataToFirebase() {
+        let empObj = {};
+        employees.forEach((emp, index) => {
+            empObj["emp_" + index] = emp;
+        });
+        db.ref('pec_data').set({
+            owners: ownerAccounts,
+            employees: empObj
+        });
+    }
 
     function hideAllScreens() {
         document.querySelectorAll('.content > div').forEach(el => el.classList.add('hidden'));
@@ -523,16 +543,15 @@
 
             if(authMode === 'register') {
                 ownerAccounts[pendingEmail] = pendingPassword;
-                localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
             } else if(authMode === 'forgot') {
                 let newPass = prompt("Enter your new password:");
                 if(newPass) {
                     ownerAccounts[pendingEmail] = newPass;
-                    localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
                     alert('Password updated successfully!');
                 }
             }
 
+            syncDataToFirebase();
             currentSessionUser = pendingEmail;
             localStorage.setItem('pec_current_user', currentSessionUser);
             showOwnerDashboard();
@@ -640,11 +659,10 @@
             alert('Employee created successfully! ID: ' + newId);
         }
 
-        localStorage.setItem('pec_employees', JSON.stringify(employees));
+        syncDataToFirebase();
         switchOwnerTab('home');
     }
 
-    // --- RENDER EMPLOYEE LIST WITH 3-DOT MENU ---
     function renderEmployeeList() {
         const container = document.getElementById('employee-list-container');
         container.innerHTML = "";
@@ -676,7 +694,6 @@
         });
     }
 
-    // --- FILTER EMPLOYEES BY NAME OR ID ---
     function filterEmployees() {
         let query = document.getElementById('search-employee').value.toLowerCase();
         let container = document.getElementById('employee-list-container');
@@ -714,7 +731,6 @@
 
     function toggleMenu(event, index) {
         event.stopPropagation();
-        // Hide all other open menus
         let dropdowns = document.getElementsByClassName("dropdown-menu");
         for (let i = 0; i < dropdowns.length; i++) {
             if (i !== index) dropdowns[i].classList.remove('show');
@@ -743,17 +759,15 @@
     function deleteEmployee(index) {
         if(confirm("Are you sure you want to delete this employee?")) {
             employees.splice(index, 1);
-            localStorage.setItem('pec_employees', JSON.stringify(employees));
+            syncDataToFirebase();
             renderEmployeeList();
         }
     }
 
-    // --- OWNER VIEW FOR EMPLOYEE DETAILS & ATTENDANCE HISTORY (WITH PHOTO, PRESENT/ABSENT COUNT) ---
     function openOwnerEmployeeDetailModal(empId) {
         const emp = employees.find(e => e.id === empId);
         if(!emp) return;
 
-        // Current month & year calendar calculation for preview
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth();
@@ -773,7 +787,7 @@
 
         for(let d = 1; d <= daysInMonth; d++) {
             let fullDateStr = `${year}-${month}-${d}`;
-            let status = emp.attendance[fullDateStr];
+            let status = emp.attendance ? emp.attendance[fullDateStr] : null;
             let cls = "cal-day";
             if(status === 'present') {
                 cls += " present";
@@ -890,8 +904,10 @@
 
         const now = new Date();
         const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+        if(!emp.attendance) emp.attendance = {};
         emp.attendance[dateKey] = 'present';
-        localStorage.setItem('pec_employees', JSON.stringify(employees));
+        
+        syncDataToFirebase();
         alert('Attendance marked successfully for today!');
         switchEmpTab('history');
     }
@@ -918,7 +934,7 @@
 
         for(let d = 1; d <= daysInMonth; d++) {
             let fullDateStr = `${selectedYear}-${selectedMonth}-${d}`;
-            let status = emp.attendance[fullDateStr];
+            let status = emp.attendance ? emp.attendance[fullDateStr] : null;
 
             let cell = document.createElement('div');
             cell.className = "cal-day";
