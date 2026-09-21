@@ -4,12 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prasanta Engineering & Contractor - Attendance & Management System</title>
-    <!-- EmailJS SDK for sending OTP emails -->
+    <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
             emailjs.init("dx_EZ5roIzsVPTokP");
         })();
+    </script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Configuration (Cloud Sync Enabled)
+        const firebaseConfig = {
+            databaseURL: "https://prasanta-engineering-default-rtdb.firebaseio.com/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
     </script>
     <style>
         :root {
@@ -142,8 +153,6 @@
             align-items: center;
             z-index: 100;
         }
-        
-        /* 3-Dot Menu Styles */
         .emp-item-card {
             display: flex;
             justify-content: space-between;
@@ -154,52 +163,23 @@
             border-radius: 8px;
             margin-bottom: 8px;
         }
-        .menu-container {
-            position: relative;
-        }
+        .menu-container { position: relative; }
         .dots-btn {
-            background: none;
-            border: none;
-            color: var(--ink);
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            padding: 0 8px;
-            width: auto;
-            margin: 0;
+            background: none; border: none; color: var(--ink);
+            font-size: 20px; font-weight: bold; cursor: pointer; padding: 0 8px; width: auto; margin: 0;
         }
         .dropdown-menu {
-            position: absolute;
-            right: 0;
-            top: 30px;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            display: none;
-            z-index: 10;
-            width: 100px;
+            position: absolute; right: 0; top: 30px; background: white;
+            border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none; z-index: 10; width: 100px;
         }
-        .dropdown-menu.show {
-            display: block;
-        }
+        .dropdown-menu.show { display: block; }
         .dropdown-menu button {
-            background: none;
-            color: var(--ink);
-            border: none;
-            width: 100%;
-            text-align: left;
-            padding: 8px 12px;
-            font-size: 14px;
-            margin: 0;
-            border-radius: 0;
+            background: none; color: var(--ink); border: none; width: 100%;
+            text-align: left; padding: 8px 12px; font-size: 14px; margin: 0; border-radius: 0;
         }
-        .dropdown-menu button:hover {
-            background: #f1f1f1;
-        }
-        .dropdown-menu button.delete-opt {
-            color: var(--red);
-        }
+        .dropdown-menu button:hover { background: #f1f1f1; }
+        .dropdown-menu button.delete-opt { color: var(--red); }
     </style>
 </head>
 <body>
@@ -207,7 +187,7 @@
 <div class="container">
     <div class="header">
         <div class="logo-box">Prasanta Engineering & Contractor</div>
-        <div class="sub-logo">Official Attendance & Management System</div>
+        <div class="sub-logo">Official Attendance & Management System (Cloud Sync)</div>
     </div>
 
     <div class="content">
@@ -376,7 +356,7 @@
     </div>
 </div>
 
-<!-- Modal for Owner to View Detailed Employee Info & Attendance History -->
+<!-- Modal for Owner to View Detailed Employee Info -->
 <div id="employee-modal" class="modal hidden">
     <div class="card" style="width: 92%; max-width: 420px; background: white; max-height: 90vh; overflow-y: auto;">
         <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
@@ -386,19 +366,12 @@
 </div>
 
 <script>
-    // Default Owner accounts combined with LocalStorage so any new registered admin works across browsers via OTP
-    let defaultOwnerAccounts = {
+    let ownerAccounts = {
         "aratakumarsahoo3@gmail.com": "admin123",
         "admin@pec.com": "password"
     };
 
-    let savedOwners = JSON.parse(localStorage.getItem('pec_owner_accounts'));
-    let ownerAccounts = savedOwners ? { ...defaultOwnerAccounts, ...savedOwners } : defaultOwnerAccounts;
-    localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
-
-    let employees = JSON.parse(localStorage.getItem('pec_employees')) || [
-        { id: "PEC-EMP-101", name: "Rahul Kumar", dob: "2000-01-15", aadhaar: "Redacted", joining: "2025-01-01", position: "Helper", salary: "12000", photo: "", attendance: {"2026-5-1": "present", "2026-5-2": "present"} }
-    ];
+    let employees = [];
     let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
     let currentSessionUser = localStorage.getItem('pec_current_user') || null;
 
@@ -408,18 +381,39 @@
     let authMode = ""; 
 
     window.onload = function() {
+        // Sync Owners and Employees from Firebase Cloud Database
+        db.ref('pec_owner_accounts').once('value').then((snapshot) => {
+            if (snapshot.exists()) {
+                ownerAccounts = { ...ownerAccounts, ...snapshot.val() };
+            } else {
+                db.ref('pec_owner_accounts').set(ownerAccounts);
+            }
+        });
+
+        db.ref('pec_employees').on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                let data = snapshot.val();
+                employees = Array.isArray(data) ? data : Object.values(data);
+            } else {
+                employees = [
+                    { id: "PEC-EMP-101", name: "Rahul Kumar", dob: "2000-01-15", aadhaar: "Redacted", joining: "2025-01-01", position: "Helper", salary: "12000", photo: "", attendance: {"2026-5-1": "present"} }
+                ];
+                db.ref('pec_employees').set(employees);
+            }
+            if(currentSessionUser) {
+                renderEmployeeList();
+            }
+        });
+
         if(currentSessionUser) {
             showOwnerDashboard();
         }
-        // Close dropdown menus when clicking outside
+
         window.onclick = function(event) {
             if (!event.target.matches('.dots-btn')) {
                 let dropdowns = document.getElementsByClassName("dropdown-menu");
                 for (let i = 0; i < dropdowns.length; i++) {
-                    let openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
+                    dropdowns[i].classList.remove('show');
                 }
             }
         }
@@ -453,29 +447,31 @@
             return;
         }
 
-        // Fetch latest saved accounts from localStorage in case registered from another browser session
-        let latestOwners = JSON.parse(localStorage.getItem('pec_owner_accounts')) || ownerAccounts;
-
-        if(latestOwners[email] && latestOwners[email] === pass) {
-            currentSessionUser = email;
-            localStorage.setItem('pec_current_user', currentSessionUser);
-            alert('Login Successful!');
-            showOwnerDashboard();
-        } else {
-            alert('Invalid email or password!');
-        }
+        db.ref('pec_owner_accounts').once('value').then((snapshot) => {
+            let latestOwners = snapshot.exists() ? snapshot.val() : ownerAccounts;
+            if(latestOwners[email] && latestOwners[email] === pass) {
+                currentSessionUser = email;
+                localStorage.setItem('pec_current_user', currentSessionUser);
+                alert('Login Successful!');
+                showOwnerDashboard();
+            } else {
+                alert('Invalid email or password!');
+            }
+        });
     }
 
     function showForgotPasswordModal() {
         const email = prompt("Enter your registered owner email for password reset OTP:");
         if(email && email.includes('@')) {
             let cleanEmail = email.trim().toLowerCase();
-            let latestOwners = JSON.parse(localStorage.getItem('pec_owner_accounts')) || ownerAccounts;
-            if(latestOwners[cleanEmail]) {
-                generateAndSendOTP(cleanEmail, 'forgot');
-            } else {
-                alert('Email not found in owner database.');
-            }
+            db.ref('pec_owner_accounts').once('value').then((snapshot) => {
+                let latestOwners = snapshot.exists() ? snapshot.val() : ownerAccounts;
+                if(latestOwners[cleanEmail]) {
+                    generateAndSendOTP(cleanEmail, 'forgot');
+                } else {
+                    alert('Email not found in owner database.');
+                }
+            });
         }
     }
 
@@ -515,15 +511,16 @@
             return;
         }
 
-        let latestOwners = JSON.parse(localStorage.getItem('pec_owner_accounts')) || ownerAccounts;
-        if(latestOwners[email]) {
-            alert('Email already registered! Please login.');
-            showLoginScreen();
-            return;
-        }
-
-        pendingPassword = pass;
-        generateAndSendOTP(email, 'register');
+        db.ref('pec_owner_accounts').once('value').then((snapshot) => {
+            let latestOwners = snapshot.exists() ? snapshot.val() : ownerAccounts;
+            if(latestOwners[email]) {
+                alert('Email already registered! Please login.');
+                showLoginScreen();
+                return;
+            }
+            pendingPassword = pass;
+            generateAndSendOTP(email, 'register');
+        });
     }
 
     function verifyOTP() {
@@ -532,25 +529,27 @@
             alert('Verification successful!');
             document.getElementById('entered-otp').value = "";
 
-            let latestOwners = JSON.parse(localStorage.getItem('pec_owner_accounts')) || ownerAccounts;
+            db.ref('pec_owner_accounts').once('value').then((snapshot) => {
+                let latestOwners = snapshot.exists() ? snapshot.val() : ownerAccounts;
 
-            if(authMode === 'register') {
-                latestOwners[pendingEmail] = pendingPassword;
-                localStorage.setItem('pec_owner_accounts', JSON.stringify(latestOwners));
-                ownerAccounts = latestOwners;
-            } else if(authMode === 'forgot') {
-                let newPass = prompt("Enter your new password:");
-                if(newPass) {
-                    latestOwners[pendingEmail] = newPass;
-                    localStorage.setItem('pec_owner_accounts', JSON.stringify(latestOwners));
+                if(authMode === 'register') {
+                    latestOwners[pendingEmail] = pendingPassword;
+                    db.ref('pec_owner_accounts').set(latestOwners);
                     ownerAccounts = latestOwners;
-                    alert('Password updated successfully!');
+                } else if(authMode === 'forgot') {
+                    let newPass = prompt("Enter your new password:");
+                    if(newPass) {
+                        latestOwners[pendingEmail] = newPass;
+                        db.ref('pec_owner_accounts').set(latestOwners);
+                        ownerAccounts = latestOwners;
+                        alert('Password updated successfully!');
+                    }
                 }
-            }
 
-            currentSessionUser = pendingEmail;
-            localStorage.setItem('pec_current_user', currentSessionUser);
-            showOwnerDashboard();
+                currentSessionUser = pendingEmail;
+                localStorage.setItem('pec_current_user', currentSessionUser);
+                showOwnerDashboard();
+            });
         } else {
             alert('Invalid OTP! Please try again.');
         }
@@ -622,7 +621,7 @@
         } else {
             let existingPhoto = "";
             if(editIndex !== "") {
-                existingPhoto = employees[editIndex].photo;
+                existingPhoto = employees[editIndex].photo || "";
             }
             processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, existingPhoto);
         }
@@ -655,14 +654,14 @@
             alert('Employee created successfully! ID: ' + newId);
         }
 
-        localStorage.setItem('pec_employees', JSON.stringify(employees));
+        db.ref('pec_employees').set(employees);
         switchOwnerTab('home');
     }
 
     function renderEmployeeList() {
         const container = document.getElementById('employee-list-container');
         container.innerHTML = "";
-        if(employees.length === 0) {
+        if(!employees || employees.length === 0) {
             container.innerHTML = "<p>No employees found.</p>";
             return;
         }
@@ -755,7 +754,7 @@
     function deleteEmployee(index) {
         if(confirm("Are you sure you want to delete this employee?")) {
             employees.splice(index, 1);
-            localStorage.setItem('pec_employees', JSON.stringify(employees));
+            db.ref('pec_employees').set(employees);
             renderEmployeeList();
         }
     }
@@ -773,6 +772,7 @@
 
         let presentCount = 0;
         let absentCount = 0;
+        let attendanceObj = emp.attendance || {};
 
         let calHtml = `<div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; color:#555;"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>`;
         calHtml += `<div class="calendar-grid" id="modal-cal-days">`;
@@ -783,7 +783,7 @@
 
         for(let d = 1; d <= daysInMonth; d++) {
             let fullDateStr = `${year}-${month}-${d}`;
-            let status = emp.attendance[fullDateStr];
+            let status = attendanceObj[fullDateStr];
             let cls = "cal-day";
             if(status === 'present') {
                 cls += " present";
@@ -895,15 +895,21 @@
     }
 
     function captureSelfieAttendance() {
-        const emp = employees.find(e => e.id === currentLoggedInEmpId);
-        if(!emp) return;
+        const empIndex = employees.findIndex(e => e.id === currentLoggedInEmpId);
+        if(empIndex === -1) return;
 
         const now = new Date();
         const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-        emp.attendance[dateKey] = 'present';
-        localStorage.setItem('pec_employees', JSON.stringify(employees));
-        alert('Attendance marked successfully for today!');
-        switchEmpTab('history');
+        
+        if(!employees[empIndex].attendance) {
+            employees[empIndex].attendance = {};
+        }
+        employees[empIndex].attendance[dateKey] = 'present';
+
+        db.ref('pec_employees').set(employees).then(() => {
+            alert('Attendance marked successfully for today!');
+            switchEmpTab('history');
+        });
     }
 
     function renderCalendar() {
@@ -920,6 +926,7 @@
 
         let presentCount = 0;
         let absentCount = 0;
+        let attendanceObj = emp.attendance || {};
 
         for(let i = 0; i < firstDayIndex; i++) {
             let emptyCell = document.createElement('div');
@@ -928,7 +935,7 @@
 
         for(let d = 1; d <= daysInMonth; d++) {
             let fullDateStr = `${selectedYear}-${selectedMonth}-${d}`;
-            let status = emp.attendance[fullDateStr];
+            let status = attendanceObj[fullDateStr];
 
             let cell = document.createElement('div');
             cell.className = "cal-day";
