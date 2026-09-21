@@ -143,7 +143,6 @@
             z-index: 100;
         }
         
-        /* 3-Dot Menu Styles */
         .emp-item-card {
             display: flex;
             justify-content: space-between;
@@ -333,13 +332,10 @@
             <!-- Employee Tab 2: Attendance Camera & Location -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Daily Attendance</h3>
-                <p style="font-size: 13px; color: #666;">Submit both In-Time and Out-Time verification with photo and location.</p>
+                <p style="font-size: 13px; color: #666;">Submit both In-Time and Out-Time verification with photo (Camera/Gallery) and location.</p>
                 
                 <div style="margin-bottom: 15px;">
-                    <label><strong>1. In-Time Attendance</strong></label>
-                    <div style="text-align: center; margin-bottom: 8px; background: #000; border-radius: 6px; overflow: hidden; min-height: 150px; display: flex; align-items: center; justify-content: center;">
-                        <video id="camera-preview-in" autoplay playsinline style="width: 100%; max-height: 150px; object-fit: cover;"></video>
-                    </div>
+                    <label><strong>1. In-Time Attendance Photo</strong></label>
                     <input type="file" id="emp-in-file" accept="image/*">
                     <button onclick="submitAttendanceType('in')">Submit In-Time</button>
                 </div>
@@ -347,10 +343,7 @@
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
                 <div style="margin-bottom: 15px;">
-                    <label><strong>2. Out-Time Attendance</strong></label>
-                    <div style="text-align: center; margin-bottom: 8px; background: #000; border-radius: 6px; overflow: hidden; min-height: 150px; display: flex; align-items: center; justify-content: center;">
-                        <video id="camera-preview-out" autoplay playsinline style="width: 100%; max-height: 150px; object-fit: cover;"></video>
-                    </div>
+                    <label><strong>2. Out-Time Attendance Photo</strong></label>
                     <input type="file" id="emp-out-file" accept="image/*">
                     <button class="secondary" onclick="submitAttendanceType('out')">Submit Out-Time</button>
                 </div>
@@ -410,9 +403,7 @@
     let ownerAccounts = savedOwners ? { ...defaultOwnerAccounts, ...savedOwners } : defaultOwnerAccounts;
     localStorage.setItem('pec_owner_accounts', JSON.stringify(ownerAccounts));
 
-    let employees = JSON.parse(localStorage.getItem('pec_employees')) || [
-        { id: "PEC-EMP-101", name: "Rahul Kumar", dob: "2000-01-15", aadhaar: "Redacted", joining: "2025-01-01", position: "Helper", salary: "12000", photo: "", attendance: {} }
-    ];
+    let employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
     let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
     let currentSessionUser = localStorage.getItem('pec_current_user') || null;
 
@@ -630,6 +621,7 @@
     }
 
     function processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, photo) {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
         if(editIndex !== "") {
             let idx = parseInt(editIndex);
             employees[idx].name = name;
@@ -661,6 +653,7 @@
     }
 
     function renderEmployeeList() {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
         const container = document.getElementById('employee-list-container');
         container.innerHTML = "";
         if(employees.length === 0) {
@@ -692,6 +685,7 @@
     }
 
     function filterEmployees() {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
         let query = document.getElementById('search-employee').value.toLowerCase();
         let container = document.getElementById('employee-list-container');
         container.innerHTML = "";
@@ -737,6 +731,7 @@
     }
 
     function editEmployee(index) {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
         const emp = employees[index];
         document.getElementById('form-title-text').innerText = "Edit Employee Details";
         document.getElementById('edit-emp-index').value = index;
@@ -762,6 +757,7 @@
     }
 
     function openOwnerEmployeeDetailModal(empId) {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
         const emp = employees.find(e => e.id === empId);
         if(!emp) return;
 
@@ -827,26 +823,27 @@
 
     function loginEmployee() {
         const idInput = document.getElementById('emp-login-id').value.trim();
-        const found = employees.find(e => e.id.toLowerCase() === idInput.toLowerCase());
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
+        const found = employees.find(e => e.id.toLowerCase() === idInput.toLowerCase() || e.id === idInput);
         if(found) {
             currentLoggedInEmpId = found.id;
             localStorage.setItem('pec_current_emp', currentLoggedInEmpId);
             loadEmployeeDashboard(currentLoggedInEmpId);
         } else {
-            alert('Invalid Employee ID!');
+            alert('Invalid Employee ID! Please check your ID again.');
         }
     }
 
     function logoutEmployee() {
         currentLoggedInEmpId = null;
         localStorage.removeItem('pec_current_emp');
-        stopCameraStreams();
         backToWelcome();
     }
 
     function loadEmployeeDashboard(empId) {
         hideAllScreens();
         document.getElementById('screen-emp-dashboard').classList.remove('hidden');
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
         const emp = employees.find(e => e.id === empId);
         if(emp) {
             document.getElementById('emp-welcome-title').innerText = emp.name;
@@ -867,50 +864,19 @@
         document.getElementById('emp-pane-profile').classList.add('hidden');
         document.getElementById('emp-pane-attendance').classList.add('hidden');
         document.getElementById('emp-pane-history').classList.add('hidden');
-        stopCameraStreams();
 
         if(tab === 'profile') {
             document.getElementById('emp-pane-profile').classList.remove('hidden');
         } else if(tab === 'attendance') {
             document.getElementById('emp-pane-attendance').classList.remove('hidden');
-            startCameraStreams();
         } else if(tab === 'history') {
             document.getElementById('emp-pane-history').classList.remove('hidden');
             renderCalendar();
         }
     }
 
-    let videoStreamIn = null;
-    let videoStreamOut = null;
-
-    function startCameraStreams() {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-            .then(stream => {
-                videoStreamIn = stream;
-                document.getElementById('camera-preview-in').srcObject = stream;
-            })
-            .catch(err => console.log("Camera In error:", err));
-
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-            .then(stream => {
-                videoStreamOut = stream;
-                document.getElementById('camera-preview-out').srcObject = stream;
-            })
-            .catch(err => console.log("Camera Out error:", err));
-    }
-
-    function stopCameraStreams() {
-        if(videoStreamIn) {
-            videoStreamIn.getTracks().forEach(track => track.stop());
-            videoStreamIn = null;
-        }
-        if(videoStreamOut) {
-            videoStreamOut.getTracks().forEach(track => track.stop());
-            videoStreamOut = null;
-        }
-    }
-
     function submitAttendanceType(type) {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
         const emp = employees.find(e => e.id === currentLoggedInEmpId);
         if(!emp) return;
 
@@ -937,7 +903,6 @@
                     };
                     reader.readAsDataURL(fileInput.files[0]);
                 } else {
-                    // Fallback to placeholder or blank if no photo selected
                     saveAttendanceRecord(emp, dateKey, type, timeStr, "", locationStr);
                 }
             }, error => {
@@ -964,6 +929,7 @@
     }
 
     function renderCalendar() {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
         const container = document.getElementById('calendar-days-container');
         container.innerHTML = "";
         const emp = employees.find(e => e.id === currentLoggedInEmpId);
@@ -1011,6 +977,7 @@
     }
 
     function showAttendanceDetailModal(empId, dateStr) {
+        employees = JSON.parse(localStorage.getItem('pec_employees')) || [];
         const emp = employees.find(e => e.id === empId);
         if(!emp || !emp.attendance[dateStr]) return;
 
@@ -1030,7 +997,7 @@
                 <strong>Out-Time Record:</strong><br>
                 Time: ${rec.outTime || 'N/A'}<br>
                 Location: ${rec.outLoc || 'N/A'}<br>
-                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No Out-Time photo uploaded</small>'}
+                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100% ; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No Out-Time photo uploaded</small>'}
             </div>
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
