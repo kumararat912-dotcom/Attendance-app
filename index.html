@@ -332,19 +332,19 @@
             <!-- Employee Tab 2: Attendance Camera & Location -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Daily Attendance</h3>
-                <p style="font-size: 13px; color: #666;">Submit both In-Time and Out-Time verification with photo (Camera/Gallery) and location.</p>
+                <p style="font-size: 13px; color: #666;">Submit both In-Time and Out-Time verification with front camera selfie and location.</p>
                 
                 <div style="margin-bottom: 15px;">
-                    <label><strong>1. In-Time Attendance Photo</strong></label>
-                    <input type="file" id="emp-in-file" accept="image/*">
+                    <label><strong>1. In-Time Attendance Selfie (Front Camera Only)</strong></label>
+                    <input type="file" id="emp-in-file" accept="image/*" capture="user">
                     <button onclick="submitAttendanceType('in')">Submit In-Time</button>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
                 <div style="margin-bottom: 15px;">
-                    <label><strong>2. Out-Time Attendance Photo</strong></label>
-                    <input type="file" id="emp-out-file" accept="image/*">
+                    <label><strong>2. Out-Time Attendance Selfie (Front Camera Only)</strong></label>
+                    <input type="file" id="emp-out-file" accept="image/*" capture="user">
                     <button class="secondary" onclick="submitAttendanceType('out')">Submit Out-Time</button>
                 </div>
             </div>
@@ -811,7 +811,7 @@
                 <span class="badge badge-blue">Present: ${presentCount} Days</span> 
                 <span class="badge badge-red">Absent: ${absentCount} Days</span>
             </div>
-            <p style="font-size: 11px; color: #666;">Click blue date tiles to check In/Out photos and GPS locations.</p>
+            <p style="font-size: 11px; color: #666;">Click blue date tiles to check In/Out selfies and GPS locations.</p>
             ${calHtml}
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
@@ -903,7 +903,7 @@
                     };
                     reader.readAsDataURL(fileInput.files[0]);
                 } else {
-                    saveAttendanceRecord(emp, dateKey, type, timeStr, "", locationStr);
+                    alert("Please capture a front camera selfie to mark attendance.");
                 }
             }, error => {
                 alert("GPS Location access is required to mark attendance.");
@@ -991,13 +991,13 @@
                 <strong>In-Time Record:</strong><br>
                 Time: ${rec.inTime || 'N/A'}<br>
                 Location: ${rec.inLoc || 'N/A'}<br>
-                ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No In-Time photo uploaded</small>'}
+                ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No In-Time selfie uploaded</small>'}
             </div>
             <div style="background: #f1f1f1; padding: 10px; border-radius: 6px;">
                 <strong>Out-Time Record:</strong><br>
                 Time: ${rec.outTime || 'N/A'}<br>
                 Location: ${rec.outLoc || 'N/A'}<br>
-                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100% ; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No Out-Time photo uploaded</small>'}
+                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100% ; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No Out-Time selfie uploaded</small>'}
             </div>
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
