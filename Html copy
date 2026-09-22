@@ -714,7 +714,6 @@
         authMode = mode;
         generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Browser Alert Simulation for Instant 6-digit Code
         alert("Your 6-Digit Verification OTP Code is: " + generatedOTP);
         
         hideAllScreens();
@@ -841,8 +840,8 @@
             <h5 style="margin: 5px 0; color: var(--navy);">1. Company Personal & Logo</h5>
             <div style="background: var(--bg); padding: 8px; border-radius: 6px; position: relative; margin-bottom: 12px; font-size: 13px; border: 1px solid var(--border);">
                 <div style="display:flex; gap:6px;">
-                    <button style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyPersonalDetails()">Edit Name</button>
-                    <button class="secondary" style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyLogoImage()">Edit Logo</button>
+                    <button type="button" style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyPersonalDetails()">Edit Name</button>
+                    <button type="button" class="secondary" style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyLogoImage()">Edit Logo</button>
                 </div>
                 <p style="margin: 6px 0 2px 0;"><strong>Name:</strong> <span id="lbl-comp-name">${comp.name}</span></p>
             </div>
@@ -862,14 +861,14 @@
             </div>
 
             <h5 style="margin: 5px 0; color: var(--navy);">Share Portal</h5>
-            <button class="secondary" style="font-size: 13px; padding: 8px; margin-bottom: 12px;" onclick="shareAppPortal()">📤 Share App</button>
+            <button type="button" class="secondary" style="font-size: 13px; padding: 8px; margin-bottom: 12px;" onclick="shareAppPortal()">📤 Share App</button>
             
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;">
-            <button class="danger" style="font-size: 13px; padding: 8px;" onclick="deleteCompanyAccount()">Delete Account</button>
+            <button type="button" class="danger" style="font-size: 13px; padding: 8px;" onclick="deleteCompanyAccount()">Delete Account</button>
         `;
     }
 
-    function editCompanyPersonalDetails() {
+    window.editCompanyPersonalDetails = function() {
         let comp = ownerAccounts[currentSessionUser];
         let newName = prompt("Edit Company Name:", comp.name);
         if(newName) {
@@ -878,13 +877,14 @@
             localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
             applyCompanyBranding(currentSessionUser);
             document.getElementById('dashboard-company-title').innerText = comp.name + " Dashboard";
-            document.getElementById('lbl-comp-name').innerText = comp.name;
+            let nameLbl = document.getElementById('lbl-comp-name');
+            if(nameLbl) nameLbl.innerText = comp.name;
             renderSideDrawerContent();
             alert('Company name updated successfully!');
         }
-    }
+    };
 
-    function editCompanyLogoImage() {
+    window.editCompanyLogoImage = function() {
         let fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'image/*';
@@ -904,9 +904,9 @@
             }
         };
         fileInput.click();
-    }
+    };
 
-    function updateOwnerSetting(key, val) {
+    window.updateOwnerSetting = function(key, val) {
         let comp = ownerAccounts[currentSessionUser];
         if(!comp.settings) comp.settings = { percentageCalc: true, cameraAllowed: true, darkMode: false };
         comp.settings[key] = val;
@@ -918,18 +918,18 @@
             else document.body.classList.remove('dark-mode');
         }
         alert('Setting updated successfully!');
-    }
+    };
 
-    function shareAppPortal() {
+    window.shareAppPortal = function() {
         let shareText = `Hello employees, please open our Attendance Portal using Company Code: ${currentSessionUser} and your assigned Employee ID. Portal Link: ` + window.location.href;
         if (navigator.share) {
             navigator.share({ title: 'Attendance Portal', text: shareText, url: window.location.href }).catch(() => {});
         } else {
             prompt("Copy portal details for employees:", shareText);
         }
-    }
+    };
 
-    function deleteCompanyAccount() {
+    window.deleteCompanyAccount = function() {
         if(confirm("Are you sure delete your account?")) {
             delete ownerAccounts[currentSessionUser];
             delete companyEmployees[currentSessionUser];
@@ -938,7 +938,7 @@
             toggleSideDrawer(false);
             logoutApp();
         }
-    }
+    };
 
     function switchOwnerTab(tab) {
         if(tab === 'home') {
@@ -1059,10 +1059,10 @@
                     </div>
                 </div>
                 <div class="menu-container">
-                    <button class="dots-btn" onclick="toggleMenu(event, ${index})">&#8942;</button>
+                    <button type="button" class="dots-btn" onclick="toggleMenu(event, ${index})">&#8942;</button>
                     <div id="dropdown-menu-${index}" class="dropdown-menu">
-                        <button onclick="editEmployee(${index})">Edit</button>
-                        <button class="delete-opt" onclick="deleteEmployee(${index})">Delete</button>
+                        <button type="button" onclick="editEmployee(${index})">Edit</button>
+                        <button type="button" class="delete-opt" onclick="deleteEmployee(${index})">Delete</button>
                     </div>
                 </div>
             `;
@@ -1096,10 +1096,10 @@
                     </div>
                 </div>
                 <div class="menu-container">
-                    <button class="dots-btn" onclick="toggleMenu(event, ${originalIndex})">&#8942;</button>
+                    <button type="button" class="dots-btn" onclick="toggleMenu(event, ${originalIndex})">&#8942;</button>
                     <div id="dropdown-menu-${originalIndex}" class="dropdown-menu">
-                        <button onclick="editEmployee(${originalIndex})">Edit</button>
-                        <button class="delete-opt" onclick="deleteEmployee(${originalIndex})">Delete</button>
+                        <button type="button" onclick="editEmployee(${originalIndex})">Edit</button>
+                        <button type="button" class="delete-opt" onclick="deleteEmployee(${originalIndex})">Delete</button>
                     </div>
                 </div>
             `;
@@ -1211,8 +1211,8 @@
                 <h4 style="margin:0;">${emp.name}</h4>
                 <small style="opacity:0.7;">ID: ${emp.id}</small>
             </div>
-            <button onclick="openOwnerEmployeeProfileModal('${empId}')">1. Employee Details</button>
-            <button class="secondary" onclick="openOwnerEmployeeCalendarModal('${empId}')">2. Attendance & Salary Details</button>
+            <button type="button" onclick="openOwnerEmployeeProfileModal('${empId}')">1. Employee Details</button>
+            <button type="button" class="secondary" onclick="openOwnerEmployeeCalendarModal('${empId}')">2. Attendance & Salary Details</button>
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
     }
@@ -1233,7 +1233,7 @@
             <p><strong>Salary:</strong> ${emp.salary}</p>
             <p><strong>Date of Birth:</strong> ${emp.dob || 'N/A'}</p>
             <p><strong>Joining Date:</strong> ${emp.joining || 'N/A'}</p>
-            <button class="secondary" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
+            <button type="button" class="secondary" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
         `;
     }
 
@@ -1272,7 +1272,7 @@
             </div>
             <div id="owner-emp-calendar-container"></div>
             <div id="owner-emp-summary-box" style="font-size: 13px; margin-top: 12px; text-align: center; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border);"></div>
-            <button class="secondary" style="margin-top: 10px;" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
+            <button type="button" class="secondary" style="margin-top: 10px;" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
         `;
 
         document.getElementById('modal-body-content').innerHTML = modalContent;
