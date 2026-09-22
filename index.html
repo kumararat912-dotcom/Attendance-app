@@ -44,6 +44,7 @@
             --amber: #D98E2B;
             --blue: #2A6F97;
             --red: #E63946;
+            --orange: #F4A261;
             --border: #DEE2E6;
         }
         body.dark-mode {
@@ -437,7 +438,7 @@
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance with Save/Edit Locking -->
+            <!-- Employee Tab 2: Attendance with Save/Edit Prompt -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Daily Attendance</h3>
                 <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time selfies using front camera.</p>
@@ -453,10 +454,14 @@
                     </div>
                     <div id="in-action-btns">
                         <button type="button" class="secondary" onclick="startCamera('in')" style="margin-bottom: 6px;">Open Camera Frame</button>
-                        <button type="button" onclick="captureAndSubmitAttendance('in')">Capture & Save In-Time</button>
+                        <button type="button" onclick="captureAttendance('in')">Capture In-Time</button>
+                    </div>
+                    <div id="in-save-edit-btns" class="hidden" style="display: flex; gap: 10px;">
+                        <button type="button" class="success" style="margin:0;" onclick="confirmAndSaveAttendance('in')">Save</button>
+                        <button type="button" class="danger" style="margin:0;" onclick="editAttendanceCapture('in')">Edit</button>
                     </div>
                     <div id="in-locked-msg" class="hidden" style="text-align: center; font-weight: bold; color: var(--blue); padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;">
-                        Locked for today. <button type="button" class="secondary" style="width: auto; padding: 4px 10px; font-size: 12px; margin: 0 0 0 10px;" onclick="editAttendanceSubmission('in')">Edit</button>
+                        Saved & Locked for today.
                     </div>
                 </div>
 
@@ -473,10 +478,14 @@
                     </div>
                     <div id="out-action-btns">
                         <button type="button" class="secondary" onclick="startCamera('out')" style="margin-bottom: 6px;">Open Camera Frame</button>
-                        <button type="button" class="secondary" onclick="captureAndSubmitAttendance('out')">Capture & Save Out-Time</button>
+                        <button type="button" class="secondary" onclick="captureAttendance('out')">Capture Out-Time</button>
+                    </div>
+                    <div id="out-save-edit-btns" class="hidden" style="display: flex; gap: 10px;">
+                        <button type="button" class="success" style="margin:0;" onclick="confirmAndSaveAttendance('out')">Save</button>
+                        <button type="button" class="danger" style="margin:0;" onclick="editAttendanceCapture('out')">Edit</button>
                     </div>
                     <div id="out-locked-msg" class="hidden" style="text-align: center; font-weight: bold; color: var(--blue); padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;">
-                        Locked for today. <button type="button" class="secondary" style="width: auto; padding: 4px 10px; font-size: 12px; margin: 0 0 0 10px;" onclick="editAttendanceSubmission('out')">Edit</button>
+                        Saved & Locked for today.
                     </div>
                 </div>
             </div>
@@ -484,7 +493,7 @@
             <!-- Employee Tab 3: Calendar & Salary Calculation -->
             <div id="emp-pane-history" class="card hidden">
                 <h3>Attendance Calendar & Salary Calculation</h3>
-                <p style="font-size: 12px; color: #666;">Click any colored date tile to view duty hours, percentage & details.</p>
+                <p style="font-size: 12px; color: #666;">Click any colored date tile to view details.</p>
                 <div class="flex-row">
                     <select id="filter-year" onchange="renderCalendar()">
                         <option value="2026" selected>2026</option>
@@ -508,11 +517,11 @@
     </div>
 </div>
 
-<!-- Modal for Viewing Detailed Attendance Log & Owner Employee Calendar -->
+<!-- Modal for Viewing Detailed Attendance Log & Owner Options -->
 <div id="employee-modal" class="modal hidden">
     <div class="card" style="width: 92%; max-width: 420px; background: var(--panel); max-height: 90vh; overflow-y: auto;">
         <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
-        <h3 style="margin-top:0;" id="owner-modal-title">Attendance & Employee Details</h3>
+        <h3 style="margin-top:0;" id="owner-modal-title">Details</h3>
         <div id="modal-body-content"></div>
     </div>
 </div>
@@ -567,6 +576,7 @@
     let pendingCompanyLogo = "";
     let authMode = ""; 
     let activeStream = null;
+    let tempCapturedPhoto = { in: "", out: "" };
 
     window.addEventListener('firebase-loaded', function() {
         initRealtimeSync();
@@ -1063,7 +1073,7 @@
             let div = document.createElement('div');
             div.className = "emp-item-card";
             div.innerHTML = `
-                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
+                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeMenuModal('${emp.id}')">
                     ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color:#333;">${emp.name.charAt(0)}</div>`}
                     <div>
                         <strong>${emp.name}</strong> (${emp.id})<br>
@@ -1100,7 +1110,7 @@
             let div = document.createElement('div');
             div.className = "emp-item-card";
             div.innerHTML = `
-                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
+                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeMenuModal('${emp.id}')">
                     ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color:#333;">${emp.name.charAt(0)}</div>`}
                     <div>
                         <strong>${emp.name}</strong> (${emp.id})<br>
@@ -1186,7 +1196,7 @@
             for(let d = 1; d <= daysInMonth; d++) {
                 let fullDateStr = `${year}-${month}-${d}`;
                 let rec = emp.attendance[fullDateStr];
-                if(rec && rec.status === 'present') {
+                if(rec && rec.inPhoto && rec.outPhoto) {
                     if(usePercentage) {
                         totalEffDays += (rec.percentage / 100);
                     } else {
@@ -1210,26 +1220,59 @@
         document.body.removeChild(link);
     }
 
-    // Owner viewing Employee Calendar with Filter options
-    function openOwnerEmployeeDetailModal(empId) {
+    // Owner clicking employee card -> 2 Options
+    function openOwnerEmployeeMenuModal(empId) {
         companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
         let list = companyEmployees[currentSessionUser] || [];
         const emp = list.find(e => e.id === empId);
         if(!emp) return;
 
-        document.getElementById('owner-modal-title').innerText = `${emp.name} - Attendance History`;
+        document.getElementById('owner-modal-title').innerText = `${emp.name} Options`;
+        document.getElementById('modal-body-content').innerHTML = `
+            <div style="text-align: center; margin-bottom: 15px;">
+                ${emp.photo ? `<img src="${emp.photo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 6px;">` : `<div style="width: 70px; height: 70px; border-radius: 50%; background: #ccc; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color:#333;">${emp.name.charAt(0)}</div>`}
+                <h4 style="margin:0;">${emp.name}</h4>
+                <small style="opacity:0.7;">ID: ${emp.id}</small>
+            </div>
+            <button onclick="openOwnerEmployeeProfileModal('${empId}')">1. Employee Details</button>
+            <button class="secondary" onclick="openOwnerEmployeeCalendarModal('${empId}')">2. Attendance & Salary Details</button>
+        `;
+        document.getElementById('employee-modal').classList.remove('hidden');
+    }
+
+    function openOwnerEmployeeProfileModal(empId) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const emp = list.find(e => e.id === empId);
+        if(!emp) return;
+
+        document.getElementById('owner-modal-title').innerText = `Employee Profile`;
+        document.getElementById('modal-body-content').innerHTML = `
+            ${emp.photo ? `<img src="${emp.photo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 10px;">` : ''}
+            <p><strong>Employee ID:</strong> ${emp.id}</p>
+            <p><strong>Full Name:</strong> ${emp.name}</p>
+            <p><strong>Position:</strong> ${emp.position}</p>
+            <p><strong>Assigned Duty Hours:</strong> ${emp.dutyHours || 8} Hours</p>
+            <p><strong>Salary:</strong> ${emp.salary}</p>
+            <p><strong>Date of Birth:</strong> ${emp.dob || 'N/A'}</p>
+            <p><strong>Joining Date:</strong> ${emp.joining || 'N/A'}</p>
+            <button class="secondary" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
+        `;
+    }
+
+    function openOwnerEmployeeCalendarModal(empId) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const emp = list.find(e => e.id === empId);
+        if(!emp) return;
+
+        document.getElementById('owner-modal-title').innerText = `${emp.name} - Attendance Calendar`;
         
         const now = new Date();
         let currentYear = now.getFullYear();
         let currentMonth = now.getMonth();
 
         let modalContent = `
-            <div style="text-align: center; margin-bottom: 12px;">
-                ${emp.photo ? `<img src="${emp.photo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 6px;">` : `<div style="width: 70px; height: 70px; border-radius: 50%; background: #ccc; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color:#333;">${emp.name.charAt(0)}</div>`}
-                <h4 style="margin:0;">${emp.name}</h4>
-                <small style="opacity:0.7;">ID: ${emp.id} | Duty: ${emp.dutyHours || 8}h</small>
-            </div>
-            
             <div class="flex-row" style="margin-bottom: 10px;">
                 <select id="owner-filter-year" onchange="renderOwnerEmployeeCalendar('${empId}')">
                     <option value="2026" ${currentYear === 2026 ? 'selected' : ''}>2026</option>
@@ -1252,10 +1295,10 @@
             </div>
             <div id="owner-emp-calendar-container"></div>
             <div id="owner-emp-summary-box" style="font-size: 13px; margin-top: 12px; text-align: center; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border);"></div>
+            <button class="secondary" style="margin-top: 10px;" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
         `;
 
         document.getElementById('modal-body-content').innerHTML = modalContent;
-        document.getElementById('employee-modal').classList.remove('hidden');
         renderOwnerEmployeeCalendar(empId);
     }
 
@@ -1284,16 +1327,21 @@
             cell.className = "cal-day";
             cell.innerText = d;
 
-            if(record && record.status === 'present') {
+            if(record && record.inPhoto && record.outPhoto) {
                 presentCount++;
                 let pct = record.percentage || 100;
                 totalPct += pct;
                 cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #ccc ${pct}%)`;
                 cell.style.color = pct > 50 ? "white" : "black";
                 cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
+            } else if(record && record.inPhoto && !record.outPhoto) {
+                cell.style.background = "var(--orange)";
+                cell.style.color = "white";
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
             } else {
-                cell.style.background = "var(--border)";
-                cell.style.color = "var(--ink)";
+                cell.style.background = "var(--red)";
+                cell.style.color = "white";
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
             }
             calHtml += cell.outerHTML;
         }
@@ -1405,56 +1453,36 @@
         const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
         let record = emp.attendance[dateKey];
 
-        if(record && record.inPhoto) {
+        if(record && record.inPhoto && record.inLocked) {
             document.getElementById('preview-in-img').src = record.inPhoto;
             document.getElementById('preview-in-img').style.display = 'block';
             document.getElementById('placeholder-in-text').style.display = 'none';
             document.getElementById('video-in').style.display = 'none';
             document.getElementById('in-action-btns').classList.add('hidden');
+            document.getElementById('in-save-edit-btns').classList.add('hidden');
             document.getElementById('in-locked-msg').classList.remove('hidden');
         } else {
             document.getElementById('preview-in-img').style.display = 'none';
             document.getElementById('placeholder-in-text').style.display = 'block';
             document.getElementById('in-action-btns').classList.remove('hidden');
+            document.getElementById('in-save-edit-btns').classList.add('hidden');
             document.getElementById('in-locked-msg').classList.add('hidden');
         }
 
-        if(record && record.outPhoto) {
+        if(record && record.outPhoto && record.outLocked) {
             document.getElementById('preview-out-img').src = record.outPhoto;
             document.getElementById('preview-out-img').style.display = 'block';
             document.getElementById('placeholder-out-text').style.display = 'none';
             document.getElementById('video-out').style.display = 'none';
             document.getElementById('out-action-btns').classList.add('hidden');
+            document.getElementById('out-save-edit-btns').classList.add('hidden');
             document.getElementById('out-locked-msg').classList.remove('hidden');
         } else {
             document.getElementById('preview-out-img').style.display = 'none';
             document.getElementById('placeholder-out-text').style.display = 'block';
             document.getElementById('out-action-btns').classList.remove('hidden');
+            document.getElementById('out-save-edit-btns').classList.add('hidden');
             document.getElementById('out-locked-msg').classList.add('hidden');
-        }
-    }
-
-    function editAttendanceSubmission(type) {
-        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
-        let list = companyEmployees[currentEmpCompany] || [];
-        const emp = list.find(e => e.id === currentLoggedInEmpId);
-        if(!emp) return;
-
-        const now = new Date();
-        const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-        if(emp.attendance[dateKey]) {
-            if(type === 'in') {
-                emp.attendance[dateKey].inPhoto = '';
-                emp.attendance[dateKey].inTime = '';
-                emp.attendance[dateKey].inTimeObj = null;
-            } else {
-                emp.attendance[dateKey].outPhoto = '';
-                emp.attendance[dateKey].outTime = '';
-                emp.attendance[dateKey].outTimeObj = null;
-            }
-            localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
-            syncCompanyEmployeesToCloud(currentEmpCompany, companyEmployees[currentEmpCompany]);
-            checkAttendanceLockStatus();
         }
     }
 
@@ -1486,12 +1514,7 @@
             });
     }
 
-    function captureAndSubmitAttendance(type) {
-        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
-        let list = companyEmployees[currentEmpCompany] || [];
-        const emp = list.find(e => e.id === currentLoggedInEmpId);
-        if(!emp) return;
-
+    function captureAttendance(type) {
         const video = document.getElementById(`video-${type}`);
         const canvas = document.getElementById(`canvas-${type}`);
         const previewImg = document.getElementById(`preview-${type}-img`);
@@ -1506,12 +1529,32 @@
         let ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         let photoData = canvas.toDataURL('image/jpeg');
+        tempCapturedPhoto[type] = photoData;
 
         video.style.display = 'none';
         previewImg.src = photoData;
         previewImg.style.display = 'block';
 
         stopActiveCamera();
+
+        document.getElementById(`${type}-action-btns`).classList.add('hidden');
+        document.getElementById(`${type}-save-edit-btns`).classList.remove('hidden');
+    }
+
+    function editAttendanceCapture(type) {
+        document.getElementById(`${type}-save-edit-btns`).classList.add('hidden');
+        document.getElementById(`${type}-action-btns`).classList.remove('hidden');
+        document.getElementById(`preview-${type}-img`).style.display = 'none';
+        document.getElementById(`placeholder-${type}-text`).style.display = 'block';
+        tempCapturedPhoto[type] = "";
+    }
+
+    function confirmAndSaveAttendance(type) {
+        let photoData = tempCapturedPhoto[type];
+        if(!photoData) {
+            alert('No photo captured.');
+            return;
+        }
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(position => {
@@ -1524,11 +1567,11 @@
                     .then(response => response.json())
                     .then(data => {
                         let addressStr = data.display_name || `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
-                        saveAttendanceRecord(emp, type, timeStr, nowTime, photoData, addressStr);
+                        commitAttendanceSave(type, timeStr, nowTime, photoData, addressStr);
                     })
                     .catch(() => {
                         let fallbackLoc = `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
-                        saveAttendanceRecord(emp, type, timeStr, nowTime, photoData, fallbackLoc);
+                        commitAttendanceSave(type, timeStr, nowTime, photoData, fallbackLoc);
                     });
             }, error => {
                 alert("GPS Location access error: " + error.message);
@@ -1538,11 +1581,16 @@
         }
     }
 
-    function saveAttendanceRecord(emp, type, timeStr, nowTime, photoData, locationStr) {
+    function commitAttendanceSave(type, timeStr, nowTime, photoData, locationStr) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentEmpCompany] || [];
+        const emp = list.find(e => e.id === currentLoggedInEmpId);
+        if(!emp) return;
+
         const dateKey = `${nowTime.getFullYear()}-${nowTime.getMonth()}-${nowTime.getDate()}`;
         
         if(!emp.attendance[dateKey]) {
-            emp.attendance[dateKey] = { status: 'present', inTime: '', inTimeObj: null, inPhoto: '', inLoc: '', outTime: '', outTimeObj: null, outPhoto: '', outLoc: '', hoursWorked: 0, percentage: 100 };
+            emp.attendance[dateKey] = { status: 'present', inTime: '', inTimeObj: null, inPhoto: '', inLoc: '', inLocked: false, outTime: '', outTimeObj: null, outPhoto: '', outLoc: '', outLocked: false, hoursWorked: 0, percentage: 100 };
         }
 
         let record = emp.attendance[dateKey];
@@ -1553,13 +1601,15 @@
             record.inTimeObj = nowTime.getTime();
             record.inPhoto = photoData;
             record.inLoc = locationStr;
-            alert('In-Time attendance saved successfully!');
+            record.inLocked = true;
+            alert('In-Time attendance saved and locked successfully!');
         } else {
             record.outTime = timeStr;
             record.outTimeObj = nowTime.getTime();
             record.outPhoto = photoData;
             record.outLoc = locationStr;
-            alert('Out-Time attendance saved successfully!');
+            record.outLocked = true;
+            alert('Out-Time attendance saved and locked successfully!');
         }
 
         if(record.inTimeObj && record.outTimeObj) {
@@ -1612,16 +1662,21 @@
             cell.className = "cal-day";
             cell.innerText = d;
 
-            if(record && record.status === 'present') {
+            if(record && record.inPhoto && record.outPhoto) {
                 presentCount++;
                 let pct = record.percentage || 100;
                 totalPct += pct;
                 cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #ccc ${pct}%)`;
                 cell.style.color = pct > 50 ? "white" : "black";
                 cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
+            } else if(record && record.inPhoto && !record.outPhoto) {
+                cell.style.background = "var(--orange)";
+                cell.style.color = "white";
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
             } else {
-                cell.style.background = "var(--border)";
-                cell.style.color = "var(--ink)";
+                cell.style.background = "var(--red)";
+                cell.style.color = "white";
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
             }
             container.appendChild(cell);
         }
@@ -1639,16 +1694,46 @@
 
     function showAttendanceDetailModal(empId, dateStr) {
         companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
-        let list = companyEmployees[currentEmpCompany] || [];
+        let list = companyEmployees[currentEmpCompany] || currentSessionUser ? (companyEmployees[currentSessionUser] || []) : [];
+        if(currentEmpCompany) list = companyEmployees[currentEmpCompany] || [];
         const emp = list.find(e => e.id === empId);
-        if(!emp || !emp.attendance[dateStr]) return;
+        if(!emp) return;
 
-        let rec = emp.attendance[dateStr];
         let [y, m, d] = dateStr.split('-');
         let formattedDate = `${d}/${parseInt(m)+1}/${y}`;
+        let rec = emp.attendance[dateStr];
 
+        if(!rec) {
+            document.getElementById('owner-modal-title').innerText = `Date: ${formattedDate}`;
+            document.getElementById('modal-body-content').innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <span class="badge badge-red" style="font-size: 14px; padding: 6px 12px;">Absent</span>
+                    <p style="margin-top: 15px; color: #666;">No attendance records found for this date.</p>
+                </div>
+            `;
+            document.getElementById('employee-modal').classList.remove('hidden');
+            return;
+        }
+
+        if(rec.inPhoto && !rec.outPhoto) {
+            document.getElementById('owner-modal-title').innerText = `Date: ${formattedDate}`;
+            document.getElementById('modal-body-content').innerHTML = `
+                <div style="text-align: center; padding: 10px;">
+                    <span class="badge" style="background: var(--orange); font-size: 14px; padding: 6px 12px;">Out-Time Pending......</span>
+                </div>
+                <div style="background: var(--bg); padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid var(--border);">
+                    <strong>In-Time Record:</strong><br>
+                    Time: ${rec.inTime || 'N/A'}<br>
+                    Address: ${rec.inLoc || 'N/A'}<br>
+                    ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : ''}
+                </div>
+            `;
+            document.getElementById('employee-modal').classList.remove('hidden');
+            return;
+        }
+
+        document.getElementById('owner-modal-title').innerText = `Date: ${formattedDate}`;
         document.getElementById('modal-body-content').innerHTML = `
-            <h4>Date: ${formattedDate}</h4>
             <p><strong>Duty Hours Worked:</strong> ${rec.hoursWorked || 0} Hours / Assigned: ${emp.dutyHours || 8}h</p>
             <p><strong>Attendance Percentage:</strong> ${rec.percentage || 100}%</p>
             
