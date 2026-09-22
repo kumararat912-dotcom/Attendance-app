@@ -437,35 +437,47 @@
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance -->
+            <!-- Employee Tab 2: Attendance with Save/Edit Locking -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Daily Attendance</h3>
                 <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time selfies using front camera.</p>
                 
+                <!-- 1. In-Time Selfie Section -->
                 <div style="margin-bottom: 20px;">
-                    <label><strong>1. In-Time Attendance Selfie (Max 1 allowed)</strong></label>
+                    <label><strong>1. In-Time Attendance Selfie</strong></label>
                     <div class="camera-box-preview-large">
                         <video id="video-in" autoplay playsinline muted style="display:none;"></video>
                         <canvas id="canvas-in" style="display:none;"></canvas>
                         <img id="preview-in-img" style="display:none;" alt="In-Time Preview">
                         <span id="placeholder-in-text" style="color: #aaa; font-size: 14px;">Camera Inactive</span>
                     </div>
-                    <button type="button" class="secondary" onclick="startCamera('in')" style="margin-bottom: 6px;">Open Camera Frame</button>
-                    <button type="button" onclick="captureAndSubmitAttendance('in')">Capture & Submit In-Time</button>
+                    <div id="in-action-btns">
+                        <button type="button" class="secondary" onclick="startCamera('in')" style="margin-bottom: 6px;">Open Camera Frame</button>
+                        <button type="button" onclick="captureAndSubmitAttendance('in')">Capture & Save In-Time</button>
+                    </div>
+                    <div id="in-locked-msg" class="hidden" style="text-align: center; font-weight: bold; color: var(--blue); padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;">
+                        Locked for today. <button type="button" class="secondary" style="width: auto; padding: 4px 10px; font-size: 12px; margin: 0 0 0 10px;" onclick="editAttendanceSubmission('in')">Edit</button>
+                    </div>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
+                <!-- 2. Out-Time Selfie Section -->
                 <div style="margin-bottom: 15px;">
-                    <label><strong>2. Out-Time Attendance Selfie (Max 1 allowed)</strong></label>
+                    <label><strong>2. Out-Time Attendance Selfie</strong></label>
                     <div class="camera-box-preview-large">
                         <video id="video-out" autoplay playsinline muted style="display:none;"></video>
                         <canvas id="canvas-out" style="display:none;"></canvas>
                         <img id="preview-out-img" style="display:none;" alt="Out-Time Preview">
                         <span id="placeholder-out-text" style="color: #aaa; font-size: 14px;">Camera Inactive</span>
                     </div>
-                    <button type="button" class="secondary" onclick="startCamera('out')" style="margin-bottom: 6px;">Open Camera Frame</button>
-                    <button type="button" class="secondary" onclick="captureAndSubmitAttendance('out')">Capture & Submit Out-Time</button>
+                    <div id="out-action-btns">
+                        <button type="button" class="secondary" onclick="startCamera('out')" style="margin-bottom: 6px;">Open Camera Frame</button>
+                        <button type="button" class="secondary" onclick="captureAndSubmitAttendance('out')">Capture & Save Out-Time</button>
+                    </div>
+                    <div id="out-locked-msg" class="hidden" style="text-align: center; font-weight: bold; color: var(--blue); padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;">
+                        Locked for today. <button type="button" class="secondary" style="width: auto; padding: 4px 10px; font-size: 12px; margin: 0 0 0 10px;" onclick="editAttendanceSubmission('out')">Edit</button>
+                    </div>
                 </div>
             </div>
 
@@ -485,7 +497,7 @@
                         <option value="9">October</option><option value="10">November</option><option value="11">December</option>
                     </select>
                 </div>
-                <div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; color:#555; margin-top: 10px;">
+                <div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; opacity:0.7;">
                     <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
                 </div>
                 <div class="calendar-grid" id="calendar-days-container"></div>
@@ -496,11 +508,11 @@
     </div>
 </div>
 
-<!-- Modal for Viewing Detailed Attendance Log -->
+<!-- Modal for Viewing Detailed Attendance Log & Owner Employee Calendar -->
 <div id="employee-modal" class="modal hidden">
     <div class="card" style="width: 92%; max-width: 420px; background: var(--panel); max-height: 90vh; overflow-y: auto;">
         <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
-        <h3 style="margin-top:0;">Attendance & Employee Details</h3>
+        <h3 style="margin-top:0;" id="owner-modal-title">Attendance & Employee Details</h3>
         <div id="modal-body-content"></div>
     </div>
 </div>
@@ -832,16 +844,19 @@
 
         document.getElementById('side-drawer-body').innerHTML = `
             <div style="text-align: center; margin-bottom: 15px;">
-                ${comp.logo ? `<img src="${comp.logo}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 6px;">` : `<div style="width: 60px; height: 60px; border-radius: 50%; background: #ccc; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">${comp.name.charAt(0)}</div>`}
+                ${comp.logo ? `<img src="${comp.logo}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 6px;">` : `<div style="width: 60px; height: 60px; border-radius: 50%; background: #ccc; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color:#333;">${comp.name.charAt(0)}</div>`}
                 <h4 style="margin:0; font-size: 15px;">${comp.name}</h4>
-                <small style="color: #888;">${currentSessionUser}</small>
+                <small style="opacity: 0.7;">${currentSessionUser}</small>
             </div>
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;">
             
-            <h5 style="margin: 5px 0; color: var(--navy);">1. Company Personal</h5>
+            <h5 style="margin: 5px 0; color: var(--navy);">1. Company Personal & Logo</h5>
             <div style="background: var(--bg); padding: 8px; border-radius: 6px; position: relative; margin-bottom: 12px; font-size: 13px; border: 1px solid var(--border);">
-                <button style="position: absolute; right: 6px; top: 6px; width: auto; padding: 2px 8px; font-size: 11px; margin:0;" onclick="editCompanyPersonalDetails()">Edit</button>
-                <p style="margin: 2px 0;"><strong>Name:</strong> <span id="lbl-comp-name">${comp.name}</span></p>
+                <div style="display:flex; gap:6px;">
+                    <button style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyPersonalDetails()">Edit Name</button>
+                    <button class="secondary" style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyLogoImage()">Edit Logo</button>
+                </div>
+                <p style="margin: 6px 0 2px 0;"><strong>Name:</strong> <span id="lbl-comp-name">${comp.name}</span></p>
             </div>
 
             <h5 style="margin: 5px 0; color: var(--navy);">Controls</h5>
@@ -879,6 +894,28 @@
             renderSideDrawerContent();
             alert('Company name updated successfully!');
         }
+    }
+
+    function editCompanyLogoImage() {
+        let fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.onchange = function(e) {
+            if(e.target.files && e.target.files[0]) {
+                let reader = new FileReader();
+                reader.readAsDataURL(e.target.files[0]);
+                reader.onload = function(event) {
+                    let comp = ownerAccounts[currentSessionUser];
+                    comp.logo = event.target.result;
+                    ownerAccounts[currentSessionUser] = comp;
+                    localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+                    applyCompanyBranding(currentSessionUser);
+                    renderSideDrawerContent();
+                    alert('Company logo updated successfully!');
+                }
+            }
+        };
+        fileInput.click();
     }
 
     function updateOwnerSetting(key, val) {
@@ -1173,20 +1210,67 @@
         document.body.removeChild(link);
     }
 
+    // Owner viewing Employee Calendar with Filter options
     function openOwnerEmployeeDetailModal(empId) {
         companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
         let list = companyEmployees[currentSessionUser] || [];
         const emp = list.find(e => e.id === empId);
         if(!emp) return;
 
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
+        document.getElementById('owner-modal-title').innerText = `${emp.name} - Attendance History`;
         
-        let firstDayIndex = new Date(year, month, 1).getDay();
-        let daysInMonth = new Date(year, month + 1, 0).getDate();
-        let presentCount = 0;
-        let totalPct = 0;
+        const now = new Date();
+        let currentYear = now.getFullYear();
+        let currentMonth = now.getMonth();
+
+        let modalContent = `
+            <div style="text-align: center; margin-bottom: 12px;">
+                ${emp.photo ? `<img src="${emp.photo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 6px;">` : `<div style="width: 70px; height: 70px; border-radius: 50%; background: #ccc; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color:#333;">${emp.name.charAt(0)}</div>`}
+                <h4 style="margin:0;">${emp.name}</h4>
+                <small style="opacity:0.7;">ID: ${emp.id} | Duty: ${emp.dutyHours || 8}h</small>
+            </div>
+            
+            <div class="flex-row" style="margin-bottom: 10px;">
+                <select id="owner-filter-year" onchange="renderOwnerEmployeeCalendar('${empId}')">
+                    <option value="2026" ${currentYear === 2026 ? 'selected' : ''}>2026</option>
+                    <option value="2025" ${currentYear === 2025 ? 'selected' : ''}>2025</option>
+                </select>
+                <select id="owner-filter-month" onchange="renderOwnerEmployeeCalendar('${empId}')">
+                    <option value="0" ${currentMonth === 0 ? 'selected' : ''}>January</option>
+                    <option value="1" ${currentMonth === 1 ? 'selected' : ''}>February</option>
+                    <option value="2" ${currentMonth === 2 ? 'selected' : ''}>March</option>
+                    <option value="3" ${currentMonth === 3 ? 'selected' : ''}>April</option>
+                    <option value="4" ${currentMonth === 4 ? 'selected' : ''}>May</option>
+                    <option value="5" ${currentMonth === 5 ? 'selected' : ''}>June</option>
+                    <option value="6" ${currentMonth === 6 ? 'selected' : ''}>July</option>
+                    <option value="7" ${currentMonth === 7 ? 'selected' : ''}>August</option>
+                    <option value="8" ${currentMonth === 8 ? 'selected' : ''}>September</option>
+                    <option value="9" ${currentMonth === 9 ? 'selected' : ''}>October</option>
+                    <option value="10" ${currentMonth === 10 ? 'selected' : ''}>November</option>
+                    <option value="11" ${currentMonth === 11 ? 'selected' : ''}>December</option>
+                </select>
+            </div>
+            <div id="owner-emp-calendar-container"></div>
+            <div id="owner-emp-summary-box" style="font-size: 13px; margin-top: 12px; text-align: center; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border);"></div>
+        `;
+
+        document.getElementById('modal-body-content').innerHTML = modalContent;
+        document.getElementById('employee-modal').classList.remove('hidden');
+        renderOwnerEmployeeCalendar(empId);
+    }
+
+    function renderOwnerEmployeeCalendar(empId) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const emp = list.find(e => e.id === empId);
+        if(!emp) return;
+
+        const selYear = parseInt(document.getElementById('owner-filter-year').value);
+        const selMonth = parseInt(document.getElementById('owner-filter-month').value);
+
+        let firstDayIndex = new Date(selYear, selMonth, 1).getDay();
+        let daysInMonth = new Date(selYear, selMonth + 1, 0).getDate();
+        let presentCount = 0, totalPct = 0;
 
         let calHtml = `<div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; opacity:0.7;"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>`;
         calHtml += `<div class="calendar-grid">`;
@@ -1194,7 +1278,7 @@
         for(let i = 0; i < firstDayIndex; i++) { calHtml += `<div></div>`; }
 
         for(let d = 1; d <= daysInMonth; d++) {
-            let fullDateStr = `${year}-${month}-${d}`;
+            let fullDateStr = `${selYear}-${selMonth}-${d}`;
             let record = emp.attendance[fullDateStr];
             let cell = document.createElement('div');
             cell.className = "cal-day";
@@ -1219,19 +1303,11 @@
         let avgPct = presentCount > 0 ? (totalPct / presentCount) : 0;
         let estimatedSalary = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * (totalPct / 100)) : "N/A";
 
-        document.getElementById('modal-body-content').innerHTML = `
-            <div style="text-align: center; margin-bottom: 15px;">
-                ${emp.photo ? `<img src="${emp.photo}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 8px;">` : `<div style="width: 80px; height: 80px; border-radius: 50%; background: #ccc; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color:#333;">${emp.name.charAt(0)}</div>`}
-                <h4 style="margin:0;">${emp.name}</h4>
-                <small style="opacity:0.7;">ID: ${emp.id} | Duty: ${emp.dutyHours || 8}h</small>
-            </div>
-            <p><strong>Salary:</strong> ${emp.salary} | <strong>Est. Earned:</strong> ${estimatedSalary}</p>
-            <p><strong>Present Days:</strong> ${presentCount} | <strong>Avg Efficiency:</strong> ${avgPct.toFixed(1)}%</p>
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
-            <h4 style="margin-bottom: 5px;">Attendance Calendar</h4>
-            ${calHtml}
+        document.getElementById('owner-emp-calendar-container').innerHTML = calHtml;
+        document.getElementById('owner-emp-summary-box').innerHTML = `
+            <strong>Present Days:</strong> ${presentCount} | <strong>Avg Efficiency:</strong> ${avgPct.toFixed(1)}%<br>
+            <strong>Est. Earnings:</strong> ${estimatedSalary}
         `;
-        document.getElementById('employee-modal').classList.remove('hidden');
     }
 
     function closeModal() {
@@ -1312,9 +1388,73 @@
                 return;
             }
             document.getElementById('emp-pane-attendance').classList.remove('hidden');
+            checkAttendanceLockStatus();
         } else if(tab === 'history') {
             document.getElementById('emp-pane-history').classList.remove('hidden');
             renderCalendar();
+        }
+    }
+
+    function checkAttendanceLockStatus() {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentEmpCompany] || [];
+        const emp = list.find(e => e.id === currentLoggedInEmpId);
+        if(!emp) return;
+
+        const now = new Date();
+        const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+        let record = emp.attendance[dateKey];
+
+        if(record && record.inPhoto) {
+            document.getElementById('preview-in-img').src = record.inPhoto;
+            document.getElementById('preview-in-img').style.display = 'block';
+            document.getElementById('placeholder-in-text').style.display = 'none';
+            document.getElementById('video-in').style.display = 'none';
+            document.getElementById('in-action-btns').classList.add('hidden');
+            document.getElementById('in-locked-msg').classList.remove('hidden');
+        } else {
+            document.getElementById('preview-in-img').style.display = 'none';
+            document.getElementById('placeholder-in-text').style.display = 'block';
+            document.getElementById('in-action-btns').classList.remove('hidden');
+            document.getElementById('in-locked-msg').classList.add('hidden');
+        }
+
+        if(record && record.outPhoto) {
+            document.getElementById('preview-out-img').src = record.outPhoto;
+            document.getElementById('preview-out-img').style.display = 'block';
+            document.getElementById('placeholder-out-text').style.display = 'none';
+            document.getElementById('video-out').style.display = 'none';
+            document.getElementById('out-action-btns').classList.add('hidden');
+            document.getElementById('out-locked-msg').classList.remove('hidden');
+        } else {
+            document.getElementById('preview-out-img').style.display = 'none';
+            document.getElementById('placeholder-out-text').style.display = 'block';
+            document.getElementById('out-action-btns').classList.remove('hidden');
+            document.getElementById('out-locked-msg').classList.add('hidden');
+        }
+    }
+
+    function editAttendanceSubmission(type) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentEmpCompany] || [];
+        const emp = list.find(e => e.id === currentLoggedInEmpId);
+        if(!emp) return;
+
+        const now = new Date();
+        const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+        if(emp.attendance[dateKey]) {
+            if(type === 'in') {
+                emp.attendance[dateKey].inPhoto = '';
+                emp.attendance[dateKey].inTime = '';
+                emp.attendance[dateKey].inTimeObj = null;
+            } else {
+                emp.attendance[dateKey].outPhoto = '';
+                emp.attendance[dateKey].outTime = '';
+                emp.attendance[dateKey].outTimeObj = null;
+            }
+            localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+            syncCompanyEmployeesToCloud(currentEmpCompany, companyEmployees[currentEmpCompany]);
+            checkAttendanceLockStatus();
         }
     }
 
@@ -1413,13 +1553,13 @@
             record.inTimeObj = nowTime.getTime();
             record.inPhoto = photoData;
             record.inLoc = locationStr;
-            alert('In-Time attendance recorded successfully!');
+            alert('In-Time attendance saved successfully!');
         } else {
             record.outTime = timeStr;
             record.outTimeObj = nowTime.getTime();
             record.outPhoto = photoData;
             record.outLoc = locationStr;
-            alert('Out-Time attendance recorded successfully!');
+            alert('Out-Time attendance saved successfully!');
         }
 
         if(record.inTimeObj && record.outTimeObj) {
@@ -1442,6 +1582,7 @@
 
         localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
         syncCompanyEmployeesToCloud(currentEmpCompany, companyEmployees[currentEmpCompany]);
+        checkAttendanceLockStatus();
     }
 
     function renderCalendar() {
