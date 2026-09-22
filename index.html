@@ -33,8 +33,6 @@
 
       window.db = db;
       window.firestoreTools = { collection, doc, setDoc, getDocs, onSnapshot };
-      
-      // Dispatch custom event when firebase is ready
       window.dispatchEvent(new Event('firebase-loaded'));
     </script>
     <style>
@@ -80,19 +78,40 @@
         .header {
             background-color: var(--navy);
             color: white;
-            padding: 20px;
-            text-align: center;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .logo-box {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         .sub-logo {
-            font-size: 12px;
+            font-size: 11px;
             opacity: 0.8;
             text-transform: uppercase;
+        }
+        .owner-logo-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+        }
+        .owner-logo-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .content {
             padding: 20px;
@@ -157,9 +176,8 @@
             background: #eee;
             font-size: 13px;
             font-weight: bold;
+            cursor: pointer;
         }
-        .cal-day.present { background: var(--blue); color: white; cursor: pointer; }
-        .cal-day.absent { background: var(--red); color: white; }
         .modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -196,13 +214,34 @@
         }
         .dropdown-menu button:hover { background: #f1f1f1; }
         .dropdown-menu button.delete-opt { color: var(--red); }
-        .camera-box-preview {
-            width: 100%; height: 180px; background: #000; border-radius: 8px;
-            display: flex; justify-content: center; align-items: center; overflow: hidden;
-            margin-bottom: 10px; position: relative; border: 1px solid var(--border);
+        /* Large Rectangular Selfie Display */
+        .camera-box-preview-large {
+            width: 100%;
+            height: 260px;
+            background: #000;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-bottom: 12px;
+            position: relative;
+            border: 2px solid var(--navy);
         }
-        .camera-box-preview video, .camera-box-preview img {
-            width: 100%; height: 100%; object-fit: cover;
+        .camera-box-preview-large video, .camera-box-preview-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -210,8 +249,13 @@
 
 <div class="container">
     <div class="header">
-        <div class="logo-box" id="header-company-name">SaaS Attendance Portal</div>
-        <div class="sub-logo" id="header-company-sub">Multi-Company Management System</div>
+        <div>
+            <div class="logo-box" id="header-company-name">SaaS Attendance Portal</div>
+            <div class="sub-logo" id="header-company-sub">Multi-Company Management System</div>
+        </div>
+        <button id="owner-profile-icon-btn" class="owner-logo-btn hidden" onclick="openOwnerProfileModal()">
+            <span id="owner-logo-text-icon">🏢</span>
+        </button>
     </div>
 
     <div class="content">
@@ -240,7 +284,7 @@
         <div id="screen-register" class="card hidden">
             <h3>Register New Company</h3>
             <p style="font-size: 13px; color: #666;">Create your company account & manage attendance.</p>
-            <input type="text" id="reg-comp-name" placeholder="Company Name (e.g. Prasanta Engineering & Contractor)">
+            <input type="text" id="reg-comp-name" placeholder="Company Name">
             <label style="font-size: 12px; color: #666;">Company Logo (Optional)</label>
             <input type="file" id="reg-comp-logo" accept="image/*">
             <input type="text" id="reg-name" placeholder="Owner Full Name">
@@ -302,6 +346,9 @@
                 <label>Position / Designation *</label>
                 <input type="text" id="emp-position" placeholder="Position / Designation">
 
+                <label>Assigned Duty Hours per Day *</label>
+                <input type="number" id="emp-duty-hours" placeholder="e.g. 8 (Hours)" value="8" min="1" max="24">
+
                 <label>Salary Details (Optional)</label>
                 <input type="number" id="emp-salary" placeholder="Monthly Salary (Optional)">
 
@@ -339,18 +386,19 @@
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance -->
+            <!-- Employee Tab 2: Attendance (Large Rectangular Camera & 2 Photos Allowed) -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Daily Attendance</h3>
-                <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time with front camera preview & exact address GPS.</p>
+                <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time selfies using front camera.</p>
                 
+                <!-- 1. In-Time Selfie Section -->
                 <div style="margin-bottom: 20px;">
-                    <label><strong>1. In-Time Attendance Selfie</strong></label>
-                    <div class="camera-box-preview">
+                    <label><strong>1. In-Time Attendance Selfie (Max 1 allowed)</strong></label>
+                    <div class="camera-box-preview-large">
                         <video id="video-in" autoplay playsinline muted style="display:none;"></video>
                         <canvas id="canvas-in" style="display:none;"></canvas>
                         <img id="preview-in-img" style="display:none;" alt="In-Time Preview">
-                        <span id="placeholder-in-text" style="color: #aaa; font-size: 13px;">Camera Inactive</span>
+                        <span id="placeholder-in-text" style="color: #aaa; font-size: 14px;">Camera Inactive</span>
                     </div>
                     <button type="button" class="secondary" onclick="startCamera('in')" style="margin-bottom: 6px;">Open Camera Frame</button>
                     <button type="button" onclick="captureAndSubmitAttendance('in')">Capture & Submit In-Time</button>
@@ -358,23 +406,24 @@
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
+                <!-- 2. Out-Time Selfie Section -->
                 <div style="margin-bottom: 15px;">
-                    <label><strong>2. Out-Time Attendance Selfie</strong></label>
-                    <div class="camera-box-preview">
+                    <label><strong>2. Out-Time Attendance Selfie (Max 1 allowed)</strong></label>
+                    <div class="camera-box-preview-large">
                         <video id="video-out" autoplay playsinline muted style="display:none;"></video>
                         <canvas id="canvas-out" style="display:none;"></canvas>
                         <img id="preview-out-img" style="display:none;" alt="Out-Time Preview">
-                        <span id="placeholder-out-text" style="color: #aaa; font-size: 13px;">Camera Inactive</span>
+                        <span id="placeholder-out-text" style="color: #aaa; font-size: 14px;">Camera Inactive</span>
                     </div>
                     <button type="button" class="secondary" onclick="startCamera('out')" style="margin-bottom: 6px;">Open Camera Frame</button>
                     <button type="button" class="secondary" onclick="captureAndSubmitAttendance('out')">Capture & Submit Out-Time</button>
                 </div>
             </div>
 
-            <!-- Employee Tab 3: Calendar & Calculation -->
+            <!-- Employee Tab 3: Calendar & Proportional Percentage Calculation -->
             <div id="emp-pane-history" class="card hidden">
                 <h3>Attendance Calendar & Salary Calculation</h3>
-                <p style="font-size: 12px; color: #666;">Click on any blue date to view details.</p>
+                <p style="font-size: 12px; color: #666;">Click any colored date tile to view duty hours, percentage & details.</p>
                 <div class="flex-row">
                     <select id="filter-year" onchange="renderCalendar()">
                         <option value="2026" selected>2026</option>
@@ -398,6 +447,15 @@
     </div>
 </div>
 
+<!-- Modal for Company Profile Management (Owner) -->
+<div id="company-profile-modal" class="modal hidden">
+    <div class="card" style="width: 92%; max-width: 420px; background: white; max-height: 90vh; overflow-y: auto;">
+        <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeCompanyProfileModal()">&times;</span>
+        <h3 style="margin-top:0;">Company Profile</h3>
+        <div id="company-profile-body"></div>
+    </div>
+</div>
+
 <!-- Modal for Viewing Detailed Attendance Log -->
 <div id="employee-modal" class="modal hidden">
     <div class="card" style="width: 92%; max-width: 420px; background: white; max-height: 90vh; overflow-y: auto;">
@@ -410,7 +468,15 @@
 <script>
     // SaaS Multi-Company Setup Initialization
     let defaultOwnerAccounts = {
-        "admin@pec.com": { pass: "password", name: "Prasanta Engineering & Contractor", logo: "" }
+        "admin@pec.com": { 
+            pass: "password", 
+            name: "Prasanta Engineering & Contractor", 
+            logo: "",
+            settings: {
+                percentageCalc: true,
+                cameraAllowed: true
+            }
+        }
     };
 
     let savedOwners = JSON.parse(localStorage.getItem('pec_saas_owners'));
@@ -426,6 +492,7 @@
                 aadhaar: "[Aadhaar Redacted]",
                 joining: "2024-01-01",
                 position: "Production officer",
+                dutyHours: 8,
                 salary: "25000",
                 photo: "",
                 attendance: {}
@@ -449,7 +516,6 @@
     let authMode = ""; 
     let activeStream = null;
 
-    // Listen for Firebase initialization to sync with Firestore
     window.addEventListener('firebase-loaded', function() {
         initRealtimeSync();
     });
@@ -457,7 +523,6 @@
     function initRealtimeSync() {
         if (!window.db || !window.firestoreTools) return;
         const { collection, onSnapshot } = window.firestoreTools;
-        
         try {
             onSnapshot(collection(window.db, "saas_company_employees"), (snapshot) => {
                 let cloudData = {};
@@ -467,12 +532,8 @@
                 if (Object.keys(cloudData).length > 0) {
                     companyEmployees = { ...defaultEmployees, ...cloudData };
                     localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
-                    if (currentSessionUser) {
-                        renderEmployeeList();
-                    }
-                    if (currentLoggedInEmpId && currentEmpCompany) {
-                        loadEmployeeDashboard(currentLoggedInEmpId);
-                    }
+                    if (currentSessionUser) renderEmployeeList();
+                    if (currentLoggedInEmpId && currentEmpCompany) loadEmployeeDashboard(currentLoggedInEmpId);
                 }
             });
         } catch (e) {
@@ -512,12 +573,20 @@
         if(comp) {
             document.getElementById('header-company-name').innerText = comp.name;
             document.getElementById('header-company-sub').innerText = "Attendance Management System";
+            let btn = document.getElementById('owner-profile-icon-btn');
+            btn.classList.remove('hidden');
+            if(comp.logo) {
+                document.getElementById('owner-logo-text-icon').innerHTML = `<img src="${comp.logo}" alt="Logo">`;
+            } else {
+                document.getElementById('owner-logo-text-icon').innerText = comp.name.charAt(0).toUpperCase();
+            }
         }
     }
 
     function resetHeaderBranding() {
         document.getElementById('header-company-name').innerText = "SaaS Attendance Portal";
         document.getElementById('header-company-sub').innerText = "Multi-Company Management System";
+        document.getElementById('owner-profile-icon-btn').classList.add('hidden');
     }
 
     function hideAllScreens() {
@@ -650,7 +719,8 @@
                 ownerAccounts[pendingEmail] = {
                     pass: pendingPassword,
                     name: pendingCompanyName,
-                    logo: pendingCompanyLogo
+                    logo: pendingCompanyLogo,
+                    settings: { percentageCalc: true, cameraAllowed: true }
                 };
                 localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
                 
@@ -686,12 +756,89 @@
     function logoutApp() {
         currentSessionUser = null;
         localStorage.removeItem('pec_current_user');
+        resetHeaderBranding();
         backToWelcome();
     }
 
     function openEmployeePortalSelect() {
         hideAllScreens();
         document.getElementById('screen-emp-login').classList.remove('hidden');
+    }
+
+    // Company Profile Modal & Settings
+    function openOwnerProfileModal() {
+        let comp = ownerAccounts[currentSessionUser];
+        if(!comp) return;
+
+        let settings = comp.settings || { percentageCalc: true, cameraAllowed: true };
+
+        document.getElementById('company-profile-body').innerHTML = `
+            <div style="text-align: center; margin-bottom: 15px;">
+                ${comp.logo ? `<img src="${comp.logo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 8px;">` : `<div style="width: 70px; height: 70px; border-radius: 50%; background: #ccc; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">${comp.name.charAt(0)}</div>`}
+                <h4 style="margin:0;">${comp.name}</h4>
+                <small style="color: #666;">Owner Email: ${currentSessionUser}</small>
+            </div>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+            
+            <h4>1. Company Personal Details</h4>
+            <div style="background: #f9f9f9; padding: 10px; border-radius: 6px; position: relative; margin-bottom: 15px;">
+                <button style="position: absolute; right: 10px; top: 10px; width: auto; padding: 4px 10px; font-size: 12px;" onclick="editCompanyPersonalDetails()">Edit</button>
+                <p style="margin: 4px 0;"><strong>Company Name:</strong> <span id="lbl-comp-name">${comp.name}</span></p>
+                <p style="margin: 4px 0;"><strong>Login Email:</strong> ${currentSessionUser}</p>
+            </div>
+
+            <h4>Settings & Controls</h4>
+            <div class="toggle-row">
+                <span><strong>2. Percentage & Salary Deduction</strong></span>
+                <input type="checkbox" id="toggle-percentage" ${settings.percentageCalc ? 'checked' : ''} onchange="updateOwnerSetting('percentageCalc', this.checked)" style="width: 20px; height: 20px; margin: 0;">
+            </div>
+            <div class="toggle-row">
+                <span><strong>3. Selfie Camera Allowed</strong></span>
+                <input type="checkbox" id="toggle-camera" ${settings.cameraAllowed ? 'checked' : ''} onchange="updateOwnerSetting('cameraAllowed', this.checked)" style="width: 20px; height: 20px; margin: 0;">
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+            <button class="danger" onclick="deleteCompanyAccount()">5. Delete Account</button>
+        `;
+        document.getElementById('company-profile-modal').classList.remove('hidden');
+    }
+
+    function closeCompanyProfileModal() {
+        document.getElementById('company-profile-modal').classList.add('hidden');
+    }
+
+    function editCompanyPersonalDetails() {
+        let comp = ownerAccounts[currentSessionUser];
+        let newName = prompt("Edit Company Name:", comp.name);
+        if(newName) {
+            comp.name = newName.trim();
+            ownerAccounts[currentSessionUser] = comp;
+            localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+            applyCompanyBranding(currentSessionUser);
+            document.getElementById('dashboard-company-title').innerText = comp.name + " Dashboard";
+            document.getElementById('lbl-comp-name').innerText = comp.name;
+            alert('Company name updated successfully!');
+        }
+    }
+
+    function updateOwnerSetting(key, val) {
+        let comp = ownerAccounts[currentSessionUser];
+        if(!comp.settings) comp.settings = { percentageCalc: true, cameraAllowed: true };
+        comp.settings[key] = val;
+        ownerAccounts[currentSessionUser] = comp;
+        localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+        alert('Setting updated successfully!');
+    }
+
+    function deleteCompanyAccount() {
+        if(confirm("Are you sure you want to delete your company account and all data? This cannot be undone.")) {
+            delete ownerAccounts[currentSessionUser];
+            delete companyEmployees[currentSessionUser];
+            localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+            localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+            closeCompanyProfileModal();
+            logoutApp();
+        }
     }
 
     function switchOwnerTab(tab) {
@@ -714,6 +861,7 @@
             document.getElementById('emp-aadhaar').value = "";
             document.getElementById('emp-joining').value = "";
             document.getElementById('emp-position').value = "";
+            document.getElementById('emp-duty-hours').value = "8";
             document.getElementById('emp-salary').value = "";
             document.getElementById('emp-photo').value = "";
         }
@@ -725,6 +873,7 @@
         const aadhaar = document.getElementById('emp-aadhaar').value;
         const joining = document.getElementById('emp-joining').value;
         const position = document.getElementById('emp-position').value;
+        const dutyHours = parseFloat(document.getElementById('emp-duty-hours').value) || 8;
         const salary = document.getElementById('emp-salary').value || "Not Assigned";
         const photoInput = document.getElementById('emp-photo');
         const editIndex = document.getElementById('edit-emp-index').value;
@@ -738,7 +887,7 @@
         if(photoInput.files && photoInput.files[0]) {
             reader.readAsDataURL(photoInput.files[0]);
             reader.onload = function(e) {
-                processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, e.target.result);
+                processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, dutyHours, salary, e.target.result);
             }
         } else {
             let existingPhoto = "";
@@ -746,11 +895,11 @@
                 let list = companyEmployees[currentSessionUser] || [];
                 existingPhoto = list[editIndex].photo;
             }
-            processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, existingPhoto);
+            processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, dutyHours, salary, existingPhoto);
         }
     }
 
-    function processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, salary, photo) {
+    function processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, dutyHours, salary, photo) {
         companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
         if(!companyEmployees[currentSessionUser]) companyEmployees[currentSessionUser] = [];
 
@@ -763,6 +912,7 @@
             list[idx].aadhaar = aadhaar || "N/A";
             list[idx].joining = joining;
             list[idx].position = position;
+            list[idx].dutyHours = dutyHours;
             list[idx].salary = salary;
             if(photo) list[idx].photo = photo;
             alert('Employee updated successfully!');
@@ -775,6 +925,7 @@
                 aadhaar: aadhaar || "N/A",
                 joining: joining,
                 position: position,
+                dutyHours: dutyHours,
                 salary: salary,
                 photo: photo,
                 attendance: {}
@@ -805,7 +956,7 @@
                     ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
                     <div>
                         <strong>${emp.name}</strong> (${emp.id})<br>
-                        <small style="color: #666;">${emp.position}</small>
+                        <small style="color: #666;">${emp.position} | Duty: ${emp.dutyHours || 8}h</small>
                     </div>
                 </div>
                 <div class="menu-container">
@@ -878,6 +1029,7 @@
         document.getElementById('emp-aadhaar').value = emp.aadhaar !== "N/A" ? emp.aadhaar : "";
         document.getElementById('emp-joining').value = emp.joining || "";
         document.getElementById('emp-position').value = emp.position;
+        document.getElementById('emp-duty-hours').value = emp.dutyHours || 8;
         document.getElementById('emp-salary').value = emp.salary !== "Not Assigned" ? emp.salary : "";
         
         document.getElementById('owner-tab-home').classList.add('hidden');
@@ -910,26 +1062,33 @@
         const month = now.getMonth();
         let daysInMonth = new Date(year, month + 1, 0).getDate();
         let monthName = now.toLocaleString('default', { month: 'long' });
-        let compName = ownerAccounts[currentSessionUser] ? ownerAccounts[currentSessionUser].name : "Company";
+        let comp = ownerAccounts[currentSessionUser];
+        let compName = comp ? comp.name : "Company";
+        let usePercentage = comp && comp.settings ? comp.settings.percentageCalc : true;
 
         let csvContent = "data:text/csv;charset=utf-8,";
         csvContent += `${compName} - Monthly Attendance Report (${monthName} ${year})\n`;
-        csvContent += "Employee ID,Employee Name,Designation,Monthly Base Salary,Present Days,Absent Days,Estimated Earned Salary\n";
+        csvContent += "Employee ID,Employee Name,Designation,Monthly Base Salary,Total Effective Days,Estimated Earned Salary\n";
 
         list.forEach(emp => {
-            let presentCount = 0;
+            let totalEffDays = 0;
+            let assignedDuty = emp.dutyHours || 8;
             for(let d = 1; d <= daysInMonth; d++) {
                 let fullDateStr = `${year}-${month}-${d}`;
-                if(emp.attendance[fullDateStr] && emp.attendance[fullDateStr].status === 'present') {
-                    presentCount++;
+                let rec = emp.attendance[fullDateStr];
+                if(rec && rec.status === 'present') {
+                    if(usePercentage) {
+                        totalEffDays += (rec.percentage / 100);
+                    } else {
+                        totalEffDays += 1;
+                    }
                 }
             }
-            let absentCount = daysInMonth - presentCount;
             let baseSal = parseFloat(emp.salary);
-            let estEarned = (!isNaN(baseSal)) ? Math.round((baseSal / 30) * presentCount) : "N/A";
+            let estEarned = (!isNaN(baseSal)) ? Math.round((baseSal / 30) * totalEffDays) : "N/A";
             let rowSalary = (!isNaN(baseSal)) ? baseSal : "Not Assigned";
 
-            csvContent += `"${emp.id}","${emp.name}","${emp.position}","${rowSalary}","${presentCount}","${absentCount}","${estEarned}"\n`;
+            csvContent += `"${emp.id}","${emp.name}","${emp.position}","${rowSalary}","${totalEffDays.toFixed(2)}","${estEarned}"\n`;
         });
 
         let encodedUri = encodeURI(csvContent);
@@ -953,7 +1112,8 @@
         
         let firstDayIndex = new Date(year, month, 1).getDay();
         let daysInMonth = new Date(year, month + 1, 0).getDate();
-        let presentCount = 0, absentCount = 0;
+        let presentCount = 0;
+        let totalPct = 0;
 
         let calHtml = `<div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; color:#555;"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>`;
         calHtml += `<div class="calendar-grid">`;
@@ -963,36 +1123,39 @@
         for(let d = 1; d <= daysInMonth; d++) {
             let fullDateStr = `${year}-${month}-${d}`;
             let record = emp.attendance[fullDateStr];
-            let cls = "cal-day";
+            let cell = document.createElement('div');
+            cell.className = "cal-day";
+            cell.innerText = d;
+
             if(record && record.status === 'present') {
-                cls += " present";
                 presentCount++;
-                calHtml += `<div class="${cls}" onclick="showAttendanceDetailModal('${empId}', '${fullDateStr}')">${d}</div>`;
+                let pct = record.percentage || 100;
+                totalPct += pct;
+                cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #eee ${pct}%)`;
+                cell.style.color = pct > 50 ? "white" : "black";
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
             } else {
-                cls += " absent";
-                absentCount++;
-                calHtml += `<div class="${cls}">${d}</div>`;
+                cell.style.background = "#eee";
+                cell.style.color = "#999";
             }
+            calHtml += cell.outerHTML;
         }
         calHtml += `</div>`;
 
         let baseSalary = parseFloat(emp.salary);
-        let estimatedSalary = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * presentCount) : "N/A";
+        let avgPct = presentCount > 0 ? (totalPct / presentCount) : 0;
+        let estimatedSalary = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * (totalPct / 100)) : "N/A";
 
         document.getElementById('modal-body-content').innerHTML = `
             <div style="text-align: center; margin-bottom: 15px;">
                 ${emp.photo ? `<img src="${emp.photo}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 8px;">` : `<div style="width: 80px; height: 80px; border-radius: 50%; background: #ccc; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">${emp.name.charAt(0)}</div>`}
                 <h4 style="margin:0;">${emp.name}</h4>
-                <small style="color: #666;">ID: ${emp.id} | ${emp.position}</small>
+                <small style="color: #666;">ID: ${emp.id} | Duty: ${emp.dutyHours || 8}h</small>
             </div>
             <p><strong>Salary:</strong> ${emp.salary} | <strong>Est. Earned:</strong> ${estimatedSalary}</p>
-            <p><strong>DOB:</strong> ${emp.dob || 'N/A'} | <strong>Joining:</strong> ${emp.joining || 'N/A'}</p>
+            <p><strong>Present Days:</strong> ${presentCount} | <strong>Avg Efficiency:</strong> ${avgPct.toFixed(1)}%</p>
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
-            <h4 style="margin-bottom: 5px;">Current Month Attendance</h4>
-            <div style="margin-bottom: 10px;">
-                <span class="badge badge-blue">Present: ${presentCount} Days</span> 
-                <span class="badge badge-red">Absent: ${absentCount} Days</span>
-            </div>
+            <h4 style="margin-bottom: 5px;">Attendance Calendar</h4>
             ${calHtml}
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
@@ -1034,6 +1197,7 @@
         currentEmpCompany = null;
         localStorage.removeItem('pec_current_emp');
         localStorage.removeItem('pec_current_emp_company');
+        resetHeaderBranding();
         backToWelcome();
     }
 
@@ -1050,6 +1214,7 @@
                 <p><strong>Employee ID:</strong> ${emp.id}</p>
                 <p><strong>Full Name:</strong> ${emp.name}</p>
                 <p><strong>Position:</strong> ${emp.position}</p>
+                <p><strong>Assigned Duty Hours:</strong> ${emp.dutyHours || 8} Hours</p>
                 <p><strong>Salary:</strong> ${emp.salary}</p>
                 <p><strong>Date of Birth:</strong> ${emp.dob || 'N/A'}</p>
                 <p><strong>Joining Date:</strong> ${emp.joining || 'N/A'}</p>
@@ -1067,6 +1232,13 @@
         if(tab === 'profile') {
             document.getElementById('emp-pane-profile').classList.remove('hidden');
         } else if(tab === 'attendance') {
+            // Check if owner allowed camera
+            let comp = ownerAccounts[currentEmpCompany];
+            if(comp && comp.settings && comp.settings.cameraAllowed === false) {
+                alert('Selfie camera feature is currently disabled by company owner.');
+                switchEmpTab('profile');
+                return;
+            }
             document.getElementById('emp-pane-attendance').classList.remove('hidden');
         } else if(tab === 'history') {
             document.getElementById('emp-pane-history').classList.remove('hidden');
@@ -1075,6 +1247,12 @@
     }
 
     function startCamera(type) {
+        let comp = ownerAccounts[currentEmpCompany];
+        if(comp && comp.settings && comp.settings.cameraAllowed === false) {
+            alert('Camera is disabled by owner.');
+            return;
+        }
+
         stopActiveCamera();
         const video = document.getElementById(`video-${type}`);
         const placeholder = document.getElementById(`placeholder-${type}-text`);
@@ -1127,17 +1305,18 @@
             navigator.geolocation.getCurrentPosition(position => {
                 let lat = position.coords.latitude;
                 let lon = position.coords.longitude;
-                let timeStr = new Date().toLocaleTimeString();
+                let nowTime = new Date();
+                let timeStr = nowTime.toLocaleTimeString();
 
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
                     .then(response => response.json())
                     .then(data => {
                         let addressStr = data.display_name || `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
-                        saveAttendanceRecord(emp, type, timeStr, photoData, addressStr);
+                        saveAttendanceRecord(emp, type, timeStr, nowTime, photoData, addressStr);
                     })
                     .catch(() => {
                         let fallbackLoc = `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
-                        saveAttendanceRecord(emp, type, timeStr, photoData, fallbackLoc);
+                        saveAttendanceRecord(emp, type, timeStr, nowTime, photoData, fallbackLoc);
                     });
             }, error => {
                 alert("GPS Location access error: " + error.message);
@@ -1147,25 +1326,49 @@
         }
     }
 
-    function saveAttendanceRecord(emp, type, timeStr, photoData, locationStr) {
-        const now = new Date();
-        const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+    function saveAttendanceRecord(emp, type, timeStr, nowTime, photoData, locationStr) {
+        const dateKey = `${nowTime.getFullYear()}-${nowTime.getMonth()}-${nowTime.getDate()}`;
         
         if(!emp.attendance[dateKey]) {
-            emp.attendance[dateKey] = { status: 'present', inTime: '', inPhoto: '', inLoc: '', outTime: '', outPhoto: '', outLoc: '' };
+            emp.attendance[dateKey] = { status: 'present', inTime: '', inTimeObj: null, inPhoto: '', inLoc: '', outTime: '', outTimeObj: null, outPhoto: '', outLoc: '', hoursWorked: 0, percentage: 100 };
         }
 
+        let record = emp.attendance[dateKey];
+        let assignedDuty = emp.dutyHours || 8;
+
         if(type === 'in') {
-            emp.attendance[dateKey].inTime = timeStr;
-            emp.attendance[dateKey].inPhoto = photoData;
-            emp.attendance[dateKey].inLoc = locationStr;
+            record.inTime = timeStr;
+            record.inTimeObj = nowTime.getTime();
+            record.inPhoto = photoData;
+            record.inLoc = locationStr;
             alert('In-Time attendance recorded successfully!');
         } else {
-            emp.attendance[dateKey].outTime = timeStr;
-            emp.attendance[dateKey].outPhoto = photoData;
-            emp.attendance[dateKey].outLoc = locationStr;
+            record.outTime = timeStr;
+            record.outTimeObj = nowTime.getTime();
+            record.outPhoto = photoData;
+            record.outLoc = locationStr;
             alert('Out-Time attendance recorded successfully!');
         }
+
+        // Calculate hours worked and percentage if both in and out exist
+        if(record.inTimeObj && record.outTimeObj) {
+            let diffMs = record.outTimeObj - record.inTimeObj;
+            let diffHours = diffMs / (1000 * 60 * 60);
+            if(diffHours < 0) diffHours = 0;
+            record.hoursWorked = parseFloat(diffHours.toFixed(2));
+
+            let comp = ownerAccounts[currentEmpCompany];
+            let usePct = comp && comp.settings ? comp.settings.percentageCalc : true;
+
+            if(usePct) {
+                let pct = (diffHours / assignedDuty) * 100;
+                if(pct > 100) pct = 100;
+                record.percentage = Math.round(pct);
+            } else {
+                record.percentage = 100;
+            }
+        }
+
         localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
         syncCompanyEmployeesToCloud(currentEmpCompany, companyEmployees[currentEmpCompany]);
     }
@@ -1184,7 +1387,8 @@
         let firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
         let daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
 
-        let presentCount = 0, absentCount = 0;
+        let presentCount = 0;
+        let totalPct = 0;
 
         for(let i = 0; i < firstDayIndex; i++) { container.appendChild(document.createElement('div')); }
 
@@ -1197,21 +1401,26 @@
             cell.innerText = d;
 
             if(record && record.status === 'present') {
-                cell.classList.add('present');
-                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
                 presentCount++;
+                let pct = record.percentage || 100;
+                totalPct += pct;
+                cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #eee ${pct}%)`;
+                cell.style.color = pct > 50 ? "white" : "black";
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
             } else {
-                cell.classList.add('absent');
+                cell.style.background = "#eee";
+                cell.style.color = "#999";
             }
             container.appendChild(cell);
         }
 
         let baseSalary = parseFloat(emp.salary);
-        let calculatedEarnings = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * presentCount) : "N/A";
+        let avgPct = presentCount > 0 ? (totalPct / presentCount) : 0;
+        let calculatedEarnings = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * (totalPct / 100)) : "N/A";
 
         document.getElementById('attendance-summary-count').innerHTML = `
-            <span class="badge badge-blue">Present: ${presentCount} Days</span> 
-            <span class="badge badge-red">Absent: ${absentCount} Days</span><br><br>
+            <span class="badge badge-blue">Present Days: ${presentCount}</span><br><br>
+            <strong>Average Efficiency:</strong> ${avgPct.toFixed(1)}%<br>
             <strong>Estimated Salary for Month:</strong> ${calculatedEarnings}
         `;
     }
@@ -1228,17 +1437,20 @@
 
         document.getElementById('modal-body-content').innerHTML = `
             <h4>Date: ${formattedDate}</h4>
+            <p><strong>Duty Hours Worked:</strong> ${rec.hoursWorked || 0} Hours / Assigned: ${emp.dutyHours || 8}h</p>
+            <p><strong>Attendance Percentage:</strong> ${rec.percentage || 100}%</p>
+            
             <div style="background: #f1f1f1; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
-                <strong>In-Time Record:</strong><br>
+                <strong>1. In-Time Record:</strong><br>
                 Time: ${rec.inTime || 'N/A'}<br>
-                Address: ${rec.inLoc || 'N/Y'}<br>
-                ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : ''}
+                Address: ${rec.inLoc || 'N/A'}<br>
+                ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No selfie</small>'}
             </div>
             <div style="background: #f1f1f1; padding: 10px; border-radius: 6px;">
-                <strong>Out-Time Record:</strong><br>
+                <strong>2. Out-Time Record:</strong><br>
                 Time: ${rec.outTime || 'N/A'}<br>
-                Address: ${rec.outLoc || 'N/Y'}<br>
-                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : ''}
+                Address: ${rec.outLoc || 'N/A'}<br>
+                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No selfie</small>'}
             </div>
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
