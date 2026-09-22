@@ -609,7 +609,6 @@
     }
 
     window.onload = function() {
-        // Event Listeners setup
         document.getElementById('btn-owner-login').addEventListener('click', showLoginScreen);
         document.getElementById('btn-register').addEventListener('click', showRegisterScreen);
         document.getElementById('btn-emp-portal').addEventListener('click', openEmployeePortalSelect);
@@ -763,32 +762,6 @@
         }
     }
 
-    function generateAndSendOTP(email, mode) {
-        pendingEmail = email;
-        authMode = mode;
-        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-
-        let templateParams = {
-            to_email: email,
-            otp_code: generatedOTP,
-            time: new Date().toLocaleTimeString(),
-            message: "Your OTP verification code is: " + generatedOTP
-        };
-
-        emailjs.send("service_33ql72e", "template_qs9fv3s", templateParams)
-            .then(function(response) {
-                alert('OTP sent successfully to your email: ' + email);
-                hideAllScreens();
-                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
-                document.getElementById('screen-otp').classList.remove('hidden');
-            }, function(error) {
-                alert('Email Service Failed / Offline. Your Verification OTP is: ' + generatedOTP);
-                hideAllScreens();
-                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
-                document.getElementById('screen-otp').classList.remove('hidden');
-            });
-    }
-
     function requestRegisterOTP() {
         const compName = document.getElementById('reg-comp-name').value.trim();
         const name = document.getElementById('reg-name').value.trim();
@@ -810,17 +783,54 @@
         pendingCompanyName = compName;
         pendingPassword = pass;
 
-        if(logoInput.files && logoInput.files[0]) {
+        if(logoInput && logoInput.files && logoInput.files[0]) {
             let reader = new FileReader();
             reader.readAsDataURL(logoInput.files[0]);
             reader.onload = function(e) {
                 pendingCompanyLogo = e.target.result;
-                generateAndSendOTP(email, 'register');
-            }
+                executeOTPDispatch(email, 'register');
+            };
+            reader.onerror = function() {
+                pendingCompanyLogo = "";
+                executeOTPDispatch(email, 'register');
+            };
         } else {
             pendingCompanyLogo = "";
-            generateAndSendOTP(email, 'register');
+            executeOTPDispatch(email, 'register');
         }
+    }
+
+    function generateAndSendOTP(email, mode) {
+        executeOTPDispatch(email, mode);
+    }
+
+    function executeOTPDispatch(email, mode) {
+        pendingEmail = email;
+        authMode = mode;
+        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+
+        let templateParams = {
+            to_email: email,
+            otp_code: generatedOTP,
+            time: new Date().toLocaleTimeString(),
+            message: "Your OTP verification code is: " + generatedOTP
+        };
+
+        console.log("Sending OTP to:", email, "OTP:", generatedOTP);
+
+        emailjs.send("service_33ql72e", "template_qs9fv3s", templateParams)
+            .then(function(response) {
+                alert('OTP sent successfully to your email: ' + email);
+                hideAllScreens();
+                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
+                document.getElementById('screen-otp').classList.remove('hidden');
+            }, function(error) {
+                console.error("EmailJS Error:", error);
+                alert('Email Service Failed / Offline. Your Verification OTP is: ' + generatedOTP);
+                hideAllScreens();
+                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
+                document.getElementById('screen-otp').classList.remove('hidden');
+            });
     }
 
     function verifyOTP() {
