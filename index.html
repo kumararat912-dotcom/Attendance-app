@@ -736,7 +736,8 @@
                 document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
                 document.getElementById('screen-otp').classList.remove('hidden');
             }, function(error) {
-                alert('EmailJS simulation OTP: ' + generatedOTP);
+                // Fallback alert showing OTP directly if EmailJS blocks external emails
+                alert('OTP generated successfully!\n\nYour 6-digit OTP code is: ' + generatedOTP);
                 hideAllScreens();
                 document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
                 document.getElementById('screen-otp').classList.remove('hidden');
@@ -1732,6 +1733,7 @@
             return;
         }
 
+        document.getElementById('owner-modal-title': 'Date: ' + formattedDate);
         document.getElementById('owner-modal-title').innerText = `Date: ${formattedDate}`;
         document.getElementById('modal-body-content').innerHTML = `
             <p><strong>Duty Hours Worked:</strong> ${rec.hoursWorked || 0} Hours / Assigned: ${emp.dutyHours || 8}h</p>
