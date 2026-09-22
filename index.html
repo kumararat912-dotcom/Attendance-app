@@ -46,6 +46,12 @@
             --red: #E63946;
             --border: #DEE2E6;
         }
+        body.dark-mode {
+            --bg: #121212;
+            --panel: #1E1E1E;
+            --ink: #E0E0E0;
+            --border: #333333;
+        }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: var(--bg);
@@ -56,6 +62,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
         .container {
             width: 100%;
@@ -66,6 +73,7 @@
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
+            position: relative;
         }
         @media(min-width: 481px) {
             .container {
@@ -126,6 +134,7 @@
             margin-bottom: 15px;
         }
         h2, h3 { color: var(--navy); margin-top: 0; }
+        body.dark-mode h2, body.dark-mode h3 { color: #90caf9; }
         input, select, textarea {
             width: 100%;
             padding: 12px;
@@ -134,6 +143,8 @@
             border-radius: 6px;
             font-size: 15px;
             box-sizing: border-box;
+            background: var(--bg);
+            color: var(--ink);
         }
         button {
             width: 100%;
@@ -177,6 +188,7 @@
             font-size: 13px;
             font-weight: bold;
             cursor: pointer;
+            color: #333;
         }
         .modal {
             position: fixed;
@@ -187,12 +199,40 @@
             align-items: center;
             z-index: 100;
         }
+        /* Right Half Screen Slide-in Drawer */
+        .side-drawer {
+            position: fixed;
+            top: 0; right: -75%;
+            width: 75%;
+            max-width: 320px;
+            height: 100%;
+            background: var(--panel);
+            border-left: 1px solid var(--border);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            z-index: 200;
+            transition: right 0.3s ease;
+            box-sizing: border-box;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .side-drawer.open {
+            right: 0;
+        }
+        .drawer-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            z-index: 150;
+        }
+        .drawer-overlay.show { display: block; }
+
         .emp-item-card {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 12px;
-            background: white;
+            background: var(--panel);
             border: 1px solid var(--border);
             border-radius: 8px;
             margin-bottom: 8px;
@@ -203,7 +243,7 @@
             font-size: 20px; font-weight: bold; cursor: pointer; padding: 0 8px; width: auto; margin: 0;
         }
         .dropdown-menu {
-            position: absolute; right: 0; top: 30px; background: white;
+            position: absolute; right: 0; top: 30px; background: var(--panel);
             border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             display: none; z-index: 10; width: 100px;
         }
@@ -212,9 +252,9 @@
             background: none; color: var(--ink); border: none; width: 100%;
             text-align: left; padding: 8px 12px; font-size: 14px; margin: 0; border-radius: 0;
         }
-        .dropdown-menu button:hover { background: #f1f1f1; }
+        .dropdown-menu button:hover { background: var(--border); }
         .dropdown-menu button.delete-opt { color: var(--red); }
-        /* Large Rectangular Selfie Display */
+        
         .camera-box-preview-large {
             width: 100%;
             height: 260px;
@@ -237,11 +277,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: white;
+            background: var(--panel);
             padding: 10px 15px;
             border: 1px solid var(--border);
             border-radius: 6px;
             margin-bottom: 10px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -253,9 +294,19 @@
             <div class="logo-box" id="header-company-name">SaaS Attendance Portal</div>
             <div class="sub-logo" id="header-company-sub">Multi-Company Management System</div>
         </div>
-        <button id="owner-profile-icon-btn" class="owner-logo-btn hidden" onclick="openOwnerProfileModal()">
+        <button id="owner-profile-icon-btn" class="owner-logo-btn hidden" onclick="toggleSideDrawer(true)">
             <span id="owner-logo-text-icon">🏢</span>
         </button>
+    </div>
+
+    <!-- Right Half Screen Slide-in Drawer -->
+    <div id="drawer-overlay" class="drawer-overlay" onclick="toggleSideDrawer(false)"></div>
+    <div id="side-drawer" class="side-drawer">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin:0;">Company Profile</h3>
+            <span style="font-size: 24px; cursor: pointer; font-weight: bold;" onclick="toggleSideDrawer(false)">&times;</span>
+        </div>
+        <div id="side-drawer-body"></div>
     </div>
 
     <div class="content">
@@ -386,12 +437,11 @@
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance (Large Rectangular Camera & 2 Photos Allowed) -->
+            <!-- Employee Tab 2: Attendance -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Daily Attendance</h3>
                 <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time selfies using front camera.</p>
                 
-                <!-- 1. In-Time Selfie Section -->
                 <div style="margin-bottom: 20px;">
                     <label><strong>1. In-Time Attendance Selfie (Max 1 allowed)</strong></label>
                     <div class="camera-box-preview-large">
@@ -406,7 +456,6 @@
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
-                <!-- 2. Out-Time Selfie Section -->
                 <div style="margin-bottom: 15px;">
                     <label><strong>2. Out-Time Attendance Selfie (Max 1 allowed)</strong></label>
                     <div class="camera-box-preview-large">
@@ -420,7 +469,7 @@
                 </div>
             </div>
 
-            <!-- Employee Tab 3: Calendar & Proportional Percentage Calculation -->
+            <!-- Employee Tab 3: Calendar & Salary Calculation -->
             <div id="emp-pane-history" class="card hidden">
                 <h3>Attendance Calendar & Salary Calculation</h3>
                 <p style="font-size: 12px; color: #666;">Click any colored date tile to view duty hours, percentage & details.</p>
@@ -440,25 +489,16 @@
                     <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
                 </div>
                 <div class="calendar-grid" id="calendar-days-container"></div>
-                <div style="font-size: 14px; margin-top: 15px; text-align: center; background: white; padding: 10px; border-radius: 6px;" id="attendance-summary-count"></div>
+                <div style="font-size: 14px; margin-top: 15px; text-align: center; background: var(--panel); padding: 10px; border-radius: 6px;" id="attendance-summary-count"></div>
             </div>
         </div>
 
     </div>
 </div>
 
-<!-- Modal for Company Profile Management (Owner) -->
-<div id="company-profile-modal" class="modal hidden">
-    <div class="card" style="width: 92%; max-width: 420px; background: white; max-height: 90vh; overflow-y: auto;">
-        <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeCompanyProfileModal()">&times;</span>
-        <h3 style="margin-top:0;">Company Profile</h3>
-        <div id="company-profile-body"></div>
-    </div>
-</div>
-
 <!-- Modal for Viewing Detailed Attendance Log -->
 <div id="employee-modal" class="modal hidden">
-    <div class="card" style="width: 92%; max-width: 420px; background: white; max-height: 90vh; overflow-y: auto;">
+    <div class="card" style="width: 92%; max-width: 420px; background: var(--panel); max-height: 90vh; overflow-y: auto;">
         <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
         <h3 style="margin-top:0;">Attendance & Employee Details</h3>
         <div id="modal-body-content"></div>
@@ -466,7 +506,6 @@
 </div>
 
 <script>
-    // SaaS Multi-Company Setup Initialization
     let defaultOwnerAccounts = {
         "admin@pec.com": { 
             pass: "password", 
@@ -474,7 +513,8 @@
             logo: "",
             settings: {
                 percentageCalc: true,
-                cameraAllowed: true
+                cameraAllowed: true,
+                darkMode: false
             }
         }
     };
@@ -580,6 +620,11 @@
             } else {
                 document.getElementById('owner-logo-text-icon').innerText = comp.name.charAt(0).toUpperCase();
             }
+            if(comp.settings && comp.settings.darkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
         }
     }
 
@@ -587,6 +632,7 @@
         document.getElementById('header-company-name').innerText = "SaaS Attendance Portal";
         document.getElementById('header-company-sub').innerText = "Multi-Company Management System";
         document.getElementById('owner-profile-icon-btn').classList.add('hidden');
+        document.body.classList.remove('dark-mode');
     }
 
     function hideAllScreens() {
@@ -720,7 +766,7 @@
                     pass: pendingPassword,
                     name: pendingCompanyName,
                     logo: pendingCompanyLogo,
-                    settings: { percentageCalc: true, cameraAllowed: true }
+                    settings: { percentageCalc: true, cameraAllowed: true, darkMode: false }
                 };
                 localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
                 
@@ -765,46 +811,59 @@
         document.getElementById('screen-emp-login').classList.remove('hidden');
     }
 
-    // Company Profile Modal & Settings
-    function openOwnerProfileModal() {
-        let comp = ownerAccounts[currentSessionUser];
-        if(!comp) return;
-
-        let settings = comp.settings || { percentageCalc: true, cameraAllowed: true };
-
-        document.getElementById('company-profile-body').innerHTML = `
-            <div style="text-align: center; margin-bottom: 15px;">
-                ${comp.logo ? `<img src="${comp.logo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 8px;">` : `<div style="width: 70px; height: 70px; border-radius: 50%; background: #ccc; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">${comp.name.charAt(0)}</div>`}
-                <h4 style="margin:0;">${comp.name}</h4>
-                <small style="color: #666;">Owner Email: ${currentSessionUser}</small>
-            </div>
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
-            
-            <h4>1. Company Personal Details</h4>
-            <div style="background: #f9f9f9; padding: 10px; border-radius: 6px; position: relative; margin-bottom: 15px;">
-                <button style="position: absolute; right: 10px; top: 10px; width: auto; padding: 4px 10px; font-size: 12px;" onclick="editCompanyPersonalDetails()">Edit</button>
-                <p style="margin: 4px 0;"><strong>Company Name:</strong> <span id="lbl-comp-name">${comp.name}</span></p>
-                <p style="margin: 4px 0;"><strong>Login Email:</strong> ${currentSessionUser}</p>
-            </div>
-
-            <h4>Settings & Controls</h4>
-            <div class="toggle-row">
-                <span><strong>2. Percentage & Salary Deduction</strong></span>
-                <input type="checkbox" id="toggle-percentage" ${settings.percentageCalc ? 'checked' : ''} onchange="updateOwnerSetting('percentageCalc', this.checked)" style="width: 20px; height: 20px; margin: 0;">
-            </div>
-            <div class="toggle-row">
-                <span><strong>3. Selfie Camera Allowed</strong></span>
-                <input type="checkbox" id="toggle-camera" ${settings.cameraAllowed ? 'checked' : ''} onchange="updateOwnerSetting('cameraAllowed', this.checked)" style="width: 20px; height: 20px; margin: 0;">
-            </div>
-            
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
-            <button class="danger" onclick="deleteCompanyAccount()">5. Delete Account</button>
-        `;
-        document.getElementById('company-profile-modal').classList.remove('hidden');
+    // Slide-in Drawer Controls
+    function toggleSideDrawer(open) {
+        let drawer = document.getElementById('side-drawer');
+        let overlay = document.getElementById('drawer-overlay');
+        if(open) {
+            renderSideDrawerContent();
+            drawer.classList.add('open');
+            overlay.classList.add('show');
+        } else {
+            drawer.classList.remove('open');
+            overlay.classList.remove('show');
+        }
     }
 
-    function closeCompanyProfileModal() {
-        document.getElementById('company-profile-modal').classList.add('hidden');
+    function renderSideDrawerContent() {
+        let comp = ownerAccounts[currentSessionUser];
+        if(!comp) return;
+        let settings = comp.settings || { percentageCalc: true, cameraAllowed: true, darkMode: false };
+
+        document.getElementById('side-drawer-body').innerHTML = `
+            <div style="text-align: center; margin-bottom: 15px;">
+                ${comp.logo ? `<img src="${comp.logo}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 6px;">` : `<div style="width: 60px; height: 60px; border-radius: 50%; background: #ccc; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">${comp.name.charAt(0)}</div>`}
+                <h4 style="margin:0; font-size: 15px;">${comp.name}</h4>
+                <small style="color: #888;">${currentSessionUser}</small>
+            </div>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;">
+            
+            <h5 style="margin: 5px 0; color: var(--navy);">1. Company Personal</h5>
+            <div style="background: var(--bg); padding: 8px; border-radius: 6px; position: relative; margin-bottom: 12px; font-size: 13px; border: 1px solid var(--border);">
+                <button style="position: absolute; right: 6px; top: 6px; width: auto; padding: 2px 8px; font-size: 11px; margin:0;" onclick="editCompanyPersonalDetails()">Edit</button>
+                <p style="margin: 2px 0;"><strong>Name:</strong> <span id="lbl-comp-name">${comp.name}</span></p>
+            </div>
+
+            <h5 style="margin: 5px 0; color: var(--navy);">Controls</h5>
+            <div class="toggle-row" style="padding: 8px 10px; font-size: 13px;">
+                <span><strong>2. Percentage</strong></span>
+                <input type="checkbox" id="toggle-percentage" ${settings.percentageCalc ? 'checked' : ''} onchange="updateOwnerSetting('percentageCalc', this.checked)" style="width: 18px; height: 18px; margin: 0;">
+            </div>
+            <div class="toggle-row" style="padding: 8px 10px; font-size: 13px;">
+                <span><strong>3. Camera Allowed</strong></span>
+                <input type="checkbox" id="toggle-camera" ${settings.cameraAllowed ? 'checked' : ''} onchange="updateOwnerSetting('cameraAllowed', this.checked)" style="width: 18px; height: 18px; margin: 0;">
+            </div>
+            <div class="toggle-row" style="padding: 8px 10px; font-size: 13px;">
+                <span><strong>4. Background (Off=Black)</strong></span>
+                <input type="checkbox" id="toggle-dark" ${settings.darkMode ? 'checked' : ''} onchange="updateOwnerSetting('darkMode', this.checked)" style="width: 18px; height: 18px; margin: 0;">
+            </div>
+
+            <h5 style="margin: 5px 0; color: var(--navy);">Share Portal</h5>
+            <button class="secondary" style="font-size: 13px; padding: 8px; margin-bottom: 12px;" onclick="shareAppPortal()">📤 Share App</button>
+            
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;">
+            <button class="danger" style="font-size: 13px; padding: 8px;" onclick="deleteCompanyAccount()">Delete Account</button>
+        `;
     }
 
     function editCompanyPersonalDetails() {
@@ -817,26 +876,41 @@
             applyCompanyBranding(currentSessionUser);
             document.getElementById('dashboard-company-title').innerText = comp.name + " Dashboard";
             document.getElementById('lbl-comp-name').innerText = comp.name;
+            renderSideDrawerContent();
             alert('Company name updated successfully!');
         }
     }
 
     function updateOwnerSetting(key, val) {
         let comp = ownerAccounts[currentSessionUser];
-        if(!comp.settings) comp.settings = { percentageCalc: true, cameraAllowed: true };
+        if(!comp.settings) comp.settings = { percentageCalc: true, cameraAllowed: true, darkMode: false };
         comp.settings[key] = val;
         ownerAccounts[currentSessionUser] = comp;
         localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+        
+        if(key === 'darkMode') {
+            if(val) document.body.classList.add('dark-mode');
+            else document.body.classList.remove('dark-mode');
+        }
         alert('Setting updated successfully!');
     }
 
+    function shareAppPortal() {
+        let shareText = `Hello employees, please open our Attendance Portal using Company Code: ${currentSessionUser} and your assigned Employee ID. Portal Link: ` + window.location.href;
+        if (navigator.share) {
+            navigator.share({ title: 'Attendance Portal', text: shareText, url: window.location.href }).catch(() => {});
+        } else {
+            prompt("Copy portal details for employees:", shareText);
+        }
+    }
+
     function deleteCompanyAccount() {
-        if(confirm("Are you sure you want to delete your company account and all data? This cannot be undone.")) {
+        if(confirm("Are you sure delete your account?")) {
             delete ownerAccounts[currentSessionUser];
             delete companyEmployees[currentSessionUser];
             localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
             localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
-            closeCompanyProfileModal();
+            toggleSideDrawer(false);
             logoutApp();
         }
     }
@@ -953,10 +1027,10 @@
             div.className = "emp-item-card";
             div.innerHTML = `
                 <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
-                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
+                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color:#333;">${emp.name.charAt(0)}</div>`}
                     <div>
                         <strong>${emp.name}</strong> (${emp.id})<br>
-                        <small style="color: #666;">${emp.position} | Duty: ${emp.dutyHours || 8}h</small>
+                        <small style="opacity: 0.7;">${emp.position} | Duty: ${emp.dutyHours || 8}h</small>
                     </div>
                 </div>
                 <div class="menu-container">
@@ -990,10 +1064,10 @@
             div.className = "emp-item-card";
             div.innerHTML = `
                 <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeDetailModal('${emp.id}')">
-                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${emp.name.charAt(0)}</div>`}
+                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color:#333;">${emp.name.charAt(0)}</div>`}
                     <div>
                         <strong>${emp.name}</strong> (${emp.id})<br>
-                        <small style="color: #666;">${emp.position}</small>
+                        <small style="opacity: 0.7;">${emp.position}</small>
                     </div>
                 </div>
                 <div class="menu-container">
@@ -1072,7 +1146,6 @@
 
         list.forEach(emp => {
             let totalEffDays = 0;
-            let assignedDuty = emp.dutyHours || 8;
             for(let d = 1; d <= daysInMonth; d++) {
                 let fullDateStr = `${year}-${month}-${d}`;
                 let rec = emp.attendance[fullDateStr];
@@ -1115,7 +1188,7 @@
         let presentCount = 0;
         let totalPct = 0;
 
-        let calHtml = `<div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; color:#555;"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>`;
+        let calHtml = `<div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; opacity:0.7;"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>`;
         calHtml += `<div class="calendar-grid">`;
 
         for(let i = 0; i < firstDayIndex; i++) { calHtml += `<div></div>`; }
@@ -1131,12 +1204,12 @@
                 presentCount++;
                 let pct = record.percentage || 100;
                 totalPct += pct;
-                cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #eee ${pct}%)`;
+                cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #ccc ${pct}%)`;
                 cell.style.color = pct > 50 ? "white" : "black";
                 cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
             } else {
-                cell.style.background = "#eee";
-                cell.style.color = "#999";
+                cell.style.background = "var(--border)";
+                cell.style.color = "var(--ink)";
             }
             calHtml += cell.outerHTML;
         }
@@ -1148,9 +1221,9 @@
 
         document.getElementById('modal-body-content').innerHTML = `
             <div style="text-align: center; margin-bottom: 15px;">
-                ${emp.photo ? `<img src="${emp.photo}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 8px;">` : `<div style="width: 80px; height: 80px; border-radius: 50%; background: #ccc; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">${emp.name.charAt(0)}</div>`}
+                ${emp.photo ? `<img src="${emp.photo}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 8px;">` : `<div style="width: 80px; height: 80px; border-radius: 50%; background: #ccc; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color:#333;">${emp.name.charAt(0)}</div>`}
                 <h4 style="margin:0;">${emp.name}</h4>
-                <small style="color: #666;">ID: ${emp.id} | Duty: ${emp.dutyHours || 8}h</small>
+                <small style="opacity:0.7;">ID: ${emp.id} | Duty: ${emp.dutyHours || 8}h</small>
             </div>
             <p><strong>Salary:</strong> ${emp.salary} | <strong>Est. Earned:</strong> ${estimatedSalary}</p>
             <p><strong>Present Days:</strong> ${presentCount} | <strong>Avg Efficiency:</strong> ${avgPct.toFixed(1)}%</p>
@@ -1232,7 +1305,6 @@
         if(tab === 'profile') {
             document.getElementById('emp-pane-profile').classList.remove('hidden');
         } else if(tab === 'attendance') {
-            // Check if owner allowed camera
             let comp = ownerAccounts[currentEmpCompany];
             if(comp && comp.settings && comp.settings.cameraAllowed === false) {
                 alert('Selfie camera feature is currently disabled by company owner.');
@@ -1350,7 +1422,6 @@
             alert('Out-Time attendance recorded successfully!');
         }
 
-        // Calculate hours worked and percentage if both in and out exist
         if(record.inTimeObj && record.outTimeObj) {
             let diffMs = record.outTimeObj - record.inTimeObj;
             let diffHours = diffMs / (1000 * 60 * 60);
@@ -1404,12 +1475,12 @@
                 presentCount++;
                 let pct = record.percentage || 100;
                 totalPct += pct;
-                cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #eee ${pct}%)`;
+                cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #ccc ${pct}%)`;
                 cell.style.color = pct > 50 ? "white" : "black";
                 cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
             } else {
-                cell.style.background = "#eee";
-                cell.style.color = "#999";
+                cell.style.background = "var(--border)";
+                cell.style.color = "var(--ink)";
             }
             container.appendChild(cell);
         }
@@ -1440,13 +1511,13 @@
             <p><strong>Duty Hours Worked:</strong> ${rec.hoursWorked || 0} Hours / Assigned: ${emp.dutyHours || 8}h</p>
             <p><strong>Attendance Percentage:</strong> ${rec.percentage || 100}%</p>
             
-            <div style="background: #f1f1f1; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+            <div style="background: var(--bg); padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border);">
                 <strong>1. In-Time Record:</strong><br>
                 Time: ${rec.inTime || 'N/A'}<br>
                 Address: ${rec.inLoc || 'N/A'}<br>
                 ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No selfie</small>'}
             </div>
-            <div style="background: #f1f1f1; padding: 10px; border-radius: 6px;">
+            <div style="background: var(--bg); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
                 <strong>2. Out-Time Record:</strong><br>
                 Time: ${rec.outTime || 'N/A'}<br>
                 Address: ${rec.outLoc || 'N/A'}<br>
