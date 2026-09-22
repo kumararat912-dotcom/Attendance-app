@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Company Attendance & Management System</title>
+    <!-- Firebase SDKs & Firestore Configuration -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+      import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBCj4EEYDKbtuBtdHsHEssW3zHcLAv0CRA",
+        authDomain: "prasanta-attendance-system.firebaseapp.com",
+        projectId: "prasanta-attendance-system",
+        storageBucket: "prasanta-attendance-system.firebasestorage.app",
+        messagingSenderId: "265672524321",
+        appId: "1:265672524321:web:7f656a0db2b127db6e1960",
+        measurementId: "G-624KWXRXV0"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const db = getFirestore(app);
+
+      window.db = db;
+      window.firestoreTools = { collection, doc, setDoc, getDocs, onSnapshot };
+      window.dispatchEvent(new Event('firebase-loaded'));
+    </script>
+    <style>
+        :root {
+            --bg: #FFFFFF;
+            --panel: #F8F9FA;
+            --ink: #1C2430;
+            --navy: #1D3557;
+            --amber: #D98E2B;
+            --blue: #2A6F97;
+            --red: #E63946;
+            --orange: #F4A261;
+            --border: #DEE2E6;
+        }
+        body.dark-mode {
+            --bg: #121212;
+            --panel: #1E1E1E;
+            --ink: #E0E0E0;
+            --border: #333333;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--ink);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--bg);
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            position: relative;
+        }
+        @media(min-width: 481px) {
+            .container {
+                min-height: 85vh;
+                border-radius: 16px;
+                border: 1px solid var(--border);
+                overflow: hidden;
+            }
+        }
+        .header {
+            background-color: var(--navy);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo-box {
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .sub-logo {
+            font-size: 11px;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+        .owner-logo-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+        }
+        .owner-logo-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        h2, h3 { color: var(--navy); margin-top: 0; }
+        body.dark-mode h2, body.dark-mode h3 { color: #90caf9; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 16px 0;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background: var(--bg);
+            color: var(--ink);
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--navy);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        button:hover { opacity: 0.9; }
+        button.secondary { background-color: var(--amber); }
+        button.danger { background-color: var(--red); }
+        button.success { background-color: #2a9d8f; }
+        .hidden { display: none !important; }
+        .flex-row { display: flex; gap: 10px; }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-blue { background-color: var(--blue); }
+        .badge-red { background-color: var(--red); }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .cal-day {
+            padding: 8px 0;
+            border-radius: 4px;
+            background: #eee;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #333;
+        }
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .side-drawer {
+            position: fixed;
+            top: 0; right: -75%;
+            width: 75%;
+            max-width: 320px;
+            height: 100%;
+            background: var(--panel);
+            border-left: 1px solid var(--border);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            z-index: 200;
+            transition: right 0.3s ease;
+            box-sizing: border-box;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .side-drawer.open {
+            right: 0;
+        }
+        .drawer-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            z-index: 150;
+        }
+        .drawer-overlay.show { display: block; }
+
+        .emp-item-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .menu-container { position: relative; }
+        .dots-btn {
+            background: none; border: none; color: var(--ink);
+            font-size: 20px; font-weight: bold; cursor: pointer; padding: 0 8px; width: auto; margin: 0;
+        }
+        .dropdown-menu {
+            position: absolute; right: 0; top: 30px; background: var(--panel);
+            border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none; z-index: 10; width: 100px;
+        }
+        .dropdown-menu.show { display: block; }
+        .dropdown-menu button {
+            background: none; color: var(--ink); border: none; width: 100%;
+            text-align: left; padding: 8px 12px; font-size: 14px; margin: 0; border-radius: 0;
+        }
+        .dropdown-menu button:hover { background: var(--border); }
+        .dropdown-menu button.delete-opt { color: var(--red); }
+        
+        .camera-box-preview-large {
+            width: 100%;
+            height: 260px;
+            background: #000;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-bottom: 12px;
+            position: relative;
+            border: 2px solid var(--navy);
+        }
+        .camera-box-preview-large video, .camera-box-preview-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel);
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <div class="logo-box" id="header-company-name">SaaS Attendance Portal</div>
+            <div class="sub-logo" id="header-company-sub">Multi-Company Management System</div>
+        </div>
+        <button id="owner-profile-icon-btn" class="owner-logo-btn hidden" onclick="toggleSideDrawer(true)">
+            <span id="owner-logo-text-icon">🏢</span>
+        </button>
+    </div>
+
+    <!-- Right Half Screen Slide-in Drawer -->
+    <div id="drawer-overlay" class="drawer-overlay" onclick="toggleSideDrawer(false)"></div>
+    <div id="side-drawer" class="side-drawer">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin:0;">Company Profile</h3>
+            <span style="font-size: 24px; cursor: pointer; font-weight: bold;" onclick="toggleSideDrawer(false)">&times;</span>
+        </div>
+        <div id="side-drawer-body"></div>
+    </div>
+
+    <div class="content">
+
+        <!-- WELCOME SCREEN -->
+        <div id="screen-welcome" class="card" style="text-align: center; padding: 40px 20px;">
+            <h3>Welcome</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 30px;">Select your portal to continue</p>
+            <button onclick="showLoginScreen()">I. Company Owner Login</button>
+            <button class="secondary" onclick="showRegisterScreen()">II. Register New Company</button>
+            <button style="background-color: var(--blue);" onclick="openEmployeePortalSelect()">III. Employee Portal</button>
+        </div>
+
+        <!-- LOGIN SCREEN -->
+        <div id="screen-login" class="card hidden">
+            <h3>Company Owner Login</h3>
+            <p style="font-size: 13px; color: #666;">Enter your registered company credentials.</p>
+            <input type="email" id="login-email" placeholder="Enter owner email">
+            <input type="password" id="login-password" placeholder="Enter password">
+            <button onclick="loginOwnerWithPassword()">Login</button>
+            <button class="secondary" onclick="showForgotPasswordModal()">Forgot Password / Reset via OTP?</button>
+            <button class="danger" onclick="backToWelcome()">Back</button>
+        </div>
+
+        <!-- REGISTER SCREEN (COMPANY REGISTRATION) -->
+        <div id="screen-register" class="card hidden">
+            <h3>Register New Company</h3>
+            <p style="font-size: 13px; color: #666;">Create your company account & manage attendance.</p>
+            <input type="text" id="reg-comp-name" placeholder="Company Name">
+            <label style="font-size: 12px; color: #666;">Company Logo (Optional)</label>
+            <input type="file" id="reg-comp-logo" accept="image/*">
+            <input type="text" id="reg-name" placeholder="Owner Full Name">
+            <input type="email" id="reg-email" placeholder="Owner Email Address">
+            <input type="password" id="reg-pass" placeholder="Create Password">
+            <button onclick="requestRegisterOTP()">Generate & Verify OTP</button>
+            <button class="secondary" onclick="backToWelcome()">Back</button>
+        </div>
+
+        <!-- OTP VERIFICATION SCREEN -->
+        <div id="screen-otp" class="card hidden">
+            <h3>Verify OTP Code</h3>
+            <p style="font-size: 13px; color: #666;" id="otp-instruction">Enter the 6-digit OTP generated on screen.</p>
+            <input type="text" id="entered-otp" placeholder="Enter 6-digit OTP" maxlength="6">
+            <button onclick="verifyOTP()">Verify & Proceed</button>
+            <button class="secondary" onclick="backToWelcome()">Cancel</button>
+        </div>
+
+        <!-- OWNER DASHBOARD -->
+        <div id="screen-owner-dashboard" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin:0;" id="dashboard-company-title">Company Dashboard</h3>
+                <button onclick="logoutApp()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
+            </div>
+            
+            <div class="flex-row" style="margin-bottom: 15px;">
+                <button onclick="switchOwnerTab('home')" id="tab-btn-home">(i) Employees List</button>
+                <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employee</button>
+            </div>
+
+            <!-- Owner Tab 1: Home / Employees List -->
+            <div id="owner-tab-home" class="card">
+                <h3>Manage Employees</h3>
+                <button class="success" onclick="exportMonthlyReportCSV()">📥 Download Monthly Report (CSV)</button>
+                <input type="text" id="search-employee" placeholder="Filter by employee name or ID..." onkeyup="filterEmployees()">
+                <div id="employee-list-container"></div>
+            </div>
+
+            <!-- Owner Tab 2: Add / Edit Employees -->
+            <div id="owner-tab-add" class="card hidden">
+                <h3 id="form-title-text">Add Employee Details</h3>
+                <input type="hidden" id="edit-emp-index" value="">
+                
+                <label>Employee Photo Upload</label>
+                <input type="file" id="emp-photo" accept="image/*">
+                
+                <label>Employee Name *</label>
+                <input type="text" id="emp-name" placeholder="Full Name">
+                
+                <label>Date of Birth</label>
+                <input type="date" id="emp-dob">
+                
+                <label>Aadhar No</label>
+                <input type="text" id="emp-aadhaar" placeholder="Aadhar No">
+                
+                <label>Joining Date</label>
+                <input type="date" id="emp-joining">
+                
+                <label>Position / Designation *</label>
+                <input type="text" id="emp-position" placeholder="Position / Designation">
+
+                <label>Assigned Duty Hours per Day *</label>
+                <input type="number" id="emp-duty-hours" placeholder="e.g. 8 (Hours)" value="8" min="1" max="24">
+
+                <label>Salary Details (Optional)</label>
+                <input type="number" id="emp-salary" placeholder="Monthly Salary (Optional)">
+
+                <button onclick="saveEmployeeData()">Save Employee</button>
+                <button class="secondary" onclick="switchOwnerTab('home')">Cancel</button>
+            </div>
+        </div>
+
+        <!-- EMPLOYEE LOGIN -->
+        <div id="screen-emp-login" class="card hidden">
+            <h3>Employee Portal Login</h3>
+            <p style="font-size: 14px; color: #666;">Enter your Company Code & Employee ID.</p>
+            <input type="text" id="emp-login-company" placeholder="Company Email / Code (e.g. admin@pec.com)">
+            <input type="text" id="emp-login-id" placeholder="Employee ID (e.g. EMP-987)">
+            <button onclick="loginEmployee()">Login</button>
+            <button class="secondary" onclick="backToWelcome()">Back</button>
+        </div>
+
+        <!-- EMPLOYEE DASHBOARD -->
+        <div id="screen-emp-dashboard" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin:0;" id="emp-welcome-title">Employee Portal</h3>
+                <button onclick="logoutEmployee()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
+            </div>
+
+            <div class="flex-row" style="margin-bottom: 15px; font-size: 13px;">
+                <button onclick="switchEmpTab('profile')" id="emp-t-1">(i) Profile</button>
+                <button onclick="switchEmpTab('attendance')" id="emp-t-2" class="secondary">(ii) Mark Attendance</button>
+                <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) Calendar & Salary</button>
+            </div>
+
+            <!-- Employee Tab 1: Profile -->
+            <div id="emp-pane-profile" class="card">
+                <h3>My Profile</h3>
+                <div id="emp-profile-content"></div>
+            </div>
+
+            <!-- Employee Tab 2: Attendance with Save/Edit Prompt -->
+            <div id="emp-pane-attendance" class="card hidden">
+                <h3>Mark Daily Attendance</h3>
+                <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time selfies using front camera.</p>
+                
+                <!-- 1. In-Time Selfie Section -->
+                <div style="margin-bottom: 20px;">
+                    <label><strong>1. In-Time Attendance Selfie</strong></label>
+                    <div class="camera-box-preview-large">
+                        <video id="video-in" autoplay playsinline muted style="display:none;"></video>
+                        <canvas id="canvas-in" style="display:none;"></canvas>
+                        <img id="preview-in-img" style="display:none;" alt="In-Time Preview">
+                        <span id="placeholder-in-text" style="color: #aaa; font-size: 14px;">Camera Inactive</span>
+                    </div>
+                    <div id="in-action-btns">
+                        <button type="button" class="secondary" onclick="startCamera('in')" style="margin-bottom: 6px;">Open Camera Frame</button>
+                        <button type="button" onclick="captureAttendance('in')">Capture In-Time</button>
+                    </div>
+                    <div id="in-save-edit-btns" class="hidden" style="display: flex; gap: 10px;">
+                        <button type="button" class="success" style="margin:0;" onclick="confirmAndSaveAttendance('in')">Save</button>
+                        <button type="button" class="danger" style="margin:0;" onclick="editAttendanceCapture('in')">Edit</button>
+                    </div>
+                    <div id="in-locked-msg" class="hidden" style="text-align: center; font-weight: bold; color: var(--blue); padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;">
+                        Saved & Locked for today.
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+
+                <!-- 2. Out-Time Selfie Section -->
+                <div style="margin-bottom: 15px;">
+                    <label><strong>2. Out-Time Attendance Selfie</strong></label>
+                    <div class="camera-box-preview-large">
+                        <video id="video-out" autoplay playsinline muted style="display:none;"></video>
+                        <canvas id="canvas-out" style="display:none;"></canvas>
+                        <img id="preview-out-img" style="display:none;" alt="Out-Time Preview">
+                        <span id="placeholder-out-text" style="color: #aaa; font-size: 14px;">Camera Inactive</span>
+                    </div>
+                    <div id="out-action-btns">
+                        <button type="button" class="secondary" onclick="startCamera('out')" style="margin-bottom: 6px;">Open Camera Frame</button>
+                        <button type="button" class="secondary" onclick="captureAttendance('out')">Capture Out-Time</button>
+                    </div>
+                    <div id="out-save-edit-btns" class="hidden" style="display: flex; gap: 10px;">
+                        <button type="button" class="success" style="margin:0;" onclick="confirmAndSaveAttendance('out')">Save</button>
+                        <button type="button" class="danger" style="margin:0;" onclick="editAttendanceCapture('out')">Edit</button>
+                    </div>
+                    <div id="out-locked-msg" class="hidden" style="text-align: center; font-weight: bold; color: var(--blue); padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;">
+                        Saved & Locked for today.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Tab 3: Calendar & Salary Calculation -->
+            <div id="emp-pane-history" class="card hidden">
+                <h3>Attendance Calendar & Salary Calculation</h3>
+                <p style="font-size: 12px; color: #666;">Click any colored date tile to view details.</p>
+                <div class="flex-row">
+                    <select id="filter-year" onchange="renderCalendar()">
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+                    <select id="filter-month" onchange="renderCalendar()">
+                        <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                        <option value="3">April</option><option value="4">May</option><option value="5" selected>June</option>
+                        <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                        <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+                    </select>
+                </div>
+                <div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; opacity:0.7;">
+                    <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                </div>
+                <div class="calendar-grid" id="calendar-days-container"></div>
+                <div style="font-size: 14px; margin-top: 15px; text-align: center; background: var(--panel); padding: 10px; border-radius: 6px;" id="attendance-summary-count"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal for Viewing Detailed Attendance Log & Owner Options -->
+<div id="employee-modal" class="modal hidden">
+    <div class="card" style="width: 92%; max-width: 420px; background: var(--panel); max-height: 90vh; overflow-y: auto;">
+        <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
+        <h3 style="margin-top:0;" id="owner-modal-title">Details</h3>
+        <div id="modal-body-content"></div>
+    </div>
+</div>
+
+<script>
+    let defaultOwnerAccounts = {
+        "admin@pec.com": { 
+            pass: "password", 
+            name: "Prasanta Engineering & Contractor", 
+            logo: "",
+            settings: {
+                percentageCalc: true,
+                cameraAllowed: true,
+                darkMode: false
+            }
+        }
+    };
+
+    let savedOwners = JSON.parse(localStorage.getItem('pec_saas_owners'));
+    let ownerAccounts = savedOwners ? { ...defaultOwnerAccounts, ...savedOwners } : defaultOwnerAccounts;
+    localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+
+    let defaultEmployees = {
+        "admin@pec.com": [
+            {
+                id: "PEC-EMP-987",
+                name: "Arata kumar sahoo",
+                dob: "2005-04-27",
+                aadhaar: "[Aadhaar Redacted]",
+                joining: "2024-01-01",
+                position: "Production officer",
+                dutyHours: 8,
+                salary: "25000",
+                photo: "",
+                attendance: {}
+            }
+        ]
+    };
+
+    let savedEmployeesDb = JSON.parse(localStorage.getItem('pec_saas_employees'));
+    let companyEmployees = savedEmployeesDb ? { ...defaultEmployees, ...savedEmployeesDb } : defaultEmployees;
+    localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+
+    let currentSessionUser = localStorage.getItem('pec_current_user') || null;
+    let currentLoggedInEmpId = localStorage.getItem('pec_current_emp') || null;
+    let currentEmpCompany = localStorage.getItem('pec_current_emp_company') || null;
+
+    let generatedOTP = "";
+    let pendingEmail = "";
+    let pendingPassword = "";
+    let pendingCompanyName = "";
+    let pendingCompanyLogo = "";
+    let authMode = ""; 
+    let activeStream = null;
+    let tempCapturedPhoto = { in: "", out: "" };
+
+    window.addEventListener('firebase-loaded', function() {
+        initRealtimeSync();
+    });
+
+    function initRealtimeSync() {
+        if (!window.db || !window.firestoreTools) return;
+        const { collection, onSnapshot } = window.firestoreTools;
+        try {
+            onSnapshot(collection(window.db, "saas_company_employees"), (snapshot) => {
+                let cloudData = {};
+                snapshot.forEach((docSnap) => {
+                    cloudData[docSnap.id] = docSnap.data().employees || [];
+                });
+                if (Object.keys(cloudData).length > 0) {
+                    companyEmployees = { ...defaultEmployees, ...cloudData };
+                    localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+                    if (currentSessionUser) renderEmployeeList();
+                    if (currentLoggedInEmpId && currentEmpCompany) loadEmployeeDashboard(currentLoggedInEmpId);
+                }
+            });
+        } catch (e) {
+            console.log("Firestore sync notice: ", e);
+        }
+    }
+
+    async function syncCompanyEmployeesToCloud(companyEmail, employeesList) {
+        if (!window.db || !window.firestoreTools) return;
+        const { doc, setDoc } = window.firestoreTools;
+        try {
+            await setDoc(doc(window.db, "saas_company_employees", companyEmail), { employees: employeesList });
+        } catch (e) {
+            console.error("Error writing to cloud: ", e);
+        }
+    }
+
+    window.onload = function() {
+        if(currentSessionUser) {
+            applyCompanyBranding(currentSessionUser);
+            showOwnerDashboard();
+        } else {
+            resetHeaderBranding();
+        }
+        window.onclick = function(event) {
+            if (!event.target.matches('.dots-btn')) {
+                let dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    dropdowns[i].classList.remove('show');
+                }
+            }
+        }
+    };
+
+    function applyCompanyBranding(email) {
+        let comp = ownerAccounts[email];
+        if(comp) {
+            document.getElementById('header-company-name').innerText = comp.name;
+            document.getElementById('header-company-sub').innerText = "Attendance Management System";
+            let btn = document.getElementById('owner-profile-icon-btn');
+            btn.classList.remove('hidden');
+            if(comp.logo) {
+                document.getElementById('owner-logo-text-icon').innerHTML = `<img src="${comp.logo}" alt="Logo">`;
+            } else {
+                document.getElementById('owner-logo-text-icon').innerText = comp.name.charAt(0).toUpperCase();
+            }
+            if(comp.settings && comp.settings.darkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        }
+    }
+
+    function resetHeaderBranding() {
+        document.getElementById('header-company-name').innerText = "SaaS Attendance Portal";
+        document.getElementById('header-company-sub').innerText = "Multi-Company Management System";
+        document.getElementById('owner-profile-icon-btn').classList.add('hidden');
+        document.body.classList.remove('dark-mode');
+    }
+
+    function hideAllScreens() {
+        stopActiveCamera();
+        document.querySelectorAll('.content > div').forEach(el => el.classList.add('hidden'));
+    }
+
+    function stopActiveCamera() {
+        if(activeStream) {
+            activeStream.getTracks().forEach(track => track.stop());
+            activeStream = null;
+        }
+    }
+
+    function backToWelcome() {
+        hideAllScreens();
+        resetHeaderBranding();
+        document.getElementById('screen-welcome').classList.remove('hidden');
+    }
+
+    function showLoginScreen() {
+        hideAllScreens();
+        document.getElementById('screen-login').classList.remove('hidden');
+    }
+
+    function showRegisterScreen() {
+        hideAllScreens();
+        document.getElementById('screen-register').classList.remove('hidden');
+    }
+
+    function loginOwnerWithPassword() {
+        const email = document.getElementById('login-email').value.trim().toLowerCase();
+        const pass = document.getElementById('login-password').value;
+
+        if(!email || !pass) {
+            alert('Please enter email and password.');
+            return;
+        }
+
+        if(ownerAccounts[email] && ownerAccounts[email].pass === pass) {
+            currentSessionUser = email;
+            localStorage.setItem('pec_current_user', currentSessionUser);
+            applyCompanyBranding(email);
+            alert('Login Successful!');
+            showOwnerDashboard();
+        } else {
+            alert('Invalid email or password!');
+        }
+    }
+
+    function showForgotPasswordModal() {
+        const email = prompt("Enter your registered company email for password reset OTP:");
+        if(email && email.includes('@')) {
+            let cleanEmail = email.trim().toLowerCase();
+            if(ownerAccounts[cleanEmail]) {
+                generateAndSendOTP(cleanEmail, 'forgot');
+            } else {
+                alert('Email not found in database.');
+            }
+        }
+    }
+
+    function generateAndSendOTP(email, mode) {
+        pendingEmail = email;
+        authMode = mode;
+        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Browser Alert Simulation for Instant 6-digit Code
+        alert("Your 6-Digit Verification OTP Code is: " + generatedOTP);
+        
+        hideAllScreens();
+        document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP code shown in the alert for: " + email;
+        document.getElementById('screen-otp').classList.remove('hidden');
+    }
+
+    function requestRegisterOTP() {
+        const compName = document.getElementById('reg-comp-name').value.trim();
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim().toLowerCase();
+        const pass = document.getElementById('reg-pass').value;
+        const logoInput = document.getElementById('reg-comp-logo');
+
+        if(!compName || !name || !email || !pass) {
+            alert('Please fill all required company details.');
+            return;
+        }
+
+        if(ownerAccounts[email]) {
+            alert('Email already registered! Please login.');
+            showLoginScreen();
+            return;
+        }
+
+        pendingCompanyName = compName;
+        pendingPassword = pass;
+
+        if(logoInput.files && logoInput.files[0]) {
+            let reader = new FileReader();
+            reader.readAsDataURL(logoInput.files[0]);
+            reader.onload = function(e) {
+                pendingCompanyLogo = e.target.result;
+                generateAndSendOTP(email, 'register');
+            }
+        } else {
+            pendingCompanyLogo = "";
+            generateAndSendOTP(email, 'register');
+        }
+    }
+
+    function verifyOTP() {
+        const userOTP = document.getElementById('entered-otp').value.trim();
+        if(userOTP === generatedOTP) {
+            alert('Verification successful!');
+            document.getElementById('entered-otp').value = "";
+
+            if(authMode === 'register') {
+                ownerAccounts[pendingEmail] = {
+                    pass: pendingPassword,
+                    name: pendingCompanyName,
+                    logo: pendingCompanyLogo,
+                    settings: { percentageCalc: true, cameraAllowed: true, darkMode: false }
+                };
+                localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+                
+                if(!companyEmployees[pendingEmail]) {
+                    companyEmployees[pendingEmail] = [];
+                    localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+                }
+            } else if(authMode === 'forgot') {
+                let newPass = prompt("Enter your new password:");
+                if(newPass) {
+                    ownerAccounts[pendingEmail].pass = newPass;
+                    localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+                    alert('Password updated successfully!');
+                }
+            }
+
+            currentSessionUser = pendingEmail;
+            localStorage.setItem('pec_current_user', currentSessionUser);
+            applyCompanyBranding(currentSessionUser);
+            showOwnerDashboard();
+        } else {
+            alert('Invalid OTP! Please try again.');
+        }
+    }
+
+    function showOwnerDashboard() {
+        hideAllScreens();
+        document.getElementById('screen-owner-dashboard').classList.remove('hidden');
+        document.getElementById('dashboard-company-title').innerText = ownerAccounts[currentSessionUser].name + " Dashboard";
+        renderEmployeeList();
+    }
+
+    function logoutApp() {
+        currentSessionUser = null;
+        localStorage.removeItem('pec_current_user');
+        resetHeaderBranding();
+        backToWelcome();
+    }
+
+    function openEmployeePortalSelect() {
+        hideAllScreens();
+        document.getElementById('screen-emp-login').classList.remove('hidden');
+    }
+
+    function toggleSideDrawer(open) {
+        let drawer = document.getElementById('side-drawer');
+        let overlay = document.getElementById('drawer-overlay');
+        if(open) {
+            renderSideDrawerContent();
+            drawer.classList.add('open');
+            overlay.classList.add('show');
+        } else {
+            drawer.classList.remove('open');
+            overlay.classList.remove('show');
+        }
+    }
+
+    function renderSideDrawerContent() {
+        let comp = ownerAccounts[currentSessionUser];
+        if(!comp) return;
+        let settings = comp.settings || { percentageCalc: true, cameraAllowed: true, darkMode: false };
+
+        document.getElementById('side-drawer-body').innerHTML = `
+            <div style="text-align: center; margin-bottom: 15px;">
+                ${comp.logo ? `<img src="${comp.logo}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 6px;">` : `<div style="width: 60px; height: 60px; border-radius: 50%; background: #ccc; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color:#333;">${comp.name.charAt(0)}</div>`}
+                <h4 style="margin:0; font-size: 15px;">${comp.name}</h4>
+                <small style="opacity: 0.7;">${currentSessionUser}</small>
+            </div>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;">
+            
+            <h5 style="margin: 5px 0; color: var(--navy);">1. Company Personal & Logo</h5>
+            <div style="background: var(--bg); padding: 8px; border-radius: 6px; position: relative; margin-bottom: 12px; font-size: 13px; border: 1px solid var(--border);">
+                <div style="display:flex; gap:6px;">
+                    <button style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyPersonalDetails()">Edit Name</button>
+                    <button class="secondary" style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyLogoImage()">Edit Logo</button>
+                </div>
+                <p style="margin: 6px 0 2px 0;"><strong>Name:</strong> <span id="lbl-comp-name">${comp.name}</span></p>
+            </div>
+
+            <h5 style="margin: 5px 0; color: var(--navy);">Controls</h5>
+            <div class="toggle-row" style="padding: 8px 10px; font-size: 13px;">
+                <span><strong>2. Percentage</strong></span>
+                <input type="checkbox" id="toggle-percentage" ${settings.percentageCalc ? 'checked' : ''} onchange="updateOwnerSetting('percentageCalc', this.checked)" style="width: 18px; height: 18px; margin: 0;">
+            </div>
+            <div class="toggle-row" style="padding: 8px 10px; font-size: 13px;">
+                <span><strong>3. Camera Allowed</strong></span>
+                <input type="checkbox" id="toggle-camera" ${settings.cameraAllowed ? 'checked' : ''} onchange="updateOwnerSetting('cameraAllowed', this.checked)" style="width: 18px; height: 18px; margin: 0;">
+            </div>
+            <div class="toggle-row" style="padding: 8px 10px; font-size: 13px;">
+                <span><strong>4. Background (Off=Black)</strong></span>
+                <input type="checkbox" id="toggle-dark" ${settings.darkMode ? 'checked' : ''} onchange="updateOwnerSetting('darkMode', this.checked)" style="width: 18px; height: 18px; margin: 0;">
+            </div>
+
+            <h5 style="margin: 5px 0; color: var(--navy);">Share Portal</h5>
+            <button class="secondary" style="font-size: 13px; padding: 8px; margin-bottom: 12px;" onclick="shareAppPortal()">📤 Share App</button>
+            
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;">
+            <button class="danger" style="font-size: 13px; padding: 8px;" onclick="deleteCompanyAccount()">Delete Account</button>
+        `;
+    }
+
+    function editCompanyPersonalDetails() {
+        let comp = ownerAccounts[currentSessionUser];
+        let newName = prompt("Edit Company Name:", comp.name);
+        if(newName) {
+            comp.name = newName.trim();
+            ownerAccounts[currentSessionUser] = comp;
+            localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+            applyCompanyBranding(currentSessionUser);
+            document.getElementById('dashboard-company-title').innerText = comp.name + " Dashboard";
+            document.getElementById('lbl-comp-name').innerText = comp.name;
+            renderSideDrawerContent();
+            alert('Company name updated successfully!');
+        }
+    }
+
+    function editCompanyLogoImage() {
+        let fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.onchange = function(e) {
+            if(e.target.files && e.target.files[0]) {
+                let reader = new FileReader();
+                reader.readAsDataURL(e.target.files[0]);
+                reader.onload = function(event) {
+                    let comp = ownerAccounts[currentSessionUser];
+                    comp.logo = event.target.result;
+                    ownerAccounts[currentSessionUser] = comp;
+                    localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+                    applyCompanyBranding(currentSessionUser);
+                    renderSideDrawerContent();
+                    alert('Company logo updated successfully!');
+                }
+            }
+        };
+        fileInput.click();
+    }
+
+    function updateOwnerSetting(key, val) {
+        let comp = ownerAccounts[currentSessionUser];
+        if(!comp.settings) comp.settings = { percentageCalc: true, cameraAllowed: true, darkMode: false };
+        comp.settings[key] = val;
+        ownerAccounts[currentSessionUser] = comp;
+        localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+        
+        if(key === 'darkMode') {
+            if(val) document.body.classList.add('dark-mode');
+            else document.body.classList.remove('dark-mode');
+        }
+        alert('Setting updated successfully!');
+    }
+
+    function shareAppPortal() {
+        let shareText = `Hello employees, please open our Attendance Portal using Company Code: ${currentSessionUser} and your assigned Employee ID. Portal Link: ` + window.location.href;
+        if (navigator.share) {
+            navigator.share({ title: 'Attendance Portal', text: shareText, url: window.location.href }).catch(() => {});
+        } else {
+            prompt("Copy portal details for employees:", shareText);
+        }
+    }
+
+    function deleteCompanyAccount() {
+        if(confirm("Are you sure delete your account?")) {
+            delete ownerAccounts[currentSessionUser];
+            delete companyEmployees[currentSessionUser];
+            localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
+            localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+            toggleSideDrawer(false);
+            logoutApp();
+        }
+    }
+
+    function switchOwnerTab(tab) {
+        if(tab === 'home') {
+            document.getElementById('owner-tab-home').classList.remove('hidden');
+            document.getElementById('owner-tab-add').classList.add('hidden');
+            document.getElementById('tab-btn-home').classList.remove('secondary');
+            document.getElementById('tab-btn-add').classList.add('secondary');
+            renderEmployeeList();
+        } else {
+            document.getElementById('owner-tab-home').classList.add('hidden');
+            document.getElementById('owner-tab-add').classList.remove('hidden');
+            document.getElementById('tab-btn-home').classList.add('secondary');
+            document.getElementById('tab-btn-add').classList.remove('secondary');
+            
+            document.getElementById('form-title-text').innerText = "Add Employee Details";
+            document.getElementById('edit-emp-index').value = "";
+            document.getElementById('emp-name').value = "";
+            document.getElementById('emp-dob').value = "";
+            document.getElementById('emp-aadhaar').value = "";
+            document.getElementById('emp-joining').value = "";
+            document.getElementById('emp-position').value = "";
+            document.getElementById('emp-duty-hours').value = "8";
+            document.getElementById('emp-salary').value = "";
+            document.getElementById('emp-photo').value = "";
+        }
+    }
+
+    function saveEmployeeData() {
+        const name = document.getElementById('emp-name').value;
+        const dob = document.getElementById('emp-dob').value;
+        const aadhaar = document.getElementById('emp-aadhaar').value;
+        const joining = document.getElementById('emp-joining').value;
+        const position = document.getElementById('emp-position').value;
+        const dutyHours = parseFloat(document.getElementById('emp-duty-hours').value) || 8;
+        const salary = document.getElementById('emp-salary').value || "Not Assigned";
+        const photoInput = document.getElementById('emp-photo');
+        const editIndex = document.getElementById('edit-emp-index').value;
+
+        if(!name || !position) {
+            alert('Please fill Name and Position.');
+            return;
+        }
+
+        let reader = new FileReader();
+        if(photoInput.files && photoInput.files[0]) {
+            reader.readAsDataURL(photoInput.files[0]);
+            reader.onload = function(e) {
+                processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, dutyHours, salary, e.target.result);
+            }
+        } else {
+            let existingPhoto = "";
+            if(editIndex !== "") {
+                let list = companyEmployees[currentSessionUser] || [];
+                existingPhoto = list[editIndex].photo;
+            }
+            processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, dutyHours, salary, existingPhoto);
+        }
+    }
+
+    function processEmployeeCommit(editIndex, name, dob, aadhaar, joining, position, dutyHours, salary, photo) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        if(!companyEmployees[currentSessionUser]) companyEmployees[currentSessionUser] = [];
+
+        let list = companyEmployees[currentSessionUser];
+
+        if(editIndex !== "") {
+            let idx = parseInt(editIndex);
+            list[idx].name = name;
+            list[idx].dob = dob;
+            list[idx].aadhaar = aadhaar || "N/A";
+            list[idx].joining = joining;
+            list[idx].position = position;
+            list[idx].dutyHours = dutyHours;
+            list[idx].salary = salary;
+            if(photo) list[idx].photo = photo;
+            alert('Employee updated successfully!');
+        } else {
+            const newId = "EMP-" + Math.floor(1000 + Math.random() * 9000);
+            list.push({
+                id: newId,
+                name: name,
+                dob: dob,
+                aadhaar: aadhaar || "N/A",
+                joining: joining,
+                position: position,
+                dutyHours: dutyHours,
+                salary: salary,
+                photo: photo,
+                attendance: {}
+            });
+            alert('Employee created successfully! ID: ' + newId);
+        }
+
+        localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+        syncCompanyEmployeesToCloud(currentSessionUser, list);
+        switchOwnerTab('home');
+    }
+
+    function renderEmployeeList() {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const container = document.getElementById('employee-list-container');
+        container.innerHTML = "";
+        if(list.length === 0) {
+            container.innerHTML = "<p>No employees found.</p>";
+            return;
+        }
+
+        list.forEach((emp, index) => {
+            let div = document.createElement('div');
+            div.className = "emp-item-card";
+            div.innerHTML = `
+                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeMenuModal('${emp.id}')">
+                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color:#333;">${emp.name.charAt(0)}</div>`}
+                    <div>
+                        <strong>${emp.name}</strong> (${emp.id})<br>
+                        <small style="opacity: 0.7;">${emp.position} | Duty: ${emp.dutyHours || 8}h</small>
+                    </div>
+                </div>
+                <div class="menu-container">
+                    <button class="dots-btn" onclick="toggleMenu(event, ${index})">&#8942;</button>
+                    <div id="dropdown-menu-${index}" class="dropdown-menu">
+                        <button onclick="editEmployee(${index})">Edit</button>
+                        <button class="delete-opt" onclick="deleteEmployee(${index})">Delete</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function filterEmployees() {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        let query = document.getElementById('search-employee').value.toLowerCase();
+        let container = document.getElementById('employee-list-container');
+        container.innerHTML = "";
+        
+        let filtered = list.filter(e => e.name.toLowerCase().includes(query) || e.id.toLowerCase().includes(query));
+        if(filtered.length === 0) {
+            container.innerHTML = "<p>No matching employees found.</p>";
+            return;
+        }
+
+        filtered.forEach((emp) => {
+            let originalIndex = list.findIndex(item => item.id === emp.id);
+            let div = document.createElement('div');
+            div.className = "emp-item-card";
+            div.innerHTML = `
+                <div style="cursor: pointer; flex: 1; display: flex; align-items: center; gap: 10px;" onclick="openOwnerEmployeeMenuModal('${emp.id}')">
+                    ${emp.photo ? `<img src="${emp.photo}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color:#333;">${emp.name.charAt(0)}</div>`}
+                    <div>
+                        <strong>${emp.name}</strong> (${emp.id})<br>
+                        <small style="opacity: 0.7;">${emp.position}</small>
+                    </div>
+                </div>
+                <div class="menu-container">
+                    <button class="dots-btn" onclick="toggleMenu(event, ${originalIndex})">&#8942;</button>
+                    <div id="dropdown-menu-${originalIndex}" class="dropdown-menu">
+                        <button onclick="editEmployee(${originalIndex})">Edit</button>
+                        <button class="delete-opt" onclick="deleteEmployee(${originalIndex})">Delete</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function toggleMenu(event, index) {
+        event.stopPropagation();
+        let dropdowns = document.getElementsByClassName("dropdown-menu");
+        for (let i = 0; i < dropdowns.length; i++) {
+            if (i !== index) dropdowns[i].classList.remove('show');
+        }
+        let menu = document.getElementById(`dropdown-menu-${index}`);
+        menu.classList.toggle('show');
+    }
+
+    function editEmployee(index) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const emp = list[index];
+        document.getElementById('form-title-text').innerText = "Edit Employee Details";
+        document.getElementById('edit-emp-index').value = index;
+        document.getElementById('emp-name').value = emp.name;
+        document.getElementById('emp-dob').value = emp.dob || "";
+        document.getElementById('emp-aadhaar').value = emp.aadhaar !== "N/A" ? emp.aadhaar : "";
+        document.getElementById('emp-joining').value = emp.joining || "";
+        document.getElementById('emp-position').value = emp.position;
+        document.getElementById('emp-duty-hours').value = emp.dutyHours || 8;
+        document.getElementById('emp-salary').value = emp.salary !== "Not Assigned" ? emp.salary : "";
+        
+        document.getElementById('owner-tab-home').classList.add('hidden');
+        document.getElementById('owner-tab-add').classList.remove('hidden');
+        document.getElementById('tab-btn-home').classList.add('secondary');
+        document.getElementById('tab-btn-add').classList.remove('secondary');
+    }
+
+    function deleteEmployee(index) {
+        if(confirm("Are you sure you want to delete this employee?")) {
+            companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+            let list = companyEmployees[currentSessionUser] || [];
+            list.splice(index, 1);
+            localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+            syncCompanyEmployeesToCloud(currentSessionUser, list);
+            renderEmployeeList();
+        }
+    }
+
+    function exportMonthlyReportCSV() {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        if(list.length === 0) {
+            alert('No employee data available to export.');
+            return;
+        }
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        let daysInMonth = new Date(year, month + 1, 0).getDate();
+        let monthName = now.toLocaleString('default', { month: 'long' });
+        let comp = ownerAccounts[currentSessionUser];
+        let compName = comp ? comp.name : "Company";
+        let usePercentage = comp && comp.settings ? comp.settings.percentageCalc : true;
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += `${compName} - Monthly Attendance Report (${monthName} ${year})\n`;
+        csvContent += "Employee ID,Employee Name,Designation,Monthly Base Salary,Total Effective Days,Estimated Earned Salary\n";
+
+        list.forEach(emp => {
+            let totalEffDays = 0;
+            for(let d = 1; d <= daysInMonth; d++) {
+                let fullDateStr = `${year}-${month}-${d}`;
+                let rec = emp.attendance[fullDateStr];
+                if(rec && rec.inPhoto && rec.outPhoto) {
+                    if(usePercentage) {
+                        totalEffDays += (rec.percentage / 100);
+                    } else {
+                        totalEffDays += 1;
+                    }
+                }
+            }
+            let baseSal = parseFloat(emp.salary);
+            let estEarned = (!isNaN(baseSal)) ? Math.round((baseSal / 30) * totalEffDays) : "N/A";
+            let rowSalary = (!isNaN(baseSal)) ? baseSal : "Not Assigned";
+
+            csvContent += `"${emp.id}","${emp.name}","${emp.position}","${rowSalary}","${totalEffDays.toFixed(2)}","${estEarned}"\n`;
+        });
+
+        let encodedUri = encodeURI(csvContent);
+        let link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Attendance_Report_${monthName}_${year}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function openOwnerEmployeeMenuModal(empId) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const emp = list.find(e => e.id === empId);
+        if(!emp) return;
+
+        document.getElementById('owner-modal-title').innerText = `${emp.name} Options`;
+        document.getElementById('modal-body-content').innerHTML = `
+            <div style="text-align: center; margin-bottom: 15px;">
+                ${emp.photo ? `<img src="${emp.photo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--navy); display: block; margin: 0 auto 6px;">` : `<div style="width: 70px; height: 70px; border-radius: 50%; background: #ccc; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color:#333;">${emp.name.charAt(0)}</div>`}
+                <h4 style="margin:0;">${emp.name}</h4>
+                <small style="opacity:0.7;">ID: ${emp.id}</small>
+            </div>
+            <button onclick="openOwnerEmployeeProfileModal('${empId}')">1. Employee Details</button>
+            <button class="secondary" onclick="openOwnerEmployeeCalendarModal('${empId}')">2. Attendance & Salary Details</button>
+        `;
+        document.getElementById('employee-modal').classList.remove('hidden');
+    }
+
+    function openOwnerEmployeeProfileModal(empId) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const emp = list.find(e => e.id === empId);
+        if(!emp) return;
+
+        document.getElementById('owner-modal-title').innerText = `Employee Profile`;
+        document.getElementById('modal-body-content').innerHTML = `
+            ${emp.photo ? `<img src="${emp.photo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 10px;">` : ''}
+            <p><strong>Employee ID:</strong> ${emp.id}</p>
+            <p><strong>Full Name:</strong> ${emp.name}</p>
+            <p><strong>Position:</strong> ${emp.position}</p>
+            <p><strong>Assigned Duty Hours:</strong> ${emp.dutyHours || 8} Hours</p>
+            <p><strong>Salary:</strong> ${emp.salary}</p>
+            <p><strong>Date of Birth:</strong> ${emp.dob || 'N/A'}</p>
+            <p><strong>Joining Date:</strong> ${emp.joining || 'N/A'}</p>
+            <button class="secondary" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
+        `;
+    }
+
+    function openOwnerEmployeeCalendarModal(empId) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const emp = list.find(e => e.id === empId);
+        if(!emp) return;
+
+        document.getElementById('owner-modal-title').innerText = `${emp.name} - Attendance Calendar`;
+        
+        const now = new Date();
+        let currentYear = now.getFullYear();
+        let currentMonth = now.getMonth();
+
+        let modalContent = `
+            <div class="flex-row" style="margin-bottom: 10px;">
+                <select id="owner-filter-year" onchange="renderOwnerEmployeeCalendar('${empId}')">
+                    <option value="2026" ${currentYear === 2026 ? 'selected' : ''}>2026</option>
+                    <option value="2025" ${currentYear === 2025 ? 'selected' : ''}>2025</option>
+                </select>
+                <select id="owner-filter-month" onchange="renderOwnerEmployeeCalendar('${empId}')">
+                    <option value="0" ${currentMonth === 0 ? 'selected' : ''}>January</option>
+                    <option value="1" ${currentMonth === 1 ? 'selected' : ''}>February</option>
+                    <option value="2" ${currentMonth === 2 ? 'selected' : ''}>March</option>
+                    <option value="3" ${currentMonth === 3 ? 'selected' : ''}>April</option>
+                    <option value="4" ${currentMonth === 4 ? 'selected' : ''}>May</option>
+                    <option value="5" ${currentMonth === 5 ? 'selected' : ''}>June</option>
+                    <option value="6" ${currentMonth === 6 ? 'selected' : ''}>July</option>
+                    <option value="7" ${currentMonth === 7 ? 'selected' : ''}>August</option>
+                    <option value="8" ${currentMonth === 8 ? 'selected' : ''}>September</option>
+                    <option value="9" ${currentMonth === 9 ? 'selected' : ''}>October</option>
+                    <option value="10" ${currentMonth === 10 ? 'selected' : ''}>November</option>
+                    <option value="11" ${currentMonth === 11 ? 'selected' : ''}>December</option>
+                </select>
+            </div>
+            <div id="owner-emp-calendar-container"></div>
+            <div id="owner-emp-summary-box" style="font-size: 13px; margin-top: 12px; text-align: center; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border);"></div>
+            <button class="secondary" style="margin-top: 10px;" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
+        `;
+
+        document.getElementById('modal-body-content').innerHTML = modalContent;
+        renderOwnerEmployeeCalendar(empId);
+    }
+
+    function renderOwnerEmployeeCalendar(empId) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const emp = list.find(e => e.id === empId);
+        if(!emp) return;
+
+        const selYear = parseInt(document.getElementById('owner-filter-year').value);
+        const selMonth = parseInt(document.getElementById('owner-filter-month').value);
+
+        let firstDayIndex = new Date(selYear, selMonth, 1).getDay();
+        let daysInMonth = new Date(selYear, selMonth + 1, 0).getDate();
+        let presentCount = 0, totalPct = 0;
+
+        let calHtml = `<div class="calendar-grid" style="font-weight: bold; text-align: center; font-size: 11px; opacity:0.7;"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>`;
+        calHtml += `<div class="calendar-grid">`;
+
+        for(let i = 0; i < firstDayIndex; i++) { calHtml += `<div></div>`; }
+
+        for(let d = 1; d <= daysInMonth; d++) {
+            let fullDateStr = `${selYear}-${selMonth}-${d}`;
+            let record = emp.attendance[fullDateStr];
+            let cell = document.createElement('div');
+            cell.className = "cal-day";
+            cell.innerText = d;
+
+            if(record && record.inPhoto && record.outPhoto) {
+                presentCount++;
+                let pct = record.percentage || 100;
+                totalPct += pct;
+                cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #ccc ${pct}%)`;
+                cell.style.color = pct > 50 ? "white" : "black";
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
+            } else if(record && record.inPhoto && !record.outPhoto) {
+                cell.style.background = "var(--orange)";
+                cell.style.color = "white";
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
+            } else {
+                cell.style.background = "var(--red)";
+                cell.style.color = "white";
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
+            }
+            calHtml += cell.outerHTML;
+        }
+        calHtml += `</div>`;
+
+        let baseSalary = parseFloat(emp.salary);
+        let avgPct = presentCount > 0 ? (totalPct / presentCount) : 0;
+        let estimatedSalary = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * (totalPct / 100)) : "N/A";
+
+        document.getElementById('owner-emp-calendar-container').innerHTML = calHtml;
+        document.getElementById('owner-emp-summary-box').innerHTML = `
+            <strong>Present Days:</strong> ${presentCount} | <strong>Avg Efficiency:</strong> ${avgPct.toFixed(1)}%<br>
+            <strong>Est. Earnings:</strong> ${estimatedSalary}
+        `;
+    }
+
+    function closeModal() {
+        document.getElementById('employee-modal').classList.add('hidden');
+    }
+
+    function loginEmployee() {
+        const companyInput = document.getElementById('emp-login-company').value.trim().toLowerCase();
+        const idInput = document.getElementById('emp-login-id').value.trim();
+
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        
+        if(!companyEmployees[companyInput]) {
+            alert('Invalid Company Code / Email!');
+            return;
+        }
+
+        let list = companyEmployees[companyInput];
+        const found = list.find(e => e.id.toLowerCase() === idInput.toLowerCase() || e.id === idInput);
+        
+        if(found) {
+            currentLoggedInEmpId = found.id;
+            currentEmpCompany = companyInput;
+            localStorage.setItem('pec_current_emp', currentLoggedInEmpId);
+            localStorage.setItem('pec_current_emp_company', currentEmpCompany);
+            applyCompanyBranding(companyInput);
+            loadEmployeeDashboard(currentLoggedInEmpId);
+        } else {
+            alert('Invalid Employee ID for this company!');
+        }
+    }
+
+    function logoutEmployee() {
+        stopActiveCamera();
+        currentLoggedInEmpId = null;
+        currentEmpCompany = null;
+        localStorage.removeItem('pec_current_emp');
+        localStorage.removeItem('pec_current_emp_company');
+        resetHeaderBranding();
+        backToWelcome();
+    }
+
+    function loadEmployeeDashboard(empId) {
+        hideAllScreens();
+        document.getElementById('screen-emp-dashboard').classList.remove('hidden');
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentEmpCompany] || [];
+        const emp = list.find(e => e.id === empId);
+        if(emp) {
+            document.getElementById('emp-welcome-title').innerText = emp.name;
+            document.getElementById('emp-profile-content').innerHTML = `
+                ${emp.photo ? `<img src="${emp.photo}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 10px;">` : ''}
+                <p><strong>Employee ID:</strong> ${emp.id}</p>
+                <p><strong>Full Name:</strong> ${emp.name}</p>
+                <p><strong>Position:</strong> ${emp.position}</p>
+                <p><strong>Assigned Duty Hours:</strong> ${emp.dutyHours || 8} Hours</p>
+                <p><strong>Salary:</strong> ${emp.salary}</p>
+                <p><strong>Date of Birth:</strong> ${emp.dob || 'N/A'}</p>
+                <p><strong>Joining Date:</strong> ${emp.joining || 'N/A'}</p>
+            `;
+            switchEmpTab('profile');
+        }
+    }
+
+    function switchEmpTab(tab) {
+        stopActiveCamera();
+        document.getElementById('emp-pane-profile').classList.add('hidden');
+        document.getElementById('emp-pane-attendance').classList.add('hidden');
+        document.getElementById('emp-pane-history').classList.add('hidden');
+
+        if(tab === 'profile') {
+            document.getElementById('emp-pane-profile').classList.remove('hidden');
+        } else if(tab === 'attendance') {
+            let comp = ownerAccounts[currentEmpCompany];
+            if(comp && comp.settings && comp.settings.cameraAllowed === false) {
+                alert('Selfie camera feature is currently disabled by company owner.');
+                switchEmpTab('profile');
+                return;
+            }
+            document.getElementById('emp-pane-attendance').classList.remove('hidden');
+            checkAttendanceLockStatus();
+        } else if(tab === 'history') {
+            document.getElementById('emp-pane-history').classList.remove('hidden');
+            renderCalendar();
+        }
+    }
+
+    function checkAttendanceLockStatus() {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentEmpCompany] || [];
+        const emp = list.find(e => e.id === currentLoggedInEmpId);
+        if(!emp) return;
+
+        const now = new Date();
+        const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+        let record = emp.attendance[dateKey];
+
+        if(record && record.inPhoto && record.inLocked) {
+            document.getElementById('preview-in-img').src = record.inPhoto;
+            document.getElementById('preview-in-img').style.display = 'block';
+            document.getElementById('placeholder-in-text').style.display = 'none';
+            document.getElementById('video-in').style.display = 'none';
+            document.getElementById('in-action-btns').classList.add('hidden');
+            document.getElementById('in-save-edit-btns').classList.add('hidden');
+            document.getElementById('in-locked-msg').classList.remove('hidden');
+        } else {
+            document.getElementById('preview-in-img').style.display = 'none';
+            document.getElementById('placeholder-in-text').style.display = 'block';
+            document.getElementById('in-action-btns').classList.remove('hidden');
+            document.getElementById('in-save-edit-btns').classList.add('hidden');
+            document.getElementById('in-locked-msg').classList.add('hidden');
+        }
+
+        if(record && record.outPhoto && record.outLocked) {
+            document.getElementById('preview-out-img').src = record.outPhoto;
+            document.getElementById('preview-out-img').style.display = 'block';
+            document.getElementById('placeholder-out-text').style.display = 'none';
+            document.getElementById('video-out').style.display = 'none';
+            document.getElementById('out-action-btns').classList.add('hidden');
+            document.getElementById('out-save-edit-btns').classList.add('hidden');
+            document.getElementById('out-locked-msg').classList.remove('hidden');
+        } else {
+            document.getElementById('preview-out-img').style.display = 'none';
+            document.getElementById('placeholder-out-text').style.display = 'block';
+            document.getElementById('out-action-btns').classList.remove('hidden');
+            document.getElementById('out-save-edit-btns').classList.add('hidden');
+            document.getElementById('out-locked-msg').classList.add('hidden');
+        }
+    }
+
+    function startCamera(type) {
+        let comp = ownerAccounts[currentEmpCompany];
+        if(comp && comp.settings && comp.settings.cameraAllowed === false) {
+            alert('Camera is disabled by owner.');
+            return;
+        }
+
+        stopActiveCamera();
+        const video = document.getElementById(`video-${type}`);
+        const placeholder = document.getElementById(`placeholder-${type}-text`);
+        const previewImg = document.getElementById(`preview-${type}-img`);
+
+        video.style.display = 'block';
+        previewImg.style.display = 'none';
+        placeholder.style.display = 'none';
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+            .then(stream => {
+                activeStream = stream;
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                alert('Unable to access front camera: ' + err.message);
+                video.style.display = 'none';
+                placeholder.style.display = 'block';
+            });
+    }
+
+    function captureAttendance(type) {
+        const video = document.getElementById(`video-${type}`);
+        const canvas = document.getElementById(`canvas-${type}`);
+        const previewImg = document.getElementById(`preview-${type}-img`);
+
+        if(!activeStream || video.style.display === 'none') {
+            alert('Please click "Open Camera Frame" first.');
+            return;
+        }
+
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 240;
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        let photoData = canvas.toDataURL('image/jpeg');
+        tempCapturedPhoto[type] = photoData;
+
+        video.style.display = 'none';
+        previewImg.src = photoData;
+        previewImg.style.display = 'block';
+
+        stopActiveCamera();
+
+        document.getElementById(`${type}-action-btns`).classList.add('hidden');
+        document.getElementById(`${type}-save-edit-btns`).classList.remove('hidden');
+    }
+
+    function editAttendanceCapture(type) {
+        document.getElementById(`${type}-save-edit-btns`).classList.add('hidden');
+        document.getElementById(`${type}-action-btns`).classList.remove('hidden');
+        document.getElementById(`preview-${type}-img`).style.display = 'none';
+        document.getElementById(`placeholder-${type}-text`).style.display = 'block';
+        tempCapturedPhoto[type] = "";
+    }
+
+    function confirmAndSaveAttendance(type) {
+        let photoData = tempCapturedPhoto[type];
+        if(!photoData) {
+            alert('No photo captured.');
+            return;
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                let lat = position.coords.latitude;
+                let lon = position.coords.longitude;
+                let nowTime = new Date();
+                let timeStr = nowTime.toLocaleTimeString();
+
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let addressStr = data.display_name || `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
+                        commitAttendanceSave(type, timeStr, nowTime, photoData, addressStr);
+                    })
+                    .catch(() => {
+                        let fallbackLoc = `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
+                        commitAttendanceSave(type, timeStr, nowTime, photoData, fallbackLoc);
+                    });
+            }, error => {
+                alert("GPS Location access error: " + error.message);
+            }, { enableHighAccuracy: true });
+        } else {
+            alert("Geolocation is not supported by your browser.");
+        }
+    }
+
+    function commitAttendanceSave(type, timeStr, nowTime, photoData, locationStr) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentEmpCompany] || [];
+        const emp = list.find(e => e.id === currentLoggedInEmpId);
+        if(!emp) return;
+
+        const dateKey = `${nowTime.getFullYear()}-${nowTime.getMonth()}-${nowTime.getDate()}`;
+        
+        if(!emp.attendance[dateKey]) {
+            emp.attendance[dateKey] = { status: 'present', inTime: '', inTimeObj: null, inPhoto: '', inLoc: '', inLocked: false, outTime: '', outTimeObj: null, outPhoto: '', outLoc: '', outLocked: false, hoursWorked: 0, percentage: 100 };
+        }
+
+        let record = emp.attendance[dateKey];
+        let assignedDuty = emp.dutyHours || 8;
+
+        if(type === 'in') {
+            record.inTime = timeStr;
+            record.inTimeObj = nowTime.getTime();
+            record.inPhoto = photoData;
+            record.inLoc = locationStr;
+            record.inLocked = true;
+            alert('In-Time attendance saved and locked successfully!');
+        } else {
+            record.outTime = timeStr;
+            record.outTimeObj = nowTime.getTime();
+            record.outPhoto = photoData;
+            record.outLoc = locationStr;
+            record.outLocked = true;
+            alert('Out-Time attendance saved and locked successfully!');
+        }
+
+        if(record.inTimeObj && record.outTimeObj) {
+            let diffMs = record.outTimeObj - record.inTimeObj;
+            let diffHours = diffMs / (1000 * 60 * 60);
+            if(diffHours < 0) diffHours = 0;
+            record.hoursWorked = parseFloat(diffHours.toFixed(2));
+
+            let comp = ownerAccounts[currentEmpCompany];
+            let usePct = comp && comp.settings ? comp.settings.percentageCalc : true;
+
+            if(usePct) {
+                let pct = (diffHours / assignedDuty) * 100;
+                if(pct > 100) pct = 100;
+                record.percentage = Math.round(pct);
+            } else {
+                record.percentage = 100;
+            }
+        }
+
+        localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+        syncCompanyEmployeesToCloud(currentEmpCompany, companyEmployees[currentEmpCompany]);
+        checkAttendanceLockStatus();
+    }
+
+    function renderCalendar() {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentEmpCompany] || [];
+        const container = document.getElementById('calendar-days-container');
+        container.innerHTML = "";
+        const emp = list.find(e => e.id === currentLoggedInEmpId);
+        if(!emp) return;
+
+        const selectedYear = parseInt(document.getElementById('filter-year').value);
+        const selectedMonth = parseInt(document.getElementById('filter-month').value);
+        
+        let firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
+        let daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+
+        let presentCount = 0;
+        let totalPct = 0;
+
+        for(let i = 0; i < firstDayIndex; i++) { container.appendChild(document.createElement('div')); }
+
+        for(let d = 1; d <= daysInMonth; d++) {
+            let fullDateStr = `${selectedYear}-${selectedMonth}-${d}`;
+            let record = emp.attendance[fullDateStr];
+
+            let cell = document.createElement('div');
+            cell.className = "cal-day";
+            cell.innerText = d;
+
+            if(record && record.inPhoto && record.outPhoto) {
+                presentCount++;
+                let pct = record.percentage || 100;
+                totalPct += pct;
+                cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #ccc ${pct}%)`;
+                cell.style.color = pct > 50 ? "white" : "black";
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
+            } else if(record && record.inPhoto && !record.outPhoto) {
+                cell.style.background = "var(--orange)";
+                cell.style.color = "white";
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
+            } else {
+                cell.style.background = "var(--red)";
+                cell.style.color = "white";
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
+            }
+            container.appendChild(cell);
+        }
+
+        let baseSalary = parseFloat(emp.salary);
+        let avgPct = presentCount > 0 ? (totalPct / presentCount) : 0;
+        let calculatedEarnings = (!isNaN(baseSalary)) ? "₹ " + Math.round((baseSalary / 30) * (totalPct / 100)) : "N/A";
+
+        document.getElementById('attendance-summary-count').innerHTML = `
+            <span class="badge badge-blue">Present Days: ${presentCount}</span><br><br>
+            <strong>Average Efficiency:</strong> ${avgPct.toFixed(1)}%<br>
+            <strong>Estimated Salary for Month:</strong> ${calculatedEarnings}
+        `;
+    }
+
+    function showAttendanceDetailModal(empId, dateStr) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentEmpCompany] || currentSessionUser ? (companyEmployees[currentSessionUser] || []) : [];
+        if(currentEmpCompany) list = companyEmployees[currentEmpCompany] || [];
+        const emp = list.find(e => e.id === empId);
+        if(!emp) return;
+
+        let [y, m, d] = dateStr.split('-');
+        let formattedDate = `${d}/${parseInt(m)+1}/${y}`;
+        let rec = emp.attendance[dateStr];
+
+        if(!rec) {
+            document.getElementById('owner-modal-title').innerText = `Date: ${formattedDate}`;
+            document.getElementById('modal-body-content').innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <span class="badge badge-red" style="font-size: 14px; padding: 6px 12px;">Absent</span>
+                    <p style="margin-top: 15px; color: #666;">No attendance records found for this date.</p>
+                </div>
+            `;
+            document.getElementById('employee-modal').classList.remove('hidden');
+            return;
+        }
+
+        if(rec.inPhoto && !rec.outPhoto) {
+            document.getElementById('owner-modal-title').innerText = `Date: ${formattedDate}`;
+            document.getElementById('modal-body-content').innerHTML = `
+                <div style="text-align: center; padding: 10px;">
+                    <span class="badge" style="background: var(--orange); font-size: 14px; padding: 6px 12px;">Out-Time Pending......</span>
+                </div>
+                <div style="background: var(--bg); padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid var(--border);">
+                    <strong>In-Time Record:</strong><br>
+                    Time: ${rec.inTime || 'N/A'}<br>
+                    Address: ${rec.inLoc || 'N/A'}<br>
+                    ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : ''}
+                </div>
+            `;
+            document.getElementById('employee-modal').classList.remove('hidden');
+            return;
+        }
+
+        document.getElementById('owner-modal-title').innerText = `Date: ${formattedDate}`;
+        document.getElementById('modal-body-content').innerHTML = `
+            <p><strong>Duty Hours Worked:</strong> ${rec.hoursWorked || 0} Hours / Assigned: ${emp.dutyHours || 8}h</p>
+            <p><strong>Attendance Percentage:</strong> ${rec.percentage || 100}%</p>
+            
+            <div style="background: var(--bg); padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border);">
+                <strong>1. In-Time Record:</strong><br>
+                Time: ${rec.inTime || 'N/A'}<br>
+                Address: ${rec.inLoc || 'N/A'}<br>
+                ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No selfie</small>'}
+            </div>
+            <div style="background: var(--bg); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                <strong>2. Out-Time Record:</strong><br>
+                Time: ${rec.outTime || 'N/A'}<br>
+                Address: ${rec.outLoc || 'N/A'}<br>
+                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No selfie</small>'}
+            </div>
+        `;
+        document.getElementById('employee-modal').classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
