@@ -290,17 +290,17 @@
             <div class="logo-box" id="header-company-name">SaaS Attendance Portal</div>
             <div class="sub-logo" id="header-company-sub">Multi-Company Management System</div>
         </div>
-        <button id="owner-profile-icon-btn" class="owner-logo-btn hidden" onclick="toggleSideDrawer(true)">
+        <button id="owner-profile-icon-btn" class="owner-logo-btn hidden">
             <span id="owner-logo-text-icon">🏢</span>
         </button>
     </div>
 
     <!-- Right Half Screen Slide-in Drawer -->
-    <div id="drawer-overlay" class="drawer-overlay" onclick="toggleSideDrawer(false)"></div>
+    <div id="drawer-overlay" class="drawer-overlay"></div>
     <div id="side-drawer" class="side-drawer">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3 style="margin:0;">Company Profile</h3>
-            <span style="font-size: 24px; cursor: pointer; font-weight: bold;" onclick="toggleSideDrawer(false)">&times;</span>
+            <span id="close-drawer-btn" style="font-size: 24px; cursor: pointer; font-weight: bold;">&times;</span>
         </div>
         <div id="side-drawer-body"></div>
     </div>
@@ -311,9 +311,9 @@
         <div id="screen-welcome" class="card" style="text-align: center; padding: 40px 20px;">
             <h3>Welcome</h3>
             <p style="font-size: 14px; color: #666; margin-bottom: 30px;">Select your portal to continue</p>
-            <button onclick="showLoginScreen()">I. Company Owner Login</button>
-            <button class="secondary" onclick="showRegisterScreen()">II. Register New Company</button>
-            <button style="background-color: var(--blue);" onclick="openEmployeePortalSelect()">III. Employee Portal</button>
+            <button id="btn-owner-login">I. Company Owner Login</button>
+            <button class="secondary" id="btn-register">II. Register New Company</button>
+            <button style="background-color: var(--blue);" id="btn-emp-portal">III. Employee Portal</button>
         </div>
 
         <!-- LOGIN SCREEN -->
@@ -322,9 +322,9 @@
             <p style="font-size: 13px; color: #666;">Enter your registered company credentials.</p>
             <input type="email" id="login-email" placeholder="Enter owner email">
             <input type="password" id="login-password" placeholder="Enter password">
-            <button onclick="loginOwnerWithPassword()">Login</button>
-            <button class="secondary" onclick="showForgotPasswordModal()">Forgot Password / Reset via Email?</button>
-            <button class="danger" onclick="backToWelcome()">Back</button>
+            <button id="btn-login-submit">Login</button>
+            <button class="secondary" id="btn-forgot-pass">Forgot Password / Reset via Email?</button>
+            <button class="danger" id="btn-login-back">Back</button>
         </div>
 
         <!-- REGISTER SCREEN (COMPANY REGISTRATION) -->
@@ -337,8 +337,8 @@
             <input type="text" id="reg-name" placeholder="Owner Full Name">
             <input type="email" id="reg-email" placeholder="Owner Email Address">
             <input type="password" id="reg-pass" placeholder="Create Password">
-            <button onclick="requestRegisterOTP()">Send Verification OTP</button>
-            <button class="secondary" onclick="backToWelcome()">Back</button>
+            <button id="btn-reg-otp">Send Verification OTP</button>
+            <button class="secondary" id="btn-reg-back">Back</button>
         </div>
 
         <!-- OTP VERIFICATION SCREEN -->
@@ -346,27 +346,27 @@
             <h3>Verify Email OTP</h3>
             <p style="font-size: 13px; color: #666;" id="otp-instruction">Enter the 6-digit OTP sent to your email.</p>
             <input type="text" id="entered-otp" placeholder="Enter 6-digit OTP" maxlength="6">
-            <button onclick="verifyOTP()">Verify & Proceed</button>
-            <button class="secondary" onclick="backToWelcome()">Cancel</button>
+            <button id="btn-verify-otp">Verify & Proceed</button>
+            <button class="secondary" id="btn-otp-cancel">Cancel</button>
         </div>
 
         <!-- OWNER DASHBOARD -->
         <div id="screen-owner-dashboard" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin:0;" id="dashboard-company-title">Company Dashboard</h3>
-                <button onclick="logoutApp()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
+                <button id="btn-logout-app" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
             </div>
             
             <div class="flex-row" style="margin-bottom: 15px;">
-                <button onclick="switchOwnerTab('home')" id="tab-btn-home">(i) Employees List</button>
-                <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employee</button>
+                <button id="tab-btn-home">(i) Employees List</button>
+                <button id="tab-btn-add" class="secondary">(ii) Add Employee</button>
             </div>
 
             <!-- Owner Tab 1: Home / Employees List -->
             <div id="owner-tab-home" class="card">
                 <h3>Manage Employees</h3>
-                <button class="success" onclick="exportMonthlyReportCSV()">📥 Download Monthly Report (CSV)</button>
-                <input type="text" id="search-employee" placeholder="Filter by employee name or ID..." onkeyup="filterEmployees()">
+                <button class="success" id="btn-export-csv">📥 Download Monthly Report (CSV)</button>
+                <input type="text" id="search-employee" placeholder="Filter by employee name or ID...">
                 <div id="employee-list-container"></div>
             </div>
 
@@ -399,8 +399,8 @@
                 <label>Salary Details (Optional)</label>
                 <input type="number" id="emp-salary" placeholder="Monthly Salary (Optional)">
 
-                <button onclick="saveEmployeeData()">Save Employee</button>
-                <button class="secondary" onclick="switchOwnerTab('home')">Cancel</button>
+                <button id="btn-save-emp">Save Employee</button>
+                <button class="secondary" id="btn-cancel-emp">Cancel</button>
             </div>
         </div>
 
@@ -410,21 +410,21 @@
             <p style="font-size: 14px; color: #666;">Enter your Company Code & Employee ID.</p>
             <input type="text" id="emp-login-company" placeholder="Company Email / Code (e.g. admin@pec.com)">
             <input type="text" id="emp-login-id" placeholder="Employee ID (e.g. EMP-987)">
-            <button onclick="loginEmployee()">Login</button>
-            <button class="secondary" onclick="backToWelcome()">Back</button>
+            <button id="btn-emp-login-submit">Login</button>
+            <button class="secondary" id="btn-emp-login-back">Back</button>
         </div>
 
         <!-- EMPLOYEE DASHBOARD -->
         <div id="screen-emp-dashboard" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin:0;" id="emp-welcome-title">Employee Portal</h3>
-                <button onclick="logoutEmployee()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
+                <button id="btn-logout-emp" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
             </div>
 
             <div class="flex-row" style="margin-bottom: 15px; font-size: 13px;">
-                <button onclick="switchEmpTab('profile')" id="emp-t-1">(i) Profile</button>
-                <button onclick="switchEmpTab('attendance')" id="emp-t-2" class="secondary">(ii) Mark Attendance</button>
-                <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) Calendar & Salary</button>
+                <button id="emp-t-1">(i) Profile</button>
+                <button id="emp-t-2" class="secondary">(ii) Mark Attendance</button>
+                <button id="emp-t-3" style="background-color: var(--blue);">(iii) Calendar & Salary</button>
             </div>
 
             <!-- Employee Tab 1: Profile -->
@@ -448,12 +448,12 @@
                         <span id="placeholder-in-text" style="color: #aaa; font-size: 14px;">Camera Inactive</span>
                     </div>
                     <div id="in-action-btns">
-                        <button type="button" class="secondary" onclick="startCamera('in')" style="margin-bottom: 6px;">Open Camera Frame</button>
-                        <button type="button" onclick="captureAttendance('in')">Capture In-Time</button>
+                        <button type="button" class="secondary" id="btn-cam-in-open" style="margin-bottom: 6px;">Open Camera Frame</button>
+                        <button type="button" id="btn-cam-in-capture">Capture In-Time</button>
                     </div>
                     <div id="in-save-edit-btns" class="hidden" style="display: flex; gap: 10px;">
-                        <button type="button" class="success" style="margin:0;" onclick="confirmAndSaveAttendance('in')">Save</button>
-                        <button type="button" class="danger" style="margin:0;" onclick="editAttendanceCapture('in')">Edit</button>
+                        <button type="button" class="success" style="margin:0;" id="btn-in-save">Save</button>
+                        <button type="button" class="danger" style="margin:0;" id="btn-in-edit">Edit</button>
                     </div>
                     <div id="in-locked-msg" class="hidden" style="text-align: center; font-weight: bold; color: var(--blue); padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;">
                         Saved & Locked for today.
@@ -472,12 +472,12 @@
                         <span id="placeholder-out-text" style="color: #aaa; font-size: 14px;">Camera Inactive</span>
                     </div>
                     <div id="out-action-btns">
-                        <button type="button" class="secondary" onclick="startCamera('out')" style="margin-bottom: 6px;">Open Camera Frame</button>
-                        <button type="button" class="secondary" onclick="captureAttendance('out')">Capture Out-Time</button>
+                        <button type="button" class="secondary" id="btn-cam-out-open" style="margin-bottom: 6px;">Open Camera Frame</button>
+                        <button type="button" class="secondary" id="btn-cam-out-capture">Capture Out-Time</button>
                     </div>
                     <div id="out-save-edit-btns" class="hidden" style="display: flex; gap: 10px;">
-                        <button type="button" class="success" style="margin:0;" onclick="confirmAndSaveAttendance('out')">Save</button>
-                        <button type="button" class="danger" style="margin:0;" onclick="editAttendanceCapture('out')">Edit</button>
+                        <button type="button" class="success" style="margin:0;" id="btn-out-save">Save</button>
+                        <button type="button" class="danger" style="margin:0;" id="btn-out-edit">Edit</button>
                     </div>
                     <div id="out-locked-msg" class="hidden" style="text-align: center; font-weight: bold; color: var(--blue); padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;">
                         Saved & Locked for today.
@@ -490,11 +490,11 @@
                 <h3>Attendance Calendar & Salary Calculation</h3>
                 <p style="font-size: 12px; color: #666;">Click any colored date tile to view details.</p>
                 <div class="flex-row">
-                    <select id="filter-year" onchange="renderCalendar()">
+                    <select id="filter-year">
                         <option value="2026" selected>2026</option>
                         <option value="2025">2025</option>
                     </select>
-                    <select id="filter-month" onchange="renderCalendar()">
+                    <select id="filter-month">
                         <option value="0">January</option><option value="1">February</option><option value="2">March</option>
                         <option value="3">April</option><option value="4">May</option><option value="5" selected>June</option>
                         <option value="6">July</option><option value="7">August</option><option value="8">September</option>
@@ -515,7 +515,7 @@
 <!-- Modal for Viewing Detailed Attendance Log & Owner Options -->
 <div id="employee-modal" class="modal hidden">
     <div class="card" style="width: 92%; max-width: 420px; background: var(--panel); max-height: 90vh; overflow-y: auto;">
-        <span style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;" onclick="closeModal()">&times;</span>
+        <span id="close-modal-btn" style="float: right; font-size: 22px; cursor: pointer; font-weight: bold;">&times;</span>
         <h3 style="margin-top:0;" id="owner-modal-title">Details</h3>
         <div id="modal-body-content"></div>
     </div>
@@ -609,12 +609,63 @@
     }
 
     window.onload = function() {
+        // Event Listeners setup
+        document.getElementById('btn-owner-login').addEventListener('click', showLoginScreen);
+        document.getElementById('btn-register').addEventListener('click', showRegisterScreen);
+        document.getElementById('btn-emp-portal').addEventListener('click', openEmployeePortalSelect);
+        
+        document.getElementById('btn-login-submit').addEventListener('click', loginOwnerWithPassword);
+        document.getElementById('btn-forgot-pass').addEventListener('click', showForgotPasswordModal);
+        document.getElementById('btn-login-back').addEventListener('click', backToWelcome);
+
+        document.getElementById('btn-reg-otp').addEventListener('click', requestRegisterOTP);
+        document.getElementById('btn-reg-back').addEventListener('click', backToWelcome);
+
+        document.getElementById('btn-verify-otp').addEventListener('click', verifyOTP);
+        document.getElementById('btn-otp-cancel').addEventListener('click', backToWelcome);
+
+        document.getElementById('btn-logout-app').addEventListener('click', logoutApp);
+        document.getElementById('tab-btn-home').addEventListener('click', () => switchOwnerTab('home'));
+        document.getElementById('tab-btn-add').addEventListener('click', () => switchOwnerTab('add'));
+        document.getElementById('btn-export-csv').addEventListener('click', exportMonthlyReportCSV);
+        document.getElementById('search-employee').addEventListener('keyup', filterEmployees);
+
+        document.getElementById('btn-save-emp').addEventListener('click', saveEmployeeData);
+        document.getElementById('btn-cancel-emp').addEventListener('click', () => switchOwnerTab('home'));
+
+        document.getElementById('btn-emp-login-submit').addEventListener('click', loginEmployee);
+        document.getElementById('btn-emp-login-back').addEventListener('click', backToWelcome);
+        document.getElementById('btn-logout-emp').addEventListener('click', logoutEmployee);
+
+        document.getElementById('emp-t-1').addEventListener('click', () => switchEmpTab('profile'));
+        document.getElementById('emp-t-2').addEventListener('click', () => switchEmpTab('attendance'));
+        document.getElementById('emp-t-3').addEventListener('click', () => switchEmpTab('history'));
+
+        document.getElementById('owner-profile-icon-btn').addEventListener('click', () => toggleSideDrawer(true));
+        document.getElementById('drawer-overlay').addEventListener('click', () => toggleSideDrawer(false));
+        document.getElementById('close-drawer-btn').addEventListener('click', () => toggleSideDrawer(false));
+        document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+
+        document.getElementById('btn-cam-in-open').addEventListener('click', () => startCamera('in'));
+        document.getElementById('btn-cam-in-capture').addEventListener('click', () => captureAttendance('in'));
+        document.getElementById('btn-in-save').addEventListener('click', () => confirmAndSaveAttendance('in'));
+        document.getElementById('btn-in-edit').addEventListener('click', () => editAttendanceCapture('in'));
+
+        document.getElementById('btn-cam-out-open').addEventListener('click', () => startCamera('out'));
+        document.getElementById('btn-cam-out-capture').addEventListener('click', () => captureAttendance('out'));
+        document.getElementById('btn-out-save').addEventListener('click', () => confirmAndSaveAttendance('out'));
+        document.getElementById('btn-out-edit').addEventListener('click', () => editAttendanceCapture('out'));
+
+        document.getElementById('filter-year').addEventListener('change', renderCalendar);
+        document.getElementById('filter-month').addEventListener('change', renderCalendar);
+
         if(currentSessionUser) {
             applyCompanyBranding(currentSessionUser);
             showOwnerDashboard();
         } else {
             resetHeaderBranding();
         }
+
         window.onclick = function(event) {
             if (!event.target.matches('.dots-btn')) {
                 let dropdowns = document.getElementsByClassName("dropdown-menu");
@@ -731,7 +782,6 @@
                 document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
                 document.getElementById('screen-otp').classList.remove('hidden');
             }, function(error) {
-                // EmailJS ଫେଲ୍ ହେଲେ ଅଟୋମେଟିକ୍ ଆଲର୍ଟ ବକ୍ସ ମାଧ୍ୟମରେ OTP ଦେଖାଇବ
                 alert('Email Service Failed / Offline. Your Verification OTP is: ' + generatedOTP);
                 hideAllScreens();
                 document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
