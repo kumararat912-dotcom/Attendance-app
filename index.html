@@ -200,7 +200,6 @@
             align-items: center;
             z-index: 100;
         }
-        /* Right Half Screen Slide-in Drawer */
         .side-drawer {
             position: fixed;
             top: 0; right: -75%;
@@ -216,9 +215,7 @@
             padding: 20px;
             overflow-y: auto;
         }
-        .side-drawer.open {
-            right: 0;
-        }
+        .side-drawer.open { right: 0; }
         .drawer-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -227,7 +224,6 @@
             z-index: 150;
         }
         .drawer-overlay.show { display: block; }
-
         .emp-item-card {
             display: flex;
             justify-content: space-between;
@@ -255,7 +251,6 @@
         }
         .dropdown-menu button:hover { background: var(--border); }
         .dropdown-menu button.delete-opt { color: var(--red); }
-        
         .camera-box-preview-large {
             width: 100%;
             height: 260px;
@@ -367,7 +362,6 @@
                 <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employee</button>
             </div>
 
-            <!-- Owner Tab 1: Home / Employees List -->
             <div id="owner-tab-home" class="card">
                 <h3>Manage Employees</h3>
                 <button class="success" onclick="exportMonthlyReportCSV()">📥 Download Monthly Report (CSV)</button>
@@ -375,7 +369,6 @@
                 <div id="employee-list-container"></div>
             </div>
 
-            <!-- Owner Tab 2: Add / Edit Employees -->
             <div id="owner-tab-add" class="card hidden">
                 <h3 id="form-title-text">Add Employee Details</h3>
                 <input type="hidden" id="edit-emp-index" value="">
@@ -432,18 +425,15 @@
                 <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) Calendar & Salary</button>
             </div>
 
-            <!-- Employee Tab 1: Profile -->
             <div id="emp-pane-profile" class="card">
                 <h3>My Profile</h3>
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance with Save/Edit Prompt -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Daily Attendance</h3>
                 <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time selfies using front camera.</p>
                 
-                <!-- 1. In-Time Selfie Section -->
                 <div style="margin-bottom: 20px;">
                     <label><strong>1. In-Time Attendance Selfie</strong></label>
                     <div class="camera-box-preview-large">
@@ -467,7 +457,6 @@
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
-                <!-- 2. Out-Time Selfie Section -->
                 <div style="margin-bottom: 15px;">
                     <label><strong>2. Out-Time Attendance Selfie</strong></label>
                     <div class="camera-box-preview-large">
@@ -490,7 +479,6 @@
                 </div>
             </div>
 
-            <!-- Employee Tab 3: Calendar & Salary Calculation -->
             <div id="emp-pane-history" class="card hidden">
                 <h3>Attendance Calendar & Salary Calculation</h3>
                 <p style="font-size: 12px; color: #666;">Click any colored date tile to view details.</p>
@@ -833,7 +821,6 @@
         document.getElementById('screen-emp-login').classList.remove('hidden');
     }
 
-    // Slide-in Drawer Controls
     function toggleSideDrawer(open) {
         let drawer = document.getElementById('side-drawer');
         let overlay = document.getElementById('drawer-overlay');
@@ -1220,7 +1207,6 @@
         document.body.removeChild(link);
     }
 
-    // Owner clicking employee card -> 2 Options
     function openOwnerEmployeeMenuModal(empId) {
         companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
         let list = companyEmployees[currentSessionUser] || [];
@@ -1360,6 +1346,9 @@
 
     function closeModal() {
         document.getElementById('employee-modal').classList.add('hidden');
+        if(currentLoggedInEmpId) {
+            renderCalendar(); // Refresh calendar view on close to maintain updated states
+        }
     }
 
     function loginEmployee() {
@@ -1694,8 +1683,7 @@
 
     function showAttendanceDetailModal(empId, dateStr) {
         companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
-        let list = companyEmployees[currentEmpCompany] || currentSessionUser ? (companyEmployees[currentSessionUser] || []) : [];
-        if(currentEmpCompany) list = companyEmployees[currentEmpCompany] || [];
+        let list = companyEmployees[currentEmpCompany] || [];
         const emp = list.find(e => e.id === empId);
         if(!emp) return;
 
@@ -1740,7 +1728,7 @@
             <div style="background: var(--bg); padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border);">
                 <strong>1. In-Time Record:</strong><br>
                 Time: ${rec.inTime || 'N/A'}<br>
-                Address: ${rec.inLoc || 'N/A'}<br>
+                Address: ${rec.inLoc || 'N/As'}<br>
                 ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No selfie</small>'}
             </div>
             <div style="background: var(--bg); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
