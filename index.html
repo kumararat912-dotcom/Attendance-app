@@ -364,7 +364,7 @@
 
             <div id="owner-tab-home" class="card">
                 <h3>Manage Employees</h3>
-                <button class="success" onclick="exportMonthlyReportExcel()">📥 Download Monthly Report (Excel)</button>
+                <button class="success" onclick="exportMonthlyReportCSV()">📥 Download Monthly Report (CSV)</button>
                 <input type="text" id="search-employee" placeholder="Filter by employee name or ID..." onkeyup="filterEmployees()">
                 <div id="employee-list-container"></div>
             </div>
@@ -583,17 +583,15 @@
                 if(emp.attendance) {
                     for(let dateKey in emp.attendance) {
                         let rec = emp.attendance[dateKey];
-                        let parts = dateKey.split('-').map(Number);
-                        if(parts.length === 3) {
-                            let [y, m, d] = parts;
-                            let recTime = new Date(y, m, d).getTime();
-                            if(nowTime - recTime > ninetyDaysMs) {
-                                if(rec.inPhoto && rec.inPhoto.startsWith('data:image')) {
-                                    rec.inPhoto = "[Photo Expired & Deleted after 90 days]";
-                                }
-                                if(rec.outPhoto && rec.outPhoto.startsWith('data:image')) {
-                                    rec.outPhoto = "[Photo Expired & Deleted after 90 days]";
-                                }
+                        // If record timestamp exists or parsed from date string and is older than 90 days, remove photo data
+                        let [y, m, d] = dateKey.split('-').map(Number);
+                        let recTime = new Date(y, m, d).getTime();
+                        if(nowTime - recTime > ninetyDaysMs) {
+                            if(rec.inPhoto && rec.inPhoto.startsWith('data:image')) {
+                                rec.inPhoto = "[Photo Expired & Deleted after 90 days]";
+                            }
+                            if(rec.outPhoto && rec.outPhoto.startsWith('data:image')) {
+                                rec.outPhoto = "[Photo Expired & Deleted after 90 days]";
                             }
                         }
                     }
@@ -1210,7 +1208,7 @@
         }
     }
 
-    function exportMonthlyReportExcel() {
+    function exportMonthlyReportCSV() {
         companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
         let list = companyEmployees[currentSessionUser] || [];
         if(list.length === 0) {
@@ -1227,20 +1225,9 @@
         let compName = comp ? comp.name : "Company";
         let usePercentage = comp && comp.settings ? comp.settings.percentageCalc : true;
 
-        let excelXML = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-        <head><meta charset="utf-8"/></head>
-        <body>
-        <table>
-            <tr><th colspan="6" style="font-size:16px; font-weight:bold; background:#1D3557; color:#FFFFFF;">${compName} - Monthly Attendance Report (${monthName} ${year})</th></tr>
-            <tr>
-                <th style="background:#2A6F97; color:#FFFFFF; border:1px solid #000;">Employee ID</th>
-                <th style="background:#2A6F97; color:#FFFFFF; border:1px solid #000;">Employee Name</th>
-                <th style="background:#2A6F97; color:#FFFFFF; border:1px solid #000;">Designation</th>
-                <th style="background:#2A6F97; color:#FFFFFF; border:1px solid #000;">Monthly Base Salary</th>
-                <th style="background:#2A6F97; color:#FFFFFF; border:1px solid #000;">Total Effective Days</th>
-                <th style="background:#2A6F97; color:#FFFFFF; border:1px solid #000;">Estimated Earned Salary</th>
-            </tr>`;
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += `${compName} - Monthly Attendance Report (${monthName} ${year})\n`;
+        csvContent += "Employee ID,Employee Name,Designation,Monthly Base Salary,Total Effective Days,Estimated Earned Salary\n";
 
         list.forEach(emp => {
             let totalEffDays = 0;
@@ -1261,24 +1248,13 @@
             let estEarned = (!isNaN(baseSal)) ? Math.round((baseSal / 30) * totalEffDays) : "N/A";
             let rowSalary = (!isNaN(baseSal)) ? baseSal : "Not Assigned";
 
-            excelXML += `
-            <tr>
-                <td style="border:1px solid #000;">${emp.id}</td>
-                <td style="border:1px solid #000;">${emp.name}</td>
-                <td style="border:1px solid #000;">${emp.position}</td>
-                <td style="border:1px solid #000;">${rowSalary}</td>
-                <td style="border:1px solid #000;">${totalEffDays.toFixed(2)}</td>
-                <td style="border:1px solid #000;">${estEarned}</td>
-            </tr>`;
+            csvContent += `"${emp.id}","${emp.name}","${emp.position}","${rowSalary}","${totalEffDays.toFixed(2)}","${estEarned}"\n`;
         });
 
-        excelXML += `</table></body></html>`;
-
-        let blob = new Blob([excelXML], { type: 'application/vnd.ms-excel' });
-        let url = URL.createObjectURL(blob);
+        let encodedUri = encodeURI(csvContent);
         let link = document.createElement("a");
-        link.href = url;
-        link.download = `Attendance_Report_${monthName}_${year}.xls`;
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Attendance_Report_${monthName}_${year}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -1396,22 +1372,22 @@
                 if(record.addSalary) totalPct += 100;
                 cell.style.background = "var(--blue)";
                 cell.style.color = "white";
-                cell.onclick = (function(eId, dStr) { return function() { showAttendanceDetailModal(eId, dStr); }; })(empId, fullDateStr);
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
             } else if(record && record.inPhoto && record.outPhoto) {
                 presentCount++;
                 let pct = record.percentage || 100;
                 totalPct += pct;
                 cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #ccc ${pct}%)`;
                 cell.style.color = pct > 50 ? "white" : "black";
-                cell.onclick = (function(eId, dStr) { return function() { showAttendanceDetailModal(eId, dStr); }; })(empId, fullDateStr);
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
             } else if(record && record.inPhoto && !record.outPhoto) {
                 cell.style.background = "var(--orange)";
                 cell.style.color = "white";
-                cell.onclick = (function(eId, dStr) { return function() { showAttendanceDetailModal(eId, dStr); }; })(empId, fullDateStr);
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
             } else {
                 cell.style.background = "var(--red)";
                 cell.style.color = "white";
-                cell.onclick = (function(eId, dStr) { return function() { showAttendanceDetailModal(eId, dStr); }; })(empId, fullDateStr);
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
             }
             calHtml += cell.outerHTML;
         }
@@ -1437,12 +1413,22 @@
         document.getElementById('owner-modal-title').innerText = `${emp.name} - Leave Requests`;
         let leaves = emp.leaves || [];
         
-        let html = `<div style="font-size:13px; margin-bottom:10px;">Review all employee leave requests:</div>`;
+        let now = new Date();
+        let currentYear = now.getFullYear();
+        let currentMonth = now.getMonth();
+
+        let html = `<div style="font-size:13px; margin-bottom:10px;">Review leave requests within the current month validity:</div>`;
         
-        if(leaves.length === 0) {
-            html += `<p style="color:#666;">No leave requests found.</p>`;
+        let pendingList = leaves.filter(l => {
+            let [y, m, d] = l.date.split('-').map(Number);
+            return y === currentYear && m === currentMonth;
+        });
+
+        if(pendingList.length === 0) {
+            html += `<p style="color:#666;">No leave requests found for this month.</p>`;
         } else {
-            leaves.forEach((leave, originalIdx) => {
+            pendingList.forEach((leave, idx) => {
+                let originalIdx = leaves.findIndex(item => item.id === leave.id);
                 html += `
                     <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:6px; margin-bottom:10px; font-size:13px;">
                         <strong>Date:</strong> ${leave.date}<br>
@@ -1477,12 +1463,21 @@
         if(!emp || !emp.leaves[leaveIdx]) return;
 
         let leave = emp.leaves[leaveIdx];
+        let now = new Date();
+        let [y, m, d] = leave.date.split('-').map(Number);
+
+        // Validity check within current month
+        if(y !== now.getFullYear() || m !== now.getMonth()) {
+            alert('Leave approval/rejection is only valid within the same month!');
+            return;
+        }
 
         if(action === 'Approve') {
             let salaryMode = document.getElementById(`leave-salary-mode-${leaveIdx}`).value;
             leave.status = 'Approved';
             leave.addSalary = (salaryMode === 'on');
 
+            // Mark attendance date color blue and add to attendance map
             if(!emp.attendance) emp.attendance = {};
             emp.attendance[leave.date] = {
                 status: 'leave',
@@ -1512,7 +1507,7 @@
     function closeModal() {
         document.getElementById('employee-modal').classList.add('hidden');
         if(currentLoggedInEmpId) {
-            renderCalendar();
+            renderCalendar(); // Refresh calendar view on close to maintain updated states
         }
     }
 
@@ -1882,22 +1877,22 @@
                 if(record.addSalary) totalPct += 100;
                 cell.style.background = "var(--blue)";
                 cell.style.color = "white";
-                cell.onclick = (function(eId, dStr) { return function() { showAttendanceDetailModal(eId, dStr); }; })(emp.id, fullDateStr);
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
             } else if(record && record.inPhoto && record.outPhoto) {
                 presentCount++;
                 let pct = record.percentage || 100;
                 totalPct += pct;
                 cell.style.background = `linear-gradient(to top, var(--blue) ${pct}%, #ccc ${pct}%)`;
                 cell.style.color = pct > 50 ? "white" : "black";
-                cell.onclick = (function(eId, dStr) { return function() { showAttendanceDetailModal(eId, dStr); }; })(emp.id, fullDateStr);
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
             } else if(record && record.inPhoto && !record.outPhoto) {
                 cell.style.background = "var(--orange)";
                 cell.style.color = "white";
-                cell.onclick = (function(eId, dStr) { return function() { showAttendanceDetailModal(eId, dStr); }; })(emp.id, fullDateStr);
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
             } else {
                 cell.style.background = "var(--red)";
                 cell.style.color = "white";
-                cell.onclick = (function(eId, dStr) { return function() { showAttendanceDetailModal(eId, dStr); }; })(emp.id, fullDateStr);
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
             }
             container.appendChild(cell);
         }
@@ -1915,7 +1910,7 @@
 
     function showAttendanceDetailModal(empId, dateStr) {
         companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
-        let list = companyEmployees[currentEmpCompany] || companyEmployees[currentSessionUser] || [];
+        let list = companyEmployees[currentEmpCompany] || ownerAccounts[currentSessionUser] ? companyEmployees[currentSessionUser] : [];
         const emp = list.find(e => e.id === empId);
         if(!emp) return;
 
@@ -1957,7 +1952,7 @@
                     <strong>In-Time Record:</strong><br>
                     Time: ${rec.inTime || 'N/A'}<br>
                     Address: ${rec.inLoc || 'N/A'}<br>
-                    ${rec.inPhoto && rec.inPhoto.startsWith('data:image') ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : `<small>${rec.inPhoto || 'No selfie'}</small>`}
+                    ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : ''}
                 </div>
             `;
             document.getElementById('employee-modal').classList.remove('hidden');
