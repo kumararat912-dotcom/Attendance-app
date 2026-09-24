@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Company Attendance & Management System</title>
+    <!-- EmailJS SDK for sending OTP emails -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init("dx_EZ5roIzsVPTokP");
+        })();
+    </script>
     <!-- Firebase SDKs & Firestore Configuration -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -208,9 +215,7 @@
             padding: 20px;
             overflow-y: auto;
         }
-        .side-drawer.open {
-            right: 0;
-        }
+        .side-drawer.open { right: 0; }
         .drawer-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -219,7 +224,6 @@
             z-index: 150;
         }
         .drawer-overlay.show { display: block; }
-
         .emp-item-card {
             display: flex;
             justify-content: space-between;
@@ -247,7 +251,6 @@
         }
         .dropdown-menu button:hover { background: var(--border); }
         .dropdown-menu button.delete-opt { color: var(--red); }
-        
         .camera-box-preview-large {
             width: 100%;
             height: 260px;
@@ -320,7 +323,7 @@
             <input type="email" id="login-email" placeholder="Enter owner email">
             <input type="password" id="login-password" placeholder="Enter password">
             <button onclick="loginOwnerWithPassword()">Login</button>
-            <button class="secondary" onclick="showForgotPasswordModal()">Forgot Password / Reset via OTP?</button>
+            <button class="secondary" onclick="showForgotPasswordModal()">Forgot Password / Reset via Email?</button>
             <button class="danger" onclick="backToWelcome()">Back</button>
         </div>
 
@@ -334,14 +337,14 @@
             <input type="text" id="reg-name" placeholder="Owner Full Name">
             <input type="email" id="reg-email" placeholder="Owner Email Address">
             <input type="password" id="reg-pass" placeholder="Create Password">
-            <button onclick="requestRegisterOTP()">Generate & Verify OTP</button>
+            <button onclick="requestRegisterOTP()">Send Verification OTP</button>
             <button class="secondary" onclick="backToWelcome()">Back</button>
         </div>
 
         <!-- OTP VERIFICATION SCREEN -->
         <div id="screen-otp" class="card hidden">
-            <h3>Verify OTP Code</h3>
-            <p style="font-size: 13px; color: #666;" id="otp-instruction">Enter the 6-digit OTP generated on screen.</p>
+            <h3>Verify Email OTP</h3>
+            <p style="font-size: 13px; color: #666;" id="otp-instruction">Enter the 6-digit OTP sent to your email.</p>
             <input type="text" id="entered-otp" placeholder="Enter 6-digit OTP" maxlength="6">
             <button onclick="verifyOTP()">Verify & Proceed</button>
             <button class="secondary" onclick="backToWelcome()">Cancel</button>
@@ -359,7 +362,6 @@
                 <button onclick="switchOwnerTab('add')" id="tab-btn-add" class="secondary">(ii) Add Employee</button>
             </div>
 
-            <!-- Owner Tab 1: Home / Employees List -->
             <div id="owner-tab-home" class="card">
                 <h3>Manage Employees</h3>
                 <button class="success" onclick="exportMonthlyReportCSV()">📥 Download Monthly Report (CSV)</button>
@@ -367,7 +369,6 @@
                 <div id="employee-list-container"></div>
             </div>
 
-            <!-- Owner Tab 2: Add / Edit Employees -->
             <div id="owner-tab-add" class="card hidden">
                 <h3 id="form-title-text">Add Employee Details</h3>
                 <input type="hidden" id="edit-emp-index" value="">
@@ -418,24 +419,22 @@
                 <button onclick="logoutEmployee()" style="width: auto; padding: 6px 12px; margin:0;" class="danger">Logout</button>
             </div>
 
-            <div class="flex-row" style="margin-bottom: 15px; font-size: 13px;">
+            <div class="flex-row" style="margin-bottom: 15px; font-size: 12px;">
                 <button onclick="switchEmpTab('profile')" id="emp-t-1">(i) Profile</button>
                 <button onclick="switchEmpTab('attendance')" id="emp-t-2" class="secondary">(ii) Mark Attendance</button>
                 <button onclick="switchEmpTab('history')" id="emp-t-3" style="background-color: var(--blue);">(iii) Calendar & Salary</button>
+                <button onclick="switchEmpTab('leave')" id="emp-t-4" style="background-color: var(--amber);">(iv) Leave</button>
             </div>
 
-            <!-- Employee Tab 1: Profile -->
             <div id="emp-pane-profile" class="card">
                 <h3>My Profile</h3>
                 <div id="emp-profile-content"></div>
             </div>
 
-            <!-- Employee Tab 2: Attendance with Save/Edit Prompt -->
             <div id="emp-pane-attendance" class="card hidden">
                 <h3>Mark Daily Attendance</h3>
                 <p style="font-size: 13px; color: #666;">Submit In-Time and Out-Time selfies using front camera.</p>
                 
-                <!-- 1. In-Time Selfie Section -->
                 <div style="margin-bottom: 20px;">
                     <label><strong>1. In-Time Attendance Selfie</strong></label>
                     <div class="camera-box-preview-large">
@@ -459,7 +458,6 @@
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
-                <!-- 2. Out-Time Selfie Section -->
                 <div style="margin-bottom: 15px;">
                     <label><strong>2. Out-Time Attendance Selfie</strong></label>
                     <div class="camera-box-preview-large">
@@ -482,10 +480,29 @@
                 </div>
             </div>
 
-            <!-- Employee Tab 3: Calendar & Salary Calculation -->
+            <!-- EMPLOYEE LEAVE APPLICATION PANE -->
+            <div id="emp-pane-leave" class="card hidden">
+                <h3>Apply for Leave</h3>
+                <label>Leave Date</label>
+                <input type="date" id="emp-leave-date">
+                <label>Reason / Note</label>
+                <textarea id="emp-leave-reason" placeholder="Enter reason for leave..." rows="3" style="width:100%; padding:12px; margin:8px 0 16px 0; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--ink); font-size:15px; box-sizing:border-box;"></textarea>
+                <button onclick="submitEmployeeLeave()">Submit Leave Request</button>
+                <div id="emp-leave-history-list" style="margin-top: 15px;"></div>
+            </div>
+
             <div id="emp-pane-history" class="card hidden">
                 <h3>Attendance Calendar & Salary Calculation</h3>
                 <p style="font-size: 12px; color: #666;">Click any colored date tile to view details.</p>
+                
+                <!-- Color Hint Box -->
+                <div style="font-size: 11px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-bottom: 10px;">
+                    <strong>Color Hints:</strong><br>
+                    <span style="display:inline-block; width:10px; height:10px; background:var(--blue); margin-right:4px;"></span> Present / Approved Leave<br>
+                    <span style="display:inline-block; width:10px; height:10px; background:var(--orange); margin-right:4px;"></span> Out-Time Pending<br>
+                    <span style="display:inline-block; width:10px; height:10px; background:var(--red); margin-right:4px;"></span> Absent
+                </div>
+
                 <div class="flex-row">
                     <select id="filter-year" onchange="renderCalendar()">
                         <option value="2026" selected>2026</option>
@@ -548,13 +565,41 @@
                 dutyHours: 8,
                 salary: "25000",
                 photo: "",
-                attendance: {}
+                attendance: {},
+                leaves: []
             }
         ]
     };
 
     let savedEmployeesDb = JSON.parse(localStorage.getItem('pec_saas_employees'));
     let companyEmployees = savedEmployeesDb ? { ...defaultEmployees, ...savedEmployeesDb } : defaultEmployees;
+    
+    // Auto clean old photos older than 90 days from attendance records
+    function cleanOldAttendancePhotos() {
+        let nowTime = new Date().getTime();
+        let ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+        for(let compKey in companyEmployees) {
+            companyEmployees[compKey].forEach(emp => {
+                if(emp.attendance) {
+                    for(let dateKey in emp.attendance) {
+                        let rec = emp.attendance[dateKey];
+                        // If record timestamp exists or parsed from date string and is older than 90 days, remove photo data
+                        let [y, m, d] = dateKey.split('-').map(Number);
+                        let recTime = new Date(y, m, d).getTime();
+                        if(nowTime - recTime > ninetyDaysMs) {
+                            if(rec.inPhoto && rec.inPhoto.startsWith('data:image')) {
+                                rec.inPhoto = "[Photo Expired & Deleted after 90 days]";
+                            }
+                            if(rec.outPhoto && rec.outPhoto.startsWith('data:image')) {
+                                rec.outPhoto = "[Photo Expired & Deleted after 90 days]";
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+    cleanOldAttendancePhotos();
     localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
 
     let currentSessionUser = localStorage.getItem('pec_current_user') || null;
@@ -585,6 +630,7 @@
                 });
                 if (Object.keys(cloudData).length > 0) {
                     companyEmployees = { ...defaultEmployees, ...cloudData };
+                    cleanOldAttendancePhotos();
                     localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
                     if (currentSessionUser) renderEmployeeList();
                     if (currentLoggedInEmpId && currentEmpCompany) loadEmployeeDashboard(currentLoggedInEmpId);
@@ -714,11 +760,25 @@
         authMode = mode;
         generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
-        alert("Your 6-Digit Verification OTP Code is: " + generatedOTP);
-        
-        hideAllScreens();
-        document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP code shown in the alert for: " + email;
-        document.getElementById('screen-otp').classList.remove('hidden');
+        let templateParams = {
+            to_email: email,
+            otp_code: generatedOTP,
+            time: new Date().toLocaleTimeString(),
+            message: "Your OTP verification code is: " + generatedOTP
+        };
+
+        emailjs.send("service_33ql72e", "template_qs9fv3s", templateParams)
+            .then(function(response) {
+                alert('OTP sent successfully to your email: ' + email);
+                hideAllScreens();
+                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
+                document.getElementById('screen-otp').classList.remove('hidden');
+            }, function(error) {
+                alert('EmailJS simulation OTP: ' + generatedOTP);
+                hideAllScreens();
+                document.getElementById('otp-instruction').innerText = "Enter the 6-digit OTP sent to: " + email;
+                document.getElementById('screen-otp').classList.remove('hidden');
+            });
     }
 
     function requestRegisterOTP() {
@@ -840,8 +900,8 @@
             <h5 style="margin: 5px 0; color: var(--navy);">1. Company Personal & Logo</h5>
             <div style="background: var(--bg); padding: 8px; border-radius: 6px; position: relative; margin-bottom: 12px; font-size: 13px; border: 1px solid var(--border);">
                 <div style="display:flex; gap:6px;">
-                    <button type="button" style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyPersonalDetails()">Edit Name</button>
-                    <button type="button" class="secondary" style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyLogoImage()">Edit Logo</button>
+                    <button style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyPersonalDetails()">Edit Name</button>
+                    <button class="secondary" style="flex:1; padding: 4px; font-size: 11px; margin:0;" onclick="editCompanyLogoImage()">Edit Logo</button>
                 </div>
                 <p style="margin: 6px 0 2px 0;"><strong>Name:</strong> <span id="lbl-comp-name">${comp.name}</span></p>
             </div>
@@ -861,14 +921,14 @@
             </div>
 
             <h5 style="margin: 5px 0; color: var(--navy);">Share Portal</h5>
-            <button type="button" class="secondary" style="font-size: 13px; padding: 8px; margin-bottom: 12px;" onclick="shareAppPortal()">📤 Share App</button>
+            <button class="secondary" style="font-size: 13px; padding: 8px; margin-bottom: 12px;" onclick="shareAppPortal()">📤 Share App</button>
             
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;">
-            <button type="button" class="danger" style="font-size: 13px; padding: 8px;" onclick="deleteCompanyAccount()">Delete Account</button>
+            <button class="danger" style="font-size: 13px; padding: 8px;" onclick="deleteCompanyAccount()">Delete Account</button>
         `;
     }
 
-    window.editCompanyPersonalDetails = function() {
+    function editCompanyPersonalDetails() {
         let comp = ownerAccounts[currentSessionUser];
         let newName = prompt("Edit Company Name:", comp.name);
         if(newName) {
@@ -877,14 +937,13 @@
             localStorage.setItem('pec_saas_owners', JSON.stringify(ownerAccounts));
             applyCompanyBranding(currentSessionUser);
             document.getElementById('dashboard-company-title').innerText = comp.name + " Dashboard";
-            let nameLbl = document.getElementById('lbl-comp-name');
-            if(nameLbl) nameLbl.innerText = comp.name;
+            document.getElementById('lbl-comp-name').innerText = comp.name;
             renderSideDrawerContent();
             alert('Company name updated successfully!');
         }
-    };
+    }
 
-    window.editCompanyLogoImage = function() {
+    function editCompanyLogoImage() {
         let fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'image/*';
@@ -904,9 +963,9 @@
             }
         };
         fileInput.click();
-    };
+    }
 
-    window.updateOwnerSetting = function(key, val) {
+    function updateOwnerSetting(key, val) {
         let comp = ownerAccounts[currentSessionUser];
         if(!comp.settings) comp.settings = { percentageCalc: true, cameraAllowed: true, darkMode: false };
         comp.settings[key] = val;
@@ -918,18 +977,18 @@
             else document.body.classList.remove('dark-mode');
         }
         alert('Setting updated successfully!');
-    };
+    }
 
-    window.shareAppPortal = function() {
+    function shareAppPortal() {
         let shareText = `Hello employees, please open our Attendance Portal using Company Code: ${currentSessionUser} and your assigned Employee ID. Portal Link: ` + window.location.href;
         if (navigator.share) {
             navigator.share({ title: 'Attendance Portal', text: shareText, url: window.location.href }).catch(() => {});
         } else {
             prompt("Copy portal details for employees:", shareText);
         }
-    };
+    }
 
-    window.deleteCompanyAccount = function() {
+    function deleteCompanyAccount() {
         if(confirm("Are you sure delete your account?")) {
             delete ownerAccounts[currentSessionUser];
             delete companyEmployees[currentSessionUser];
@@ -938,7 +997,7 @@
             toggleSideDrawer(false);
             logoutApp();
         }
-    };
+    }
 
     function switchOwnerTab(tab) {
         if(tab === 'home') {
@@ -1027,7 +1086,8 @@
                 dutyHours: dutyHours,
                 salary: salary,
                 photo: photo,
-                attendance: {}
+                attendance: {},
+                leaves: []
             });
             alert('Employee created successfully! ID: ' + newId);
         }
@@ -1059,10 +1119,10 @@
                     </div>
                 </div>
                 <div class="menu-container">
-                    <button type="button" class="dots-btn" onclick="toggleMenu(event, ${index})">&#8942;</button>
+                    <button class="dots-btn" onclick="toggleMenu(event, ${index})">&#8942;</button>
                     <div id="dropdown-menu-${index}" class="dropdown-menu">
-                        <button type="button" onclick="editEmployee(${index})">Edit</button>
-                        <button type="button" class="delete-opt" onclick="deleteEmployee(${index})">Delete</button>
+                        <button onclick="editEmployee(${index})">Edit</button>
+                        <button class="delete-opt" onclick="deleteEmployee(${index})">Delete</button>
                     </div>
                 </div>
             `;
@@ -1096,10 +1156,10 @@
                     </div>
                 </div>
                 <div class="menu-container">
-                    <button type="button" class="dots-btn" onclick="toggleMenu(event, ${originalIndex})">&#8942;</button>
+                    <button class="dots-btn" onclick="toggleMenu(event, ${originalIndex})">&#8942;</button>
                     <div id="dropdown-menu-${originalIndex}" class="dropdown-menu">
-                        <button type="button" onclick="editEmployee(${originalIndex})">Edit</button>
-                        <button type="button" class="delete-opt" onclick="deleteEmployee(${originalIndex})">Delete</button>
+                        <button onclick="editEmployee(${originalIndex})">Edit</button>
+                        <button class="delete-opt" onclick="deleteEmployee(${originalIndex})">Delete</button>
                     </div>
                 </div>
             `;
@@ -1180,6 +1240,8 @@
                     } else {
                         totalEffDays += 1;
                     }
+                } else if(rec && rec.isApprovedLeave && rec.addSalary) {
+                    totalEffDays += 1;
                 }
             }
             let baseSal = parseFloat(emp.salary);
@@ -1211,8 +1273,9 @@
                 <h4 style="margin:0;">${emp.name}</h4>
                 <small style="opacity:0.7;">ID: ${emp.id}</small>
             </div>
-            <button type="button" onclick="openOwnerEmployeeProfileModal('${empId}')">1. Employee Details</button>
-            <button type="button" class="secondary" onclick="openOwnerEmployeeCalendarModal('${empId}')">2. Attendance & Salary Details</button>
+            <button onclick="openOwnerEmployeeProfileModal('${empId}')">1. Employee Details</button>
+            <button class="secondary" onclick="openOwnerEmployeeCalendarModal('${empId}')">2. Attendance & Salary Details</button>
+            <button style="background-color: var(--amber);" onclick="openOwnerLeaveApprovalsModal('${empId}')">3. Leave Requests Approval</button>
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
     }
@@ -1233,7 +1296,7 @@
             <p><strong>Salary:</strong> ${emp.salary}</p>
             <p><strong>Date of Birth:</strong> ${emp.dob || 'N/A'}</p>
             <p><strong>Joining Date:</strong> ${emp.joining || 'N/A'}</p>
-            <button type="button" class="secondary" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
+            <button class="secondary" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
         `;
     }
 
@@ -1272,7 +1335,7 @@
             </div>
             <div id="owner-emp-calendar-container"></div>
             <div id="owner-emp-summary-box" style="font-size: 13px; margin-top: 12px; text-align: center; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border);"></div>
-            <button type="button" class="secondary" style="margin-top: 10px;" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
+            <button class="secondary" style="margin-top: 10px;" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>
         `;
 
         document.getElementById('modal-body-content').innerHTML = modalContent;
@@ -1304,7 +1367,13 @@
             cell.className = "cal-day";
             cell.innerText = d;
 
-            if(record && record.inPhoto && record.outPhoto) {
+            if(record && record.isApprovedLeave) {
+                presentCount++;
+                if(record.addSalary) totalPct += 100;
+                cell.style.background = "var(--blue)";
+                cell.style.color = "white";
+                cell.onclick = function() { showAttendanceDetailModal(empId, fullDateStr); };
+            } else if(record && record.inPhoto && record.outPhoto) {
                 presentCount++;
                 let pct = record.percentage || 100;
                 totalPct += pct;
@@ -1335,8 +1404,111 @@
         `;
     }
 
+    function openOwnerLeaveApprovalsModal(empId) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const emp = list.find(e => e.id === empId);
+        if(!emp) return;
+
+        document.getElementById('owner-modal-title').innerText = `${emp.name} - Leave Requests`;
+        let leaves = emp.leaves || [];
+        
+        let now = new Date();
+        let currentYear = now.getFullYear();
+        let currentMonth = now.getMonth();
+
+        let html = `<div style="font-size:13px; margin-bottom:10px;">Review leave requests within the current month validity:</div>`;
+        
+        let pendingList = leaves.filter(l => {
+            let [y, m, d] = l.date.split('-').map(Number);
+            return y === currentYear && m === currentMonth;
+        });
+
+        if(pendingList.length === 0) {
+            html += `<p style="color:#666;">No leave requests found for this month.</p>`;
+        } else {
+            pendingList.forEach((leave, idx) => {
+                let originalIdx = leaves.findIndex(item => item.id === leave.id);
+                html += `
+                    <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:6px; margin-bottom:10px; font-size:13px;">
+                        <strong>Date:</strong> ${leave.date}<br>
+                        <strong>Reason:</strong> ${leave.reason || 'N/A'}<br>
+                        <strong>Status:</strong> <span style="font-weight:bold; color:${leave.status === 'Approved' ? 'var(--blue)' : (leave.status === 'Rejected' ? 'var(--red)' : 'var(--amber)')}">${leave.status || 'Pending'}</span><br>
+                        ${leave.status === 'Pending' ? `
+                            <div style="margin-top:8px;">
+                                <label style="font-size:11px;">Salary Add/Cutting Option:</label>
+                                <select id="leave-salary-mode-${originalIdx}" style="padding:6px; margin:4px 0;">
+                                    <option value="on">Salary Add ON</option>
+                                    <option value="off">Salary Add OFF (Cutting)</option>
+                                </select>
+                                <div style="display:flex; gap:6px;">
+                                    <button class="success" style="padding:6px; font-size:12px; margin:0;" onclick="processLeaveApproval('${empId}',${originalIdx}, 'Approve')">Approve</button>
+                                    <button class="danger" style="padding:6px; font-size:12px; margin:0;" onclick="processLeaveApproval('${empId}',${originalIdx}, 'Reject')">Reject</button>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        html += `<button class="secondary" style="margin-top: 10px;" onclick="openOwnerEmployeeMenuModal('${empId}')">Back</button>`;
+        document.getElementById('modal-body-content').innerHTML = html;
+    }
+
+    function processLeaveApproval(empId, leaveIdx, action) {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentSessionUser] || [];
+        const emp = list.find(e => e.id === empId);
+        if(!emp || !emp.leaves[leaveIdx]) return;
+
+        let leave = emp.leaves[leaveIdx];
+        let now = new Date();
+        let [y, m, d] = leave.date.split('-').map(Number);
+
+        // Validity check within current month
+        if(y !== now.getFullYear() || m !== now.getMonth()) {
+            alert('Leave approval/rejection is only valid within the same month!');
+            return;
+        }
+
+        if(action === 'Approve') {
+            let salaryMode = document.getElementById(`leave-salary-mode-${leaveIdx}`).value;
+            leave.status = 'Approved';
+            leave.addSalary = (salaryMode === 'on');
+
+            // Mark attendance date color blue and add to attendance map
+            if(!emp.attendance) emp.attendance = {};
+            emp.attendance[leave.date] = {
+                status: 'leave',
+                isApprovedLeave: true,
+                addSalary: leave.addSalary,
+                inTime: 'Leave',
+                outTime: 'Leave',
+                percentage: leave.addSalary ? 100 : 0,
+                inPhoto: 'Approved Leave',
+                outPhoto: 'Approved Leave'
+            };
+            alert('Leave Approved successfully!');
+        } else {
+            leave.status = 'Rejected';
+            leave.addSalary = false;
+            if(emp.attendance && emp.attendance[leave.date]) {
+                delete emp.attendance[leave.date];
+            }
+            alert('Leave Rejected!');
+        }
+
+        localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+        syncCompanyEmployeesToCloud(currentSessionUser, list);
+        openOwnerLeaveApprovalsModal(empId);
+    }
+
     function closeModal() {
         document.getElementById('employee-modal').classList.add('hidden');
+        if(currentLoggedInEmpId) {
+            renderCalendar(); // Refresh calendar view on close to maintain updated states
+        }
     }
 
     function loginEmployee() {
@@ -1402,6 +1574,7 @@
         document.getElementById('emp-pane-profile').classList.add('hidden');
         document.getElementById('emp-pane-attendance').classList.add('hidden');
         document.getElementById('emp-pane-history').classList.add('hidden');
+        document.getElementById('emp-pane-leave').classList.add('hidden');
 
         if(tab === 'profile') {
             document.getElementById('emp-pane-profile').classList.remove('hidden');
@@ -1417,7 +1590,67 @@
         } else if(tab === 'history') {
             document.getElementById('emp-pane-history').classList.remove('hidden');
             renderCalendar();
+        } else if(tab === 'leave') {
+            document.getElementById('emp-pane-leave').classList.remove('hidden');
+            renderEmployeeLeaveHistory();
         }
+    }
+
+    function submitEmployeeLeave() {
+        let leaveDate = document.getElementById('emp-leave-date').value;
+        let reason = document.getElementById('emp-leave-reason').value.trim();
+
+        if(!leaveDate) {
+            alert('Please select leave date.');
+            return;
+        }
+
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentEmpCompany] || [];
+        const emp = list.find(e => e.id === currentLoggedInEmpId);
+        if(!emp) return;
+
+        if(!emp.leaves) emp.leaves = [];
+        emp.leaves.push({
+            id: 'LEAVE-' + Date.now(),
+            date: leaveDate,
+            reason: reason,
+            status: 'Pending',
+            addSalary: true
+        });
+
+        localStorage.setItem('pec_saas_employees', JSON.stringify(companyEmployees));
+        syncCompanyEmployeesToCloud(currentEmpCompany, list);
+        alert('Leave application submitted successfully!');
+        document.getElementById('emp-leave-date').value = '';
+        document.getElementById('emp-leave-reason').value = '';
+        renderEmployeeLeaveHistory();
+    }
+
+    function renderEmployeeLeaveHistory() {
+        companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
+        let list = companyEmployees[currentEmpCompany] || [];
+        const emp = list.find(e => e.id === currentLoggedInEmpId);
+        if(!emp) return;
+
+        let leaves = emp.leaves || [];
+        let container = document.getElementById('emp-leave-history-list');
+        if(leaves.length === 0) {
+            container.innerHTML = `<p style="font-size:13px; color:#666;">No leave applications submitted.</p>`;
+            return;
+        }
+
+        let html = `<h4>My Leave Applications</h4>`;
+        leaves.forEach(l => {
+            html += `
+                <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:6px; margin-bottom:8px; font-size:13px;">
+                    <strong>Date:</strong> ${l.date}<br>
+                    <strong>Reason:</strong> ${l.reason || 'N/A'}<br>
+                    <strong>Status:</strong> <span style="font-weight:bold; color:${l.status === 'Approved' ? 'var(--blue)' : (l.status === 'Rejected' ? 'var(--red)' : 'var(--amber)')}">${l.status}</span>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
     }
 
     function checkAttendanceLockStatus() {
@@ -1639,7 +1872,13 @@
             cell.className = "cal-day";
             cell.innerText = d;
 
-            if(record && record.inPhoto && record.outPhoto) {
+            if(record && record.isApprovedLeave) {
+                presentCount++;
+                if(record.addSalary) totalPct += 100;
+                cell.style.background = "var(--blue)";
+                cell.style.color = "white";
+                cell.onclick = function() { showAttendanceDetailModal(emp.id, fullDateStr); };
+            } else if(record && record.inPhoto && record.outPhoto) {
                 presentCount++;
                 let pct = record.percentage || 100;
                 totalPct += pct;
@@ -1671,8 +1910,7 @@
 
     function showAttendanceDetailModal(empId, dateStr) {
         companyEmployees = JSON.parse(localStorage.getItem('pec_saas_employees')) || {};
-        let list = companyEmployees[currentEmpCompany] || currentSessionUser ? (companyEmployees[currentSessionUser] || []) : [];
-        if(currentEmpCompany) list = companyEmployees[currentEmpCompany] || [];
+        let list = companyEmployees[currentEmpCompany] || ownerAccounts[currentSessionUser] ? companyEmployees[currentSessionUser] : [];
         const emp = list.find(e => e.id === empId);
         if(!emp) return;
 
@@ -1686,6 +1924,18 @@
                 <div style="text-align: center; padding: 20px;">
                     <span class="badge badge-red" style="font-size: 14px; padding: 6px 12px;">Absent</span>
                     <p style="margin-top: 15px; color: #666;">No attendance records found for this date.</p>
+                </div>
+            `;
+            document.getElementById('employee-modal').classList.remove('hidden');
+            return;
+        }
+
+        if(rec.isApprovedLeave) {
+            document.getElementById('owner-modal-title').innerText = `Date: ${formattedDate}`;
+            document.getElementById('modal-body-content').innerHTML = `
+                <div style="text-align: center; padding: 10px;">
+                    <span class="badge badge-blue" style="font-size: 14px; padding: 6px 12px;">Approved Leave</span>
+                    <p style="margin-top: 10px;">Salary Added: <strong>${rec.addSalary ? 'Yes (ON)' : 'No (OFF / Cutting)'}</strong></p>
                 </div>
             `;
             document.getElementById('employee-modal').classList.remove('hidden');
@@ -1718,13 +1968,13 @@
                 <strong>1. In-Time Record:</strong><br>
                 Time: ${rec.inTime || 'N/A'}<br>
                 Address: ${rec.inLoc || 'N/A'}<br>
-                ${rec.inPhoto ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No selfie</small>'}
+                ${rec.inPhoto && rec.inPhoto.startsWith('data:image') ? `<img src="${rec.inPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : `<small>${rec.inPhoto || 'No selfie'}</small>`}
             </div>
             <div style="background: var(--bg); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
                 <strong>2. Out-Time Record:</strong><br>
                 Time: ${rec.outTime || 'N/A'}<br>
                 Address: ${rec.outLoc || 'N/A'}<br>
-                ${rec.outPhoto ? `<img src="${rec.outPhoto}" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : '<small>No selfie</small>'}
+                ${rec.outPhoto && rec.outPhoto.startsWith('data:image') ? `<img src="${rec.outPhoto}" style="width: 100% ; max-height: 140px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : `<small>${rec.outPhoto || 'No selfie'}</small>`}
             </div>
         `;
         document.getElementById('employee-modal').classList.remove('hidden');
